@@ -137,13 +137,17 @@ export function createComponent(
               ? 'I'
               : modelKey === 'capacitor'
                 ? 'C'
-                : modelKey === 'inductor'
+                  : modelKey === 'inductor'
                   ? 'L'
-                  : modelKey === 'ground'
-                    ? 'GND'
-                    : modelKey === 'junction'
-                      ? 'J'
-                      : 'X';
+                  : modelKey === 'potentiometer'
+                    ? 'POT'
+                    : modelKey === 'pulse_source'
+                      ? 'VP'
+                      : modelKey === 'ground'
+                        ? 'GND'
+                        : modelKey === 'junction'
+                          ? 'J'
+                          : 'X';
   return {
     id: id ?? nextId(prefix),
     modelKey,

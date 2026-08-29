@@ -6,7 +6,11 @@
   [class.tool-place]="tool() === 'place'"
   [class.tool-wire]="tool() === 'wire'"
   [class.tool-probe]="tool() === 'probe'"
+  [class.drop-target]="dragOver()"
   (wheel)="onWheel($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
 >
   <rect
     class="bg"
@@ -38,77 +42,20 @@
       (pointermove)="onSymbolPointerMove($event)"
       (pointerup)="onSymbolPointerUp($event)"
     >
-      @switch (c.modelKey) {
-        @case ('battery') {
-          <line x1="-18" y1="-28" x2="-18" y2="28" class="sym" />
-          <line x1="-8" y1="-16" x2="-8" y2="16" class="sym thick" />
-          <line x1="8" y1="-28" x2="8" y2="28" class="sym" />
-          <line x1="18" y1="-16" x2="18" y2="16" class="sym thick" />
-        }
-        @case ('resistor') {
-          <polyline
-            class="sym"
-            fill="none"
-            points="-40,0 -28,-12 -16,12 -4,-12 8,12 20,-12 32,0 40,0"
-          />
-        }
-        @case ('switch') {
-          <circle cx="-30" cy="0" r="4" class="sym fill" />
-          <circle cx="30" cy="0" r="4" class="sym fill" />
-          @if (c.params['closed']) {
-            <line x1="-26" y1="0" x2="26" y2="0" class="sym thick" />
-          } @else {
-            <line x1="-26" y1="0" x2="18" y2="-16" class="sym thick" />
-          }
-        }
-        @case ('led') {
-          <line x1="0" y1="-36" x2="0" y2="-10" class="sym" />
-          <polygon
-            points="0,-10 -14,14 14,14"
-            class="led"
-            [class.led-on]="ledOn(c.id)"
-            [class.led-off]="!ledOn(c.id)"
-          />
-          <line x1="-14" y1="14" x2="14" y2="14" class="sym thick" />
-          <line x1="0" y1="14" x2="0" y2="40" class="sym" />
-        }
-        @case ('diode') {
-          <line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
-          <polygon points="-8,0 -8,-14 12,0 -8,14" class="diode" />
-          <line x1="12" y1="-14" x2="12" y2="14" class="sym thick" />
-          <line x1="12" y1="0" x2="36" y2="0" class="sym" />
-        }
-        @case ('current_source') {
-          <circle cx="0" cy="0" r="22" class="sym" />
-          <line x1="0" y1="12" x2="0" y2="-12" class="sym thick" />
-          <polyline class="sym" fill="none" points="-6,-4 0,-12 6,-4" />
-        }
-        @case ('capacitor') {
-          <line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
-          <line x1="-8" y1="-18" x2="-8" y2="18" class="sym thick" />
-          <line x1="8" y1="-18" x2="8" y2="18" class="sym thick" />
-          <line x1="8" y1="0" x2="36" y2="0" class="sym" />
-        }
-        @case ('inductor') {
-          <path
-            class="sym"
-            fill="none"
-            d="M -40 0 L -28 0 C -28 -14, -14 -14, -14 0 C -14 -14, 0 -14, 0 0 C 0 -14, 14 -14, 14 0 C 14 -14, 28 -14, 28 0 L 40 0"
-          />
-        }
-        @case ('ground') {
-          <line x1="0" y1="-20" x2="0" y2="0" class="sym" />
-          <line x1="-16" y1="0" x2="16" y2="0" class="sym thick" />
-          <line x1="-10" y1="8" x2="10" y2="8" class="sym" />
-          <line x1="-4" y1="16" x2="4" y2="16" class="sym" />
-        }
-        @case ('junction') {
-          <circle cx="0" cy="0" r="4" class="junction-node" />
-        }
-        @default {
-          <rect x="-24" y="-16" width="48" height="32" class="sym" />
-        }
-      }
+      <!-- Invisible hit box so thin strokes remain easy to select (incl. unwired/error parts). -->
+      <rect
+        class="hit"
+        [attr.x]="-lib[c.modelKey].width / 2 - 8"
+        [attr.y]="-lib[c.modelKey].height / 2 - 8"
+        [attr.width]="lib[c.modelKey].width + 16"
+        [attr.height]="lib[c.modelKey].height + 16"
+      />
+      <g
+        appSymbolGlyph
+        [modelKey]="c.modelKey"
+        [closed]="!!c.params['closed']"
+        [ledBrightness]="ledBrightness(c.id)"
+      ></g>
 
       @if (c.modelKey !== 'junction') {
         <text x="0" y="52" text-anchor="middle" class="label">{{ c.id }}</text>

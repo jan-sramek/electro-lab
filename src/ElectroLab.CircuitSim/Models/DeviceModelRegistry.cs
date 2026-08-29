@@ -21,7 +21,9 @@ public sealed class DeviceModelRegistry
         new SwitchModel(),
         new CurrentSourceModel(),
         new CapacitorModel(),
-        new InductorModel()
+        new InductorModel(),
+        new PotentiometerModel(),
+        new PulseSourceModel()
     ];
 
     public bool TryGet(string modelKey, out IDeviceModel model)

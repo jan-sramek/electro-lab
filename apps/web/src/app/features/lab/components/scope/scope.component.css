@@ -4,6 +4,17 @@
   color: #12263a;
 }
 
+.legend {
+  list-style: none;
+  margin: 0 0 0.35rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .meta {
   margin: 0 0 0.4rem;
   font-size: 0.8rem;
@@ -17,6 +28,8 @@
   border: 1px solid #d8dee6;
   border-radius: 6px;
   background: #fff;
+  cursor: crosshair;
+  touch-action: none;
 }
 
 .bg {
@@ -25,8 +38,13 @@
 
 .wave {
   fill: none;
-  stroke: #0b6e4f;
   stroke-width: 2;
+}
+
+.scrub {
+  stroke: #334155;
+  stroke-width: 1;
+  stroke-dasharray: 3 2;
 }
 
 .muted {

@@ -7,17 +7,35 @@
   <app-lab-toolbar
     [tool]="editor.tool()"
     [analysisMode]="editor.analysisMode()"
+    [tStop]="editor.tStop()"
+    [dt]="editor.dt()"
     [canUndo]="editor.canUndo()"
     [canRedo]="editor.canRedo()"
+    [canDelete]="editor.selectedIds().length > 0"
     [busy]="sim.busy()"
+    [selectedPreset]="editor.activeExamplePreset()"
     (toolChange)="editor.setTool($event)"
     (analysisModeChange)="editor.setAnalysisMode($event)"
+    (tStopChange)="editor.setTStop($event)"
+    (dtChange)="editor.setDt($event)"
     (undo)="editor.undo()"
     (redo)="editor.redo()"
-    (ledPreset)="editor.loadLedPreset()"
-    (rcPreset)="editor.loadRcPreset()"
+    (duplicate)="editor.duplicateSelected()"
+    (remove)="editor.deleteSelected()"
+    (loadPreset)="onLoadPreset($event)"
+    (exportJson)="editor.exportJson()"
+    (importJson)="onImport($event)"
     (newSchematic)="editor.newSchematic()"
     (run)="sim.run()"
+  />
+
+  <app-circuit-tabs
+    [slots]="editor.slots()"
+    [activeId]="editor.activeSlotId()"
+    (activate)="editor.switchCircuitTab($event)"
+    (add)="editor.addCircuitTab()"
+    (close)="editor.closeCircuitTab($event)"
+    (rename)="editor.renameCircuitTab($event.id, $event.name)"
   />
 
   @if (sim.error()) {
@@ -39,14 +57,17 @@
         [tool]="editor.tool()"
         [placeModel]="editor.placeModel()"
         [selectedId]="editor.selectedId()"
+        [selectedIds]="editor.selectedIds()"
         [result]="sim.result()"
+        [scrubIndex]="sim.scrubIndex()"
         [probeTarget]="editor.probeTarget()"
         [highlightedIds]="sim.highlightedIds()"
         [highlightedNets]="sim.highlightedNets()"
         (docChange)="editor.onDocChange($event)"
-        (select)="editor.onSelect($event)"
+        (select)="editor.onSelect($event.id, $event.additive)"
         (probe)="editor.onProbe($event)"
         (placeAt)="editor.onPlaceAt($event)"
+        (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
       />
       <p class="hint">{{ 'lab.hint' | t }}</p>
     </div>
@@ -54,6 +75,7 @@
     <aside class="side">
       <app-inspector-panel
         [selected]="editor.selected()"
+        [selectionCount]="editor.selectedIds().length"
         (paramChange)="editor.onParamChange($event)"
         (rotate)="editor.rotateSelected()"
         (remove)="editor.deleteSelected()"
@@ -62,7 +84,9 @@
       @if (editor.analysisMode() === 'tran') {
         <app-scope
           [tran]="sim.result()?.tran ?? null"
-          [preferredNet]="editor.probeTarget()?.kind === 'net' ? editor.probeTarget()!.id : null"
+          [probeTarget]="editor.probeTarget()"
+          [scrubIndex]="sim.scrubIndex()"
+          (scrubIndexChange)="sim.setScrubIndex($event)"
         />
       }
     </aside>

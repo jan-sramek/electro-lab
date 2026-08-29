@@ -13,6 +13,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 })
 export class InspectorPanelComponent {
   readonly selected = input<SchematicComponent | null>(null);
+  readonly selectionCount = input(0);
   readonly paramChange = output<{ key: string; value: number | boolean }>();
   readonly rotate = output<void>();
   readonly remove = output<void>();

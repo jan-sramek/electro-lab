@@ -1,10 +1,30 @@
 <div class="scope">
   <h2>{{ 'lab.scope.title' | t }}</h2>
-  @if (series(); as s) {
-    <p class="meta">{{ 'lab.scope.vsTime' | t: { id: s.id } }}</p>
-    <svg viewBox="0 0 320 120" class="plot" [attr.aria-label]="'lab.scope.ariaWaveform' | t">
+  @if (channels().length) {
+    <ul class="legend">
+      @for (c of channels(); track c.kind + c.id) {
+        <li [style.color]="c.color">
+          {{
+            c.kind === 'voltage'
+              ? ('lab.scope.channelV' | t: { id: c.id })
+              : ('lab.scope.channelI' | t: { id: c.id })
+          }}
+        </li>
+      }
+    </ul>
+    <p class="meta">{{ 'lab.scope.scrubTime' | t: { t: timeLabel() } }}</p>
+    <svg
+      viewBox="0 0 320 120"
+      class="plot"
+      [attr.aria-label]="'lab.scope.ariaWaveform' | t"
+      (pointerdown)="onPlotPointer($event)"
+      (pointermove)="$event.buttons && onPlotPointer($event)"
+    >
       <rect x="0" y="0" width="320" height="120" class="bg" />
-      <path [attr.d]="path()" class="wave" />
+      @for (p of paths(); track p.kind + p.id) {
+        <path [attr.d]="p.d" class="wave" [attr.stroke]="p.color" />
+      }
+      <line [attr.x1]="scrubX()" y1="0" [attr.x2]="scrubX()" y2="120" class="scrub" />
     </svg>
   } @else {
     <p class="muted">{{ 'lab.scope.empty' | t }}</p>

@@ -6,7 +6,8 @@ export type DiagnosticCode =
   | 'no_ground'
   | 'ground_disconnected'
   | 'floating_component'
-  | 'dc_capacitor_island';
+  | 'dc_capacitor_island'
+  | 'shorted_voltage_source';
 
 export interface CircuitDiagnostic {
   code: DiagnosticCode;
@@ -81,8 +82,18 @@ export function diagnoseSchematic(
     out.push(diag('floating_component', 'error', floating.map((c) => c.id)));
   }
 
+  const nettled = assignNets(doc);
+  const shortedVs = nettled.components.filter((c) => {
+    if (c.modelKey !== 'battery' && c.modelKey !== 'pulse_source') return false;
+    const p = c.pins['p']?.net;
+    const n = c.pins['n']?.net;
+    return !!p && !!n && p === n;
+  });
+  if (shortedVs.length > 0) {
+    out.push(diag('shorted_voltage_source', 'error', shortedVs.map((c) => c.id)));
+  }
+
   if (mode === 'dcOp') {
-    const nettled = assignNets(doc);
     const netModels = new Map<string, { models: string[]; ids: string[] }>();
     for (const c of nettled.components) {
       if (!isSimElement(c.modelKey)) continue;

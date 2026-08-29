@@ -31,6 +31,13 @@
         {{ 'lab.inspector.delete' | t }}
       </button>
     </div>
+  } @else if (selectionCount() > 1) {
+    <p class="meta">{{ 'lab.inspector.multi' | t: { count: selectionCount() } }}</p>
+    <div class="actions">
+      <button type="button" class="danger" (click)="remove.emit()">
+        {{ 'lab.inspector.delete' | t }}
+      </button>
+    </div>
   } @else {
     <p class="muted">{{ 'lab.inspector.empty' | t }}</p>
   }

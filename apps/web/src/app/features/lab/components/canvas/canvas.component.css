@@ -25,6 +25,11 @@
   cursor: help;
 }
 
+.schematic.drop-target {
+  outline: 2px solid #0b6e4f;
+  outline-offset: -2px;
+}
+
 .bg {
   fill: transparent;
 }
@@ -40,69 +45,27 @@
   stroke: #b91c1c;
 }
 
-.junction {
-  fill: #334155;
-  pointer-events: none;
-}
-
-.junction-node {
-  fill: #12263a;
-  stroke: #12263a;
-}
-
-.symbol.error .junction-node {
-  fill: #b91c1c;
-  stroke: #b91c1c;
-}
-
 .symbol {
   cursor: grab;
 }
 
-.symbol.selected .sym,
+.hit {
+  fill: transparent;
+  stroke: none;
+  pointer-events: all;
+}
+
 .symbol.selected .label {
-  stroke: #0b6e4f;
+  fill: #0b6e4f;
 }
 
-.symbol.probed .sym {
-  stroke: #1d4ed8;
-}
-
-.symbol.error .sym,
 .symbol.error .label {
-  stroke: #b91c1c;
+  fill: #b91c1c;
 }
 
-.sym {
-  stroke: #12263a;
-  stroke-width: 2;
-  fill: none;
-}
-
-.sym.thick {
-  stroke-width: 3;
-}
-
-.sym.fill {
-  fill: #12263a;
-}
-
-.led {
-  stroke: #12263a;
-  stroke-width: 2;
-}
-
-.led-on {
-  fill: #fb7185;
-}
-
-.led-off {
-  fill: #e2e8f0;
-}
-
-.diode {
-  fill: #12263a;
-  stroke: #12263a;
+.junction {
+  fill: #334155;
+  pointer-events: none;
 }
 
 .label {

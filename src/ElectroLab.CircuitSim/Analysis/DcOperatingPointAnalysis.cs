@@ -42,7 +42,7 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
         foreach (var (el, _) in models)
         {
             if (el.Model.Equals("capacitor", StringComparison.OrdinalIgnoreCase))
-                warnings.Add($"{el.Id}: capacitor is open-circuit in DC analysis (transient not enabled yet).");
+                warnings.Add($"{el.Id}: capacitor is open-circuit in DC analysis (use Transient for charging).");
         }
 
         for (var iter = 0; iter < 6; iter++)

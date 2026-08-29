@@ -55,6 +55,7 @@ public sealed class TransientAnalysis : IAnalysis
         for (var step = 0; step <= steps; step++)
         {
             var t = Math.Min(step * opts.Dt, opts.TStop);
+            state.Time = t;
             var ctx = new StampContext(nodes, circuit.Ground);
             foreach (var (el, model) in models)
                 model.RegisterExtras(el, ctx);
@@ -158,6 +159,7 @@ public sealed class TransientAnalysis : IAnalysis
 /// <summary>Companion-model state carried between transient steps.</summary>
 public sealed class TransientState
 {
+    public double Time { get; set; }
     public DcBiasHint Bias { get; } = new();
     public Dictionary<string, double> CapVoltage { get; } = new(StringComparer.Ordinal);
     public Dictionary<string, double> IndCurrent { get; } = new(StringComparer.Ordinal);

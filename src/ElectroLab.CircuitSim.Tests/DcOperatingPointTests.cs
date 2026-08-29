@@ -174,6 +174,77 @@ public class DcOperatingPointTests
         Assert.True(series.Values[^1] > 4.5, $"final Vc={series.Values[^1]} should approach 5V");
     }
 
+    [Fact]
+    public void Transient_InductorCurrentRamps()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("L1", "inductor", Pins(("a", "n1"), ("b", "n2")), P(("l", 0.01))),
+                El("R1", "resistor", Pins(("a", "n2"), ("b", "gnd")), P(("r", 100)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new ElectroLab.CircuitSim.Analysis.AnalysisOptions
+        {
+            TStop = 0.002,
+            Dt = 2e-5
+        });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var iL = result.Tran!.BranchCurrents.First(s => s.Id == "L1");
+        Assert.True(iL.Values[0] < 0.01, "starts near 0");
+        Assert.True(iL.Values[^1] > 0.03, $"final iL={iL.Values[^1]} should rise");
+    }
+
+    [Fact]
+    public void Potentiometer_DividerAt30Percent()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 10))),
+                El("POT1", "potentiometer", Pins(("a", "n1"), ("w", "wiper"), ("b", "gnd")), P(("r", 10000), ("pos", 0.3)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        // Vw ≈ 10 * (1 - 0.3) from top? Ra = r*pos from a–w, Rb = r*(1-pos) from w–b.
+        // With a at 10V and b at 0: Vw = 10 * Rb/(Ra+Rb) = 10 * 0.7 = 7
+        Assert.Equal(7.0, result.DcOp!.NodeVoltages["wiper"], 2);
+    }
+
+    [Fact]
+    public void PulseSource_StepsDuringTransient()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VP1", "pulse_source", Pins(("p", "n1"), ("n", "gnd")),
+                    P(("v1", 0), ("v2", 5), ("td", 0.001), ("pw", 0.002))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "gnd")), P(("r", 1000)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new ElectroLab.CircuitSim.Analysis.AnalysisOptions
+        {
+            TStop = 0.005,
+            Dt = 5e-5
+        });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var vn1 = result.Tran!.NodeVoltages.First(s => s.Id == "n1");
+        Assert.True(vn1.Values[0] < 0.5);
+        var mid = vn1.Values[vn1.Values.Count / 2];
+        Assert.True(mid > 4.0, $"mid pulse V={mid}");
+    }
+
     private static ElementInstance El(
         string id,
         string model,

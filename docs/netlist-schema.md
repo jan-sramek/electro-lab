@@ -56,6 +56,8 @@
 | `current_source` | `p`, `n` | `i` | Ideal I | Same |
 | `capacitor` | `a`, `b` | `c` | Open (+warning) | BE companion |
 | `inductor` | `a`, `b` | `l` | Near-short | BE companion |
+| `potentiometer` | `a`, `w`, `b` | `r`, `pos` (0–1) | Two series R | Same |
+| `pulse_source` | `p`, `n` | `v1`, `v2`, `td`, `pw` | Uses `v1` | Pulse `v2` for `pw` after `td` |
 
 Schematic-only (not sent to CircuitEngine): Lab `ground` symbol forces connected nets to `circuit.ground`.
 

@@ -15,28 +15,48 @@ export const EN_FALLBACK: Record<string, string> = {
     'Some parts are unwired (highlighted). Connect every pin you need, or delete unused parts.',
   'diag.dc_capacitor_island':
     'In DC mode capacitors are open. Use Transient, or add a resistive path.',
+  'diag.shorted_voltage_source':
+    'A voltage source has both terminals on the same net (highlighted). Separate the pins.',
   'diag.singular_fallback':
     'Circuit cannot be solved. Check Ground is wired and there are no floating parts.',
 
   'lab.title': 'Circuit Lab',
   'lab.intro': 'Build a schematic, wire pins, and run DC or transient analysis.',
   'lab.hint':
-    'Place parts from the palette, switch to Wire and click two pins, then Run. In Wire mode, click an existing wire to add a T-junction. Wheel to zoom; Shift-drag to pan. In Select mode, click a wire to delete it.',
+    'Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. Ctrl/Cmd-click to multi-select; Ctrl+D duplicate; Ctrl+C/V copy/paste. In Wire mode, click an existing wire for a T-junction. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.',
 
   'lab.toolbar.select': 'Select',
   'lab.toolbar.wire': 'Wire',
   'lab.toolbar.probe': 'Probe',
   'lab.toolbar.dc': 'DC',
   'lab.toolbar.transient': 'Transient',
+  'lab.toolbar.tStop': 'tStop (s)',
+  'lab.toolbar.dt': 'dt (s)',
   'lab.toolbar.undo': 'Undo',
   'lab.toolbar.redo': 'Redo',
-  'lab.toolbar.ledPreset': 'LED preset',
-  'lab.toolbar.rcPreset': 'RC preset',
+  'lab.toolbar.duplicate': 'Duplicate',
+  'lab.toolbar.delete': 'Delete',
+  'lab.toolbar.presets': 'Example circuits',
+  'lab.toolbar.ledPreset': 'LED series (DC)',
+  'lab.toolbar.rcPreset': 'RC charge (transient)',
+  'lab.toolbar.potPreset': 'Potentiometer divider (DC)',
+  'lab.toolbar.pulsePreset': 'Pulse into RC (transient)',
+  'lab.toolbar.export': 'Export',
+  'lab.toolbar.import': 'Import',
   'lab.toolbar.new': 'New',
   'lab.toolbar.run': 'Run',
   'lab.toolbar.running': 'Running…',
 
+  'lab.slots.saveAs': 'Save as',
+  'lab.slots.namePlaceholder': 'Circuit name',
+  'lab.slots.save': 'Save',
+
+  'lab.tabs.aria': 'Circuit tabs',
+  'lab.tabs.add': 'New circuit tab',
+  'lab.tabs.close': 'Close circuit tab',
+
   'lab.palette.title': 'Parts',
+  'lab.palette.dragHint': 'Drag a symbol onto the canvas, or click then click to place.',
 
   'lab.symbol.battery': 'Battery',
   'lab.symbol.resistor': 'Resistor',
@@ -46,6 +66,8 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.symbol.current_source': 'Current source',
   'lab.symbol.capacitor': 'Capacitor',
   'lab.symbol.inductor': 'Inductor',
+  'lab.symbol.potentiometer': 'Potentiometer',
+  'lab.symbol.pulse_source': 'Pulse source',
   'lab.symbol.ground': 'Ground',
   'lab.symbol.junction': 'Junction',
 
@@ -57,10 +79,16 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.param.current': 'Current',
   'lab.param.capacitance': 'Capacitance',
   'lab.param.inductance': 'Inductance',
+  'lab.param.wiper': 'Wiper (0–1)',
+  'lab.param.vInitial': 'Initial V',
+  'lab.param.vPulse': 'Pulse V',
+  'lab.param.delay': 'Delay',
+  'lab.param.pulseWidth': 'Pulse width',
 
   'lab.inspector.title': 'Inspector',
   'lab.inspector.rotate': 'Rotate 90°',
   'lab.inspector.delete': 'Delete',
+  'lab.inspector.multi': '{count} parts selected',
   'lab.inspector.empty': 'Select a component to edit its parameters.',
 
   'lab.results.title': 'Results',
@@ -68,19 +96,25 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.results.branchCurrents': 'Branch currents',
   'lab.results.tranSamples': 'Transient: {count} samples (see scope).',
   'lab.results.finalNodeVoltages': 'Final node voltages',
+  'lab.results.finalBranchCurrents': 'Final branch currents',
   'lab.results.empty': 'Run a simulation to see results.',
 
   'lab.scope.title': 'Scope',
   'lab.scope.vsTime': '{id} vs time',
+  'lab.scope.channelV': '{id} (V)',
+  'lab.scope.channelI': '{id} (mA)',
+  'lab.scope.scrubTime': 't = {t} s',
   'lab.scope.ariaWaveform': 'Transient waveform',
   'lab.scope.empty': 'Run transient analysis to plot waveforms.',
 
   'lab.canvas.aria': 'Schematic canvas',
 
   'lab.probe.netFinal': 'Net {id} (final): {v} V',
+  'lab.probe.netAt': 'Net {id} @ {t} s: {v} V',
   'lab.probe.netEmpty': 'Net {id}: —',
   'lab.probe.netDc': 'Net {id}: {v} V',
   'lab.probe.branchFinal': '{id} (final): {i} mA',
+  'lab.probe.branchAt': '{id} @ {t} s: {i} mA',
   'lab.probe.branchEmpty': '{id}: —',
   'lab.probe.branchDc': '{id}: {i} mA',
 

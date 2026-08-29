@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
-import { LabEditorStore } from '../../services/lab-editor.store';
+import { LabEditorStore, ExamplePresetId } from '../../services/lab-editor.store';
 import { CircuitSimulationFacade } from '../../services/circuit-simulation.facade';
 import { SchematicPersistence } from '../../services/schematic-persistence';
 import { ComponentPaletteComponent } from '../../components/palette/palette.component';
@@ -9,6 +9,7 @@ import { LabToolbarComponent } from '../../components/toolbar/toolbar.component'
 import { ResultsPanelComponent } from '../../components/results-panel/results-panel.component';
 import { ProbeSummaryComponent } from '../../components/probe-summary/probe-summary.component';
 import { ScopeComponent } from '../../components/scope/scope.component';
+import { CircuitTabsComponent } from '../../components/circuit-tabs/circuit-tabs.component';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
@@ -22,6 +23,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
     ResultsPanelComponent,
     ProbeSummaryComponent,
     ScopeComponent,
+    CircuitTabsComponent,
     TranslatePipe
   ],
   providers: [SchematicPersistence, LabEditorStore, CircuitSimulationFacade],
@@ -36,9 +38,37 @@ export class LabPageComponent implements OnInit {
     this.editor.initFromStorage();
   }
 
+  onLoadPreset(id: ExamplePresetId): void {
+    switch (id) {
+      case 'led':
+        this.editor.loadLedPreset();
+        break;
+      case 'rc':
+        this.editor.loadRcPreset();
+        break;
+      case 'pot':
+        this.editor.loadPotPreset();
+        break;
+      case 'pulse':
+        this.editor.loadPulsePreset();
+        break;
+    }
+  }
+
+  async onImport(file: File): Promise<void> {
+    try {
+      await this.editor.importJson(file);
+    } catch {
+      /* invalid file */
+    }
+  }
+
   @HostListener('window:keydown', ['$event'])
   onKey(ev: KeyboardEvent): void {
+    const tag = (ev.target as HTMLElement)?.tagName;
+    const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
     const mod = ev.ctrlKey || ev.metaKey;
+
     if (mod && ev.key.toLowerCase() === 'z' && !ev.shiftKey) {
       ev.preventDefault();
       this.editor.undo();
@@ -48,10 +78,18 @@ export class LabPageComponent implements OnInit {
     ) {
       ev.preventDefault();
       this.editor.redo();
+    } else if (mod && ev.key.toLowerCase() === 'd' && !inField) {
+      ev.preventDefault();
+      this.editor.duplicateSelected();
+    } else if (mod && ev.key.toLowerCase() === 'c' && !inField) {
+      ev.preventDefault();
+      this.editor.copySelected();
+    } else if (mod && ev.key.toLowerCase() === 'v' && !inField) {
+      ev.preventDefault();
+      this.editor.pasteClipboard();
     } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
-      const tag = (ev.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (this.editor.selectedId()) {
+      if (inField) return;
+      if (this.editor.selectedIds().length) {
         ev.preventDefault();
         this.editor.deleteSelected();
       }

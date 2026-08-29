@@ -36,7 +36,14 @@ Optional streaming (WebSocket/SSE) only if later transient/live modes need it.
 
 ## Deferred (by design)
 
-- **AC analysis** and richer multi-channel scope UX.
+- **AC analysis** product mode.
 - Learn catalog / quizzes and LearningApi auth/progress (i18n slice exists).
 - SPICE-level semiconductor models (op-amps, BJT/MOS).
 - WebSocket / SSE streaming for live transient playback.
+
+## Lab v1 (done)
+
+- DC + fixed-step transient with editable `tStop`/`dt`
+- Multi-trace scope with time scrub driving canvas/probe
+- Duplicate / clipboard / JSON import-export; named local circuit slots
+- Teaching pack includes potentiometer and pulse voltage source

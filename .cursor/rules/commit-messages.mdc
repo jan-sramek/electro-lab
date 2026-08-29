@@ -1,0 +1,20 @@
+---
+description: Brief, human-readable git commit messages
+alwaysApply: true
+---
+# Commit messages
+
+When creating git commits for this repo:
+
+- Prefer **one short sentence** (or a short subject + optional one-line body only when needed).
+- Write like a human teammate: plain language, focus on **why** / outcome, not a file dump.
+- Avoid buzzwords, stacked clauses, and changelog-style lists in the subject.
+- No trailing period on the subject unless it reads more naturally with one.
+- Match existing history tone when the repo already has a clear style.
+
+Examples:
+
+- ✅ `Wire Lab UI through i18n keys`
+- ✅ `Fix ground diagnostics for floating nets`
+- ❌ `Add Lab simulator, LearningApi i18n, and Compose stack. Ship the Angular Lab editor with DC/transient analysis...`
+- ❌ `Update files for translation migration and related services`

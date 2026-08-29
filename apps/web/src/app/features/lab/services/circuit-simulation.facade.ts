@@ -27,6 +27,8 @@ export class CircuitSimulationFacade {
   readonly warnings = signal<string[]>([]);
   readonly highlightComponentIds = signal<string[]>([]);
   readonly highlightNetIds = signal<string[]>([]);
+  /** Sample index into tran.time for canvas/probe scrubbing. */
+  readonly scrubIndex = signal(0);
 
   readonly highlightedIds = computed(() => {
     const fromDiag = this.highlightComponentIds();
@@ -45,19 +47,26 @@ export class CircuitSimulationFacade {
     if (!p || !res) return null;
 
     if (res.analysisType === 'tran' && res.tran) {
+      const idx = Math.max(0, Math.min(this.scrubIndex(), res.tran.time.length - 1));
+      const t = res.tran.time[idx];
       if (p.kind === 'net') {
         const series = res.tran.nodeVoltages.find((s) => s.id === p.id);
-        const last = series?.values.at(-1);
-        return typeof last === 'number'
-          ? this.i18n.t('lab.probe.netFinal', { id: p.id, v: last.toFixed(4) })
+        const v = series?.values[idx];
+        return typeof v === 'number'
+          ? this.i18n.t('lab.probe.netAt', {
+              id: p.id,
+              v: v.toFixed(4),
+              t: t.toExponential(2)
+            })
           : this.i18n.t('lab.probe.netEmpty', { id: p.id });
       }
       const series = res.tran.branchCurrents.find((s) => s.id === p.id);
-      const last = series?.values.at(-1);
-      return typeof last === 'number'
-        ? this.i18n.t('lab.probe.branchFinal', {
+      const i = series?.values[idx];
+      return typeof i === 'number'
+        ? this.i18n.t('lab.probe.branchAt', {
             id: p.id,
-            i: (last * 1000).toFixed(3)
+            i: (i * 1000).toFixed(3),
+            t: t.toExponential(2)
           })
         : this.i18n.t('lab.probe.branchEmpty', { id: p.id });
     }
@@ -107,6 +116,9 @@ export class CircuitSimulationFacade {
         this.busy.set(false);
         const warn = [...(res.warnings ?? [])];
         this.warnings.set(warn);
+        if (res.tran?.time?.length) {
+          this.scrubIndex.set(res.tran.time.length - 1);
+        }
         if (!res.ok) {
           const errs = res.errors ?? [];
           this.error.set(this.mapEngineErrors(errs));
@@ -119,9 +131,15 @@ export class CircuitSimulationFacade {
     effect(() => {
       this.editor.revision();
       this.editor.analysisMode();
+      this.editor.tStop();
+      this.editor.dt();
       this.editor.doc();
       this.run();
     });
+  }
+
+  setScrubIndex(idx: number): void {
+    this.scrubIndex.set(idx);
   }
 
   run(): void {
@@ -154,7 +172,11 @@ export class CircuitSimulationFacade {
       mode === 'tran'
         ? {
             schemaVersion: 1,
-            analysis: { type: 'tran', tStop: 0.005, dt: 5e-5 },
+            analysis: {
+              type: 'tran',
+              tStop: this.editor.tStop(),
+              dt: this.editor.dt()
+            },
             circuit
           }
         : {

@@ -17,8 +17,10 @@ import {
   splitWireAtJunction
 } from '../../data/schematic.model';
 import { SYMBOL_LIBRARY } from '../../data/symbol-library';
+import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 
 interface DragState {
   id: string;
@@ -29,7 +31,7 @@ interface DragState {
 @Component({
   selector: 'app-schematic-canvas',
   standalone: true,
-  imports: [DecimalPipe, TranslatePipe],
+  imports: [DecimalPipe, TranslatePipe, SymbolGlyphComponent],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css'
 })
@@ -38,17 +40,21 @@ export class SchematicCanvasComponent {
   readonly tool = input.required<EditorTool>();
   readonly placeModel = input<string | null>(null);
   readonly selectedId = input<string | null>(null);
+  readonly selectedIds = input<string[]>([]);
   readonly result = input<SimulateResponse | null>(null);
+  readonly scrubIndex = input(0);
   readonly probeTarget = input<{ kind: 'net' | 'component'; id: string } | null>(null);
   readonly highlightedIds = input<string[]>([]);
   readonly highlightedNets = input<string[]>([]);
 
   readonly docChange = output<SchematicDocument>();
-  readonly select = output<string | null>();
+  readonly select = output<{ id: string | null; additive: boolean }>();
   readonly probe = output<{ kind: 'net' | 'component'; id: string } | null>();
   readonly placeAt = output<{ x: number; y: number }>();
+  readonly dropPlace = output<{ modelKey: string; x: number; y: number }>();
 
   readonly wireFrom = signal<PinRef | null>(null);
+  readonly dragOver = signal(false);
   readonly lib = SYMBOL_LIBRARY;
 
   /** viewBox: x y w h */
@@ -125,6 +131,36 @@ export class SchematicCanvasComponent {
     this.view.set({ x: nx, y: ny, w: nw, h: nh });
   }
 
+  onDragOver(ev: DragEvent): void {
+    const types = ev.dataTransfer?.types;
+    if (!types) return;
+    const list = [...types];
+    if (!list.includes(PALETTE_DRAG_MIME) && !list.includes('text/plain')) return;
+    ev.preventDefault();
+    if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
+    this.dragOver.set(true);
+  }
+
+  onDragLeave(ev: DragEvent): void {
+    const svg = ev.currentTarget as Element;
+    const related = ev.relatedTarget as Node | null;
+    if (related && svg.contains(related)) return;
+    this.dragOver.set(false);
+  }
+
+  onDrop(ev: DragEvent): void {
+    ev.preventDefault();
+    this.dragOver.set(false);
+    const modelKey =
+      ev.dataTransfer?.getData(PALETTE_DRAG_MIME) ||
+      ev.dataTransfer?.getData('text/plain') ||
+      '';
+    if (!modelKey || !SYMBOL_LIBRARY[modelKey]) return;
+    const svg = ev.currentTarget as SVGSVGElement;
+    const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
+    this.dropPlace.emit({ modelKey, x: snap(pt.x), y: snap(pt.y) });
+  }
+
   onBackgroundPointerDown(ev: PointerEvent): void {
     if (ev.button === 1 || ev.shiftKey) {
       const v = this.view();
@@ -140,7 +176,7 @@ export class SchematicCanvasComponent {
       return;
     }
     if (this.tool() === 'select') {
-      this.select.emit(null);
+      this.select.emit({ id: null, additive: false });
       this.probe.emit(null);
     }
     if (this.tool() === 'wire') {
@@ -177,13 +213,13 @@ export class SchematicCanvasComponent {
     const tool = this.tool();
 
     if (tool === 'probe') {
-      this.select.emit(c.id);
+      this.select.emit({ id: c.id, additive: false });
       this.probe.emit({ kind: 'component', id: c.id });
       return;
     }
     if (tool === 'wire' || tool === 'place') return;
 
-    this.select.emit(c.id);
+    this.select.emit({ id: c.id, additive: ev.ctrlKey || ev.metaKey });
     const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
     const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
     this.drag = { id: c.id, ox: pt.x - c.x, oy: pt.y - c.y };
@@ -223,7 +259,12 @@ export class SchematicCanvasComponent {
       const c = this.nettled().components.find((x) => x.id === componentId);
       const net = c?.pins[pin]?.net;
       if (net) this.probe.emit({ kind: 'net', id: net });
-      this.select.emit(componentId);
+      this.select.emit({ id: componentId, additive: false });
+      return;
+    }
+
+    if (tool === 'select') {
+      this.select.emit({ id: componentId, additive: ev.ctrlKey || ev.metaKey });
       return;
     }
 
@@ -295,8 +336,9 @@ export class SchematicCanvasComponent {
     }
     if (res?.tran) {
       const s = res.tran.nodeVoltages.find((x) => x.id === net);
-      const last = s?.values.at(-1);
-      return typeof last === 'number' ? last : null;
+      const idx = Math.max(0, Math.min(this.scrubIndex(), (s?.values.length ?? 1) - 1));
+      const v = s?.values[idx];
+      return typeof v === 'number' ? v : null;
     }
     return null;
   }
@@ -309,15 +351,21 @@ export class SchematicCanvasComponent {
     }
     if (res?.tran) {
       const s = res.tran.branchCurrents.find((x) => x.id === id);
-      const last = s?.values.at(-1);
-      return typeof last === 'number' ? last : null;
+      const idx = Math.max(0, Math.min(this.scrubIndex(), (s?.values.length ?? 1) - 1));
+      const i = s?.values[idx];
+      return typeof i === 'number' ? i : null;
     }
     return null;
   }
 
-  ledOn(id: string): boolean {
+  /**
+   * LED teaching brightness from branch current.
+   * 0 A → off; ~20 mA (and above) → full glow.
+   */
+  ledBrightness(id: string): number {
     const i = this.currentOf(id);
-    return typeof i === 'number' && i > 1e-6;
+    if (typeof i !== 'number' || i <= 1e-6) return 0;
+    return Math.min(1, i / 0.02);
   }
 
   pinPos(c: SchematicComponent, pinName: string): { x: number; y: number } {
@@ -325,6 +373,8 @@ export class SchematicCanvasComponent {
   }
 
   isSelected(id: string): boolean {
+    const multi = this.selectedIds();
+    if (multi.length) return multi.includes(id);
     return this.selectedId() === id;
   }
 
