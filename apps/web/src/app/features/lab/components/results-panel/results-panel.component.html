@@ -1,0 +1,36 @@
+<div class="results">
+  <h2>{{ 'lab.results.title' | t }}</h2>
+  @if (result()?.dcOp; as dc) {
+    <h3>{{ 'lab.results.nodeVoltages' | t }}</h3>
+    <ul>
+      @for (item of dc.nodeVoltages | keyvalue; track item.key) {
+        <li>
+          <code>{{ item.key }}</code> {{ item.value | number: '1.4-4' }} V
+        </li>
+      }
+    </ul>
+    <h3>{{ 'lab.results.branchCurrents' | t }}</h3>
+    <ul>
+      @for (item of dc.branchCurrents | keyvalue; track item.key) {
+        <li>
+          <code>{{ item.key }}</code> {{ item.value * 1000 | number: '1.3-3' }} mA
+        </li>
+      }
+    </ul>
+  } @else if (result()?.tran) {
+    <p class="muted">
+      {{ 'lab.results.tranSamples' | t: { count: result()!.tran!.time.length } }}
+    </p>
+    <h3>{{ 'lab.results.finalNodeVoltages' | t }}</h3>
+    <ul>
+      @for (s of result()!.tran!.nodeVoltages; track s.id) {
+        <li>
+          <code>{{ s.id }}</code>
+          {{ s.values.at(-1) !== undefined ? (s.values.at(-1)! | number: '1.4-4') + ' V' : '—' }}
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="muted">{{ 'lab.results.empty' | t }}</p>
+  }
+</div>

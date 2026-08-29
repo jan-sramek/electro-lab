@@ -1,0 +1,22 @@
+.results h2,
+.results h3 {
+  margin: 0 0 0.5rem;
+  color: #12263a;
+}
+
+.results h3 {
+  margin-top: 0.85rem;
+  font-size: 0.9rem;
+}
+
+.results ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 0.85rem;
+}

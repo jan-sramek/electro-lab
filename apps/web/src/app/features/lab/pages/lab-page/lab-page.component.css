@@ -1,0 +1,54 @@
+.lab-intro h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.6rem;
+  color: #12263a;
+}
+
+.lab-intro p {
+  margin: 0 0 1rem;
+  color: #5a6b7d;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.warn {
+  color: #b45309;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.lab-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) 220px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.side > * {
+  background: #f7f9fc;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+@media (max-width: 960px) {
+  .lab-layout {
+    grid-template-columns: 1fr;
+  }
+}

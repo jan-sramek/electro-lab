@@ -1,0 +1,31 @@
+.palette h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  color: #12263a;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+button {
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+button:hover {
+  border-color: #0b6e4f;
+  color: #0b6e4f;
+}

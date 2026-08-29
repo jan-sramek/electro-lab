@@ -1,0 +1,12 @@
+<div class="palette">
+  <h2>{{ 'lab.palette.title' | t }}</h2>
+  <ul>
+    @for (key of keys; track key) {
+      <li>
+        <button type="button" (click)="place.emit(key)">
+          {{ lib[key].label | t }}
+        </button>
+      </li>
+    }
+  </ul>
+</div>

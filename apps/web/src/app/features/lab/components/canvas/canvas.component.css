@@ -1,0 +1,149 @@
+.schematic {
+  width: 100%;
+  height: auto;
+  display: block;
+  background:
+    linear-gradient(#eef2f7 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, #eef2f7 1px, transparent 1px) 0 0 / 20px 20px,
+    #fbfcfe;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  touch-action: none;
+  user-select: none;
+}
+
+.schematic.tool-place,
+.schematic.tool-place .bg {
+  cursor: crosshair;
+}
+
+.schematic.tool-wire {
+  cursor: cell;
+}
+
+.schematic.tool-probe {
+  cursor: help;
+}
+
+.bg {
+  fill: transparent;
+}
+
+.wire {
+  stroke: #334155;
+  stroke-width: 2.5;
+  fill: none;
+  cursor: pointer;
+}
+
+.wire:hover {
+  stroke: #b91c1c;
+}
+
+.junction {
+  fill: #334155;
+  pointer-events: none;
+}
+
+.junction-node {
+  fill: #12263a;
+  stroke: #12263a;
+}
+
+.symbol.error .junction-node {
+  fill: #b91c1c;
+  stroke: #b91c1c;
+}
+
+.symbol {
+  cursor: grab;
+}
+
+.symbol.selected .sym,
+.symbol.selected .label {
+  stroke: #0b6e4f;
+}
+
+.symbol.probed .sym {
+  stroke: #1d4ed8;
+}
+
+.symbol.error .sym,
+.symbol.error .label {
+  stroke: #b91c1c;
+}
+
+.sym {
+  stroke: #12263a;
+  stroke-width: 2;
+  fill: none;
+}
+
+.sym.thick {
+  stroke-width: 3;
+}
+
+.sym.fill {
+  fill: #12263a;
+}
+
+.led {
+  stroke: #12263a;
+  stroke-width: 2;
+}
+
+.led-on {
+  fill: #fb7185;
+}
+
+.led-off {
+  fill: #e2e8f0;
+}
+
+.diode {
+  fill: #12263a;
+  stroke: #12263a;
+}
+
+.label {
+  fill: #334155;
+  font-size: 11px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.meas {
+  fill: #0b6e4f;
+  font-size: 10px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.pin {
+  fill: #fff;
+  stroke: #1d4ed8;
+  stroke-width: 2;
+  cursor: crosshair;
+}
+
+.pin:hover,
+.pin.active {
+  fill: #93c5fd;
+}
+
+.node-tag {
+  fill: #1d4ed8;
+  font-size: 11px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.node-tag.probed {
+  fill: #b45309;
+  font-weight: 700;
+}
+
+.node-tag.error-net {
+  fill: #b91c1c;
+  font-weight: 700;
+}

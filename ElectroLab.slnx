@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/services/" />
+  <Folder Name="/services/circuit-engine/">
+    <Project Path="services/circuit-engine/ElectroLab.CircuitEngine.csproj" />
+  </Folder>
+  <Folder Name="/services/learning-api/">
+    <Project Path="services/learning-api/ElectroLab.LearningApi.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ElectroLab.CircuitSim.Tests/ElectroLab.CircuitSim.Tests.csproj" />
+    <Project Path="src/ElectroLab.CircuitSim/ElectroLab.CircuitSim.csproj" />
+  </Folder>
+</Solution>

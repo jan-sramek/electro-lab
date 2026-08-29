@@ -1,0 +1,11 @@
+<header class="shell-header">
+  <a class="brand" routerLink="/lab">{{ 'shell.brand' | t }}</a>
+  <nav>
+    <a routerLink="/lab" routerLinkActive="active">{{ 'shell.nav.lab' | t }}</a>
+    <a routerLink="/learn" routerLinkActive="active">{{ 'shell.nav.learn' | t }}</a>
+    <a routerLink="/account" routerLinkActive="active">{{ 'shell.nav.account' | t }}</a>
+  </nav>
+</header>
+<main class="shell-main">
+  <router-outlet />
+</main>

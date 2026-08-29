@@ -1,0 +1,6 @@
+@ElectroLab.CircuitEngine_HostAddress = http://localhost:5149
+
+GET {{ElectroLab.CircuitEngine_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

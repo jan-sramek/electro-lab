@@ -4,6 +4,8 @@ node_modules/
 dist/
 bin/
 obj/
+bin_locked*/
+*_locked_bak*/
 .venv/
 __pycache__/
 
@@ -29,3 +31,11 @@ Thumbs.db
 *.log
 coverage/
 TestResults/
+
+# Local docs artifacts
+*.docx
+
+# Local scratch / vendor tools
+.build/
+.tools/
+diag-test*.txt

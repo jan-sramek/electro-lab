@@ -1,0 +1,70 @@
+<section class="lab">
+  <div class="lab-intro">
+    <h1>{{ 'lab.title' | t }}</h1>
+    <p>{{ 'lab.intro' | t }}</p>
+  </div>
+
+  <app-lab-toolbar
+    [tool]="editor.tool()"
+    [analysisMode]="editor.analysisMode()"
+    [canUndo]="editor.canUndo()"
+    [canRedo]="editor.canRedo()"
+    [busy]="sim.busy()"
+    (toolChange)="editor.setTool($event)"
+    (analysisModeChange)="editor.setAnalysisMode($event)"
+    (undo)="editor.undo()"
+    (redo)="editor.redo()"
+    (ledPreset)="editor.loadLedPreset()"
+    (rcPreset)="editor.loadRcPreset()"
+    (newSchematic)="editor.newSchematic()"
+    (run)="sim.run()"
+  />
+
+  @if (sim.error()) {
+    <p class="error">{{ sim.error() }}</p>
+  }
+  @if (sim.warnings().length) {
+    <p class="warn">{{ sim.warnings().join('; ') }}</p>
+  }
+  <app-probe-summary [summary]="sim.probeSummary()" />
+
+  <div class="lab-layout">
+    <aside class="side">
+      <app-component-palette (place)="editor.onPalettePlace($event)" />
+    </aside>
+
+    <div class="canvas-wrap">
+      <app-schematic-canvas
+        [doc]="editor.doc()"
+        [tool]="editor.tool()"
+        [placeModel]="editor.placeModel()"
+        [selectedId]="editor.selectedId()"
+        [result]="sim.result()"
+        [probeTarget]="editor.probeTarget()"
+        [highlightedIds]="sim.highlightedIds()"
+        [highlightedNets]="sim.highlightedNets()"
+        (docChange)="editor.onDocChange($event)"
+        (select)="editor.onSelect($event)"
+        (probe)="editor.onProbe($event)"
+        (placeAt)="editor.onPlaceAt($event)"
+      />
+      <p class="hint">{{ 'lab.hint' | t }}</p>
+    </div>
+
+    <aside class="side">
+      <app-inspector-panel
+        [selected]="editor.selected()"
+        (paramChange)="editor.onParamChange($event)"
+        (rotate)="editor.rotateSelected()"
+        (remove)="editor.deleteSelected()"
+      />
+      <app-results-panel [result]="sim.result()" />
+      @if (editor.analysisMode() === 'tran') {
+        <app-scope
+          [tran]="sim.result()?.tran ?? null"
+          [preferredNet]="editor.probeTarget()?.kind === 'net' ? editor.probeTarget()!.id : null"
+        />
+      }
+    </aside>
+  </div>
+</section>

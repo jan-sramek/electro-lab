@@ -1,0 +1,43 @@
+<div class="toolbar">
+  <div class="tool-group">
+    <button type="button" [class.active]="tool() === 'select'" (click)="toolChange.emit('select')">
+      {{ 'lab.toolbar.select' | t }}
+    </button>
+    <button type="button" [class.active]="tool() === 'wire'" (click)="toolChange.emit('wire')">
+      {{ 'lab.toolbar.wire' | t }}
+    </button>
+    <button type="button" [class.active]="tool() === 'probe'" (click)="toolChange.emit('probe')">
+      {{ 'lab.toolbar.probe' | t }}
+    </button>
+  </div>
+  <div class="tool-group">
+    <button
+      type="button"
+      [class.active]="analysisMode() === 'dcOp'"
+      (click)="analysisModeChange.emit('dcOp')"
+    >
+      {{ 'lab.toolbar.dc' | t }}
+    </button>
+    <button
+      type="button"
+      [class.active]="analysisMode() === 'tran'"
+      (click)="analysisModeChange.emit('tran')"
+    >
+      {{ 'lab.toolbar.transient' | t }}
+    </button>
+  </div>
+  <div class="tool-group">
+    <button type="button" (click)="undo.emit()" [disabled]="!canUndo()">
+      {{ 'lab.toolbar.undo' | t }}
+    </button>
+    <button type="button" (click)="redo.emit()" [disabled]="!canRedo()">
+      {{ 'lab.toolbar.redo' | t }}
+    </button>
+    <button type="button" (click)="ledPreset.emit()">{{ 'lab.toolbar.ledPreset' | t }}</button>
+    <button type="button" (click)="rcPreset.emit()">{{ 'lab.toolbar.rcPreset' | t }}</button>
+    <button type="button" (click)="newSchematic.emit()">{{ 'lab.toolbar.new' | t }}</button>
+    <button type="button" class="primary" (click)="run.emit()" [disabled]="busy()">
+      {{ busy() ? ('lab.toolbar.running' | t) : ('lab.toolbar.run' | t) }}
+    </button>
+  </div>
+</div>

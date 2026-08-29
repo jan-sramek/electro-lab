@@ -1,0 +1,12 @@
+<div class="scope">
+  <h2>{{ 'lab.scope.title' | t }}</h2>
+  @if (series(); as s) {
+    <p class="meta">{{ 'lab.scope.vsTime' | t: { id: s.id } }}</p>
+    <svg viewBox="0 0 320 120" class="plot" [attr.aria-label]="'lab.scope.ariaWaveform' | t">
+      <rect x="0" y="0" width="320" height="120" class="bg" />
+      <path [attr.d]="path()" class="wave" />
+    </svg>
+  } @else {
+    <p class="muted">{{ 'lab.scope.empty' | t }}</p>
+  }
+</div>

@@ -1,0 +1,35 @@
+.scope h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #12263a;
+}
+
+.meta {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.plot {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.bg {
+  fill: #f8fafc;
+}
+
+.wave {
+  fill: none;
+  stroke: #0b6e4f;
+  stroke-width: 2;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 0.85rem;
+}

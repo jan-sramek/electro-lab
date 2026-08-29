@@ -1,0 +1,37 @@
+<div class="inspector">
+  <h2>{{ 'lab.inspector.title' | t }}</h2>
+  @if (selected(); as c) {
+    <p class="meta"><code>{{ c.id }}</code> · {{ label() | t }}</p>
+    @for (p of params(); track p.key) {
+      @if (p.type === 'boolean') {
+        <label class="check">
+          <input
+            type="checkbox"
+            [ngModel]="c.params[p.key]"
+            (ngModelChange)="onBool(p.key, $event)"
+          />
+          {{ p.label | t }}
+        </label>
+      } @else {
+        <label>
+          {{ p.label | t }}@if (p.unit) { ({{ p.unit }}) }
+          <input
+            type="number"
+            [ngModel]="c.params[p.key]"
+            (ngModelChange)="onNumber(p.key, $event)"
+            [step]="p.step ?? 1"
+            [min]="p.min ?? null"
+          />
+        </label>
+      }
+    }
+    <div class="actions">
+      <button type="button" (click)="rotate.emit()">{{ 'lab.inspector.rotate' | t }}</button>
+      <button type="button" class="danger" (click)="remove.emit()">
+        {{ 'lab.inspector.delete' | t }}
+      </button>
+    </div>
+  } @else {
+    <p class="muted">{{ 'lab.inspector.empty' | t }}</p>
+  }
+</div>

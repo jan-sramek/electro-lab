@@ -1,0 +1,148 @@
+<svg
+  [attr.viewBox]="viewBox()"
+  class="schematic"
+  role="img"
+  [attr.aria-label]="'lab.canvas.aria' | t"
+  [class.tool-place]="tool() === 'place'"
+  [class.tool-wire]="tool() === 'wire'"
+  [class.tool-probe]="tool() === 'probe'"
+  (wheel)="onWheel($event)"
+>
+  <rect
+    class="bg"
+    [attr.x]="view().x"
+    [attr.y]="view().y"
+    [attr.width]="view().w"
+    [attr.height]="view().h"
+    (pointerdown)="onBackgroundPointerDown($event)"
+    (pointermove)="onBackgroundPointerMove($event)"
+    (pointerup)="onBackgroundPointerUp($event)"
+  />
+
+  @for (w of wirePaths(); track w.id) {
+    <path class="wire" [attr.d]="w.d" (click)="onWireClick($event, w.id)" />
+  }
+
+  @for (j of junctionDots(); track j.x + ',' + j.y) {
+    <circle class="junction" [attr.cx]="j.x" [attr.cy]="j.y" r="3.5" />
+  }
+
+  @for (c of nettled().components; track c.id) {
+    <g
+      class="symbol"
+      [class.selected]="isSelected(c.id)"
+      [class.probed]="isProbedComponent(c.id)"
+      [class.error]="isHighlighted(c.id)"
+      [attr.transform]="'translate(' + c.x + ',' + c.y + ') rotate(' + c.rotation + ')'"
+      (pointerdown)="onSymbolPointerDown($event, c)"
+      (pointermove)="onSymbolPointerMove($event)"
+      (pointerup)="onSymbolPointerUp($event)"
+    >
+      @switch (c.modelKey) {
+        @case ('battery') {
+          <line x1="-18" y1="-28" x2="-18" y2="28" class="sym" />
+          <line x1="-8" y1="-16" x2="-8" y2="16" class="sym thick" />
+          <line x1="8" y1="-28" x2="8" y2="28" class="sym" />
+          <line x1="18" y1="-16" x2="18" y2="16" class="sym thick" />
+        }
+        @case ('resistor') {
+          <polyline
+            class="sym"
+            fill="none"
+            points="-40,0 -28,-12 -16,12 -4,-12 8,12 20,-12 32,0 40,0"
+          />
+        }
+        @case ('switch') {
+          <circle cx="-30" cy="0" r="4" class="sym fill" />
+          <circle cx="30" cy="0" r="4" class="sym fill" />
+          @if (c.params['closed']) {
+            <line x1="-26" y1="0" x2="26" y2="0" class="sym thick" />
+          } @else {
+            <line x1="-26" y1="0" x2="18" y2="-16" class="sym thick" />
+          }
+        }
+        @case ('led') {
+          <line x1="0" y1="-36" x2="0" y2="-10" class="sym" />
+          <polygon
+            points="0,-10 -14,14 14,14"
+            class="led"
+            [class.led-on]="ledOn(c.id)"
+            [class.led-off]="!ledOn(c.id)"
+          />
+          <line x1="-14" y1="14" x2="14" y2="14" class="sym thick" />
+          <line x1="0" y1="14" x2="0" y2="40" class="sym" />
+        }
+        @case ('diode') {
+          <line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
+          <polygon points="-8,0 -8,-14 12,0 -8,14" class="diode" />
+          <line x1="12" y1="-14" x2="12" y2="14" class="sym thick" />
+          <line x1="12" y1="0" x2="36" y2="0" class="sym" />
+        }
+        @case ('current_source') {
+          <circle cx="0" cy="0" r="22" class="sym" />
+          <line x1="0" y1="12" x2="0" y2="-12" class="sym thick" />
+          <polyline class="sym" fill="none" points="-6,-4 0,-12 6,-4" />
+        }
+        @case ('capacitor') {
+          <line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
+          <line x1="-8" y1="-18" x2="-8" y2="18" class="sym thick" />
+          <line x1="8" y1="-18" x2="8" y2="18" class="sym thick" />
+          <line x1="8" y1="0" x2="36" y2="0" class="sym" />
+        }
+        @case ('inductor') {
+          <path
+            class="sym"
+            fill="none"
+            d="M -40 0 L -28 0 C -28 -14, -14 -14, -14 0 C -14 -14, 0 -14, 0 0 C 0 -14, 14 -14, 14 0 C 14 -14, 28 -14, 28 0 L 40 0"
+          />
+        }
+        @case ('ground') {
+          <line x1="0" y1="-20" x2="0" y2="0" class="sym" />
+          <line x1="-16" y1="0" x2="16" y2="0" class="sym thick" />
+          <line x1="-10" y1="8" x2="10" y2="8" class="sym" />
+          <line x1="-4" y1="16" x2="4" y2="16" class="sym" />
+        }
+        @case ('junction') {
+          <circle cx="0" cy="0" r="4" class="junction-node" />
+        }
+        @default {
+          <rect x="-24" y="-16" width="48" height="32" class="sym" />
+        }
+      }
+
+      @if (c.modelKey !== 'junction') {
+        <text x="0" y="52" text-anchor="middle" class="label">{{ c.id }}</text>
+      }
+      @if (c.modelKey !== 'junction' && currentOf(c.id) !== null) {
+        <text x="0" y="66" text-anchor="middle" class="meas">
+          {{ currentOf(c.id)! * 1000 | number: '1.1-2' }} mA
+        </text>
+      }
+    </g>
+
+    @for (pinName of pinNames(c); track pinName) {
+      @let pos = pinPos(c, pinName);
+      <circle
+        class="pin"
+        [class.active]="isWireFrom(c.id, pinName)"
+        [attr.cx]="pos.x"
+        [attr.cy]="pos.y"
+        r="6"
+        (click)="onPinClick($event, c.id, pinName)"
+      />
+    }
+  }
+
+  @for (tag of netTags(); track tag.net) {
+    <text
+      class="node-tag"
+      [class.probed]="isProbedNet(tag.net)"
+      [class.error-net]="isHighlightedNet(tag.net)"
+      [attr.x]="tag.x"
+      [attr.y]="tag.y"
+    >
+      {{ tag.net }}
+      {{ voltageOf(tag.net) !== null ? (voltageOf(tag.net)! | number: '1.2-2') + ' V' : '' }}
+    </text>
+  }
+</svg>

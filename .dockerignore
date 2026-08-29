@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/.git/
+**/*.md
+**/ElectroLab_Software_Analysis.docx
