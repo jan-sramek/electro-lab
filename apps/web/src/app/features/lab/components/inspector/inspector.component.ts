@@ -17,10 +17,16 @@ export class InspectorPanelComponent {
   readonly paramChange = output<{ key: string; value: number | boolean }>();
   readonly rotate = output<void>();
   readonly remove = output<void>();
+  readonly replaceLed = output<void>();
 
   readonly label = computed(() => {
     const c = this.selected();
     return c ? (SYMBOL_LIBRARY[c.modelKey]?.label ?? c.modelKey) : '';
+  });
+
+  readonly ledBurned = computed(() => {
+    const c = this.selected();
+    return !!c && c.modelKey === 'led' && !!c.params['burned'];
   });
 
   readonly params = computed((): ParamDef[] => {

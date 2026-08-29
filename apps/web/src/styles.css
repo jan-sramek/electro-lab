@@ -12,3 +12,8 @@ body {
   background: #ffffff;
   color: #12263a;
 }
+
+/* Keep layout from shifting when page scrollbar appears/disappears. */
+html {
+  scrollbar-gutter: stable;
+}

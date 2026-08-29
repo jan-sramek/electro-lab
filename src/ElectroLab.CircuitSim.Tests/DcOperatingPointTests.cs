@@ -50,6 +50,33 @@ public class DcOperatingPointTests
     }
 
     [Fact]
+    public void BurnedLed_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "n2")), P(("r", 10))),
+                El(
+                    "D1",
+                    "led",
+                    Pins(("a", "n2"), ("c", "gnd")),
+                    P(("vf", 2.0), ("ron", 20)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["D1"]) < 1e-9);
+        Assert.True(Math.Abs(result.DcOp.BranchCurrents["R1"]) < 1e-9);
+        Assert.Equal(5, result.DcOp.NodeVoltages["n1"], 3);
+    }
+
+    [Fact]
     public void OpenSwitch_BlocksCurrent()
     {
         var circuit = new Circuit

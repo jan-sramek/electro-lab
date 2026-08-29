@@ -1,46 +1,48 @@
-<div class="tabs" role="tablist" [attr.aria-label]="'lab.tabs.aria' | t">
-  @for (s of slots(); track s.id) {
-    <div
-      class="tab"
-      role="tab"
-      [class.active]="isActive(s.id)"
-      [attr.aria-selected]="isActive(s.id)"
-      (click)="onSelect(s.id)"
-      (dblclick)="startRename($event, s)"
-    >
-      @if (editingId() === s.id) {
-        <input
-          class="rename"
-          type="text"
-          [ngModel]="draftName()"
-          (ngModelChange)="draftName.set($event)"
-          (click)="$event.stopPropagation()"
-          (keydown.enter)="commitRename()"
-          (keydown.escape)="cancelRename()"
-          (blur)="commitRename()"
-          #renameInput
-        />
-      } @else {
-        <span class="name">{{ s.name }}</span>
-      }
-      <button
-        type="button"
-        class="close"
-        [attr.aria-label]="'lab.tabs.close' | t"
-        (click)="onClose($event, s.id)"
-        [disabled]="slots().length <= 1"
+<div class="tabs-bar" role="tablist" [attr.aria-label]="'lab.tabs.aria' | t">
+  <div class="tabs-scroll">
+    @for (s of slots(); track s.id) {
+      <div
+        class="tab"
+        role="tab"
+        [class.active]="isActive(s.id)"
+        [attr.aria-selected]="isActive(s.id)"
+        (click)="onSelect(s.id)"
+        (dblclick)="startRename($event, s)"
       >
-        ×
-      </button>
-    </div>
-  }
-  <button
-    type="button"
-    class="add"
-    (click)="add.emit()"
-    [attr.aria-label]="'lab.tabs.add' | t"
-    [attr.title]="'lab.tabs.add' | t"
-  >
-    +
-  </button>
+        @if (editingId() === s.id) {
+          <input
+            class="rename"
+            type="text"
+            [ngModel]="draftName()"
+            (ngModelChange)="draftName.set($event)"
+            (click)="$event.stopPropagation()"
+            (keydown.enter)="commitRename()"
+            (keydown.escape)="cancelRename()"
+            (blur)="commitRename()"
+            #renameInput
+          />
+        } @else {
+          <span class="name">{{ s.name }}</span>
+        }
+        <button
+          type="button"
+          class="close"
+          [attr.aria-label]="'lab.tabs.close' | t"
+          (click)="onClose($event, s.id)"
+          [disabled]="slots().length <= 1"
+        >
+          ×
+        </button>
+      </div>
+    }
+    <button
+      type="button"
+      class="add"
+      (click)="add.emit()"
+      [attr.aria-label]="'lab.tabs.add' | t"
+      [attr.title]="'lab.tabs.add' | t"
+    >
+      +
+    </button>
+  </div>
 </div>

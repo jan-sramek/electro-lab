@@ -1,15 +1,20 @@
 .toolbar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.75rem;
-  justify-content: space-between;
   margin-bottom: 0.75rem;
 }
 
 .tool-group {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.35rem;
+}
+
+.tool-group-end {
+  margin-left: auto;
 }
 
 .toolbar button {
@@ -33,6 +38,20 @@
   border-color: #0b6e4f;
   color: #fff;
   font-weight: 600;
+}
+
+.run-slot {
+  display: inline-grid;
+  justify-items: center;
+}
+
+.run-slot > span {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.run-slot > span.on {
+  visibility: visible;
 }
 
 .toolbar button.danger {
@@ -89,6 +108,7 @@
   color: #334155;
   font-size: 0.85rem;
   cursor: pointer;
+  max-width: 12rem;
 }
 
 .preset-select select:hover {

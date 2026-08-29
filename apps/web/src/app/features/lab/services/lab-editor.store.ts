@@ -33,6 +33,7 @@ export class LabEditorStore {
   readonly tool = signal<EditorTool>('select');
   readonly placeModel = signal<string | null>(null);
   readonly selectedIds = signal<string[]>([]);
+  readonly selectedWireIds = signal<string[]>([]);
   readonly probeTarget = signal<{ kind: 'net' | 'component'; id: string } | null>(null);
   readonly analysisMode = signal<AnalysisMode>('dcOp');
   readonly tStop = signal(0.005);
@@ -74,6 +75,7 @@ export class LabEditorStore {
     this.doc.set(assignNets(doc));
     this.activeSlotId.set(id);
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
     this.syncHistoryFlags();
     this.refreshSlots(id);
@@ -89,6 +91,7 @@ export class LabEditorStore {
     this.doc.set(emptyDocument());
     this.activeSlotId.set(id);
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
     this.syncHistoryFlags();
     this.refreshSlots(id);
@@ -109,6 +112,7 @@ export class LabEditorStore {
     this.doc.set(assignNets(doc));
     this.activeSlotId.set(activeId);
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
     this.syncHistoryFlags();
     this.refreshSlots(activeId);
@@ -211,6 +215,7 @@ export class LabEditorStore {
       this.selectedIds.set([]);
       return;
     }
+    this.selectedWireIds.set([]);
     if (additive) {
       const cur = this.selectedIds();
       this.selectedIds.set(
@@ -218,6 +223,35 @@ export class LabEditorStore {
       );
     } else {
       this.selectedIds.set([id]);
+    }
+  }
+
+  /** Replace or union the component selection (marquee / box select). */
+  setSelection(ids: string[], additive = false): void {
+    this.dragHistoryPushed = false;
+    this.selectedWireIds.set([]);
+    if (additive) {
+      const set = new Set([...this.selectedIds(), ...ids]);
+      this.selectedIds.set([...set]);
+    } else {
+      this.selectedIds.set(ids);
+    }
+  }
+
+  onSelectWire(id: string | null, additive = false): void {
+    this.dragHistoryPushed = false;
+    if (!id) {
+      this.selectedWireIds.set([]);
+      return;
+    }
+    this.selectedIds.set([]);
+    if (additive) {
+      const cur = this.selectedWireIds();
+      this.selectedWireIds.set(
+        cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+      );
+    } else {
+      this.selectedWireIds.set([id]);
     }
   }
 
@@ -232,6 +266,35 @@ export class LabEditorStore {
       ...doc,
       components: doc.components.map((c) =>
         c.id === id ? { ...c, params: { ...c.params, [ev.key]: ev.value } } : c
+      )
+    }));
+  }
+
+  /** Mark LEDs as failed-open after overload (sticky until replaced). */
+  markLedsBurned(ids: string[]): void {
+    const set = new Set(ids);
+    const needs = this.doc().components.some(
+      (c) => set.has(c.id) && c.modelKey === 'led' && !c.params['burned']
+    );
+    if (!needs) return;
+    this.commit((doc) => ({
+      ...doc,
+      components: doc.components.map((c) =>
+        set.has(c.id) && c.modelKey === 'led'
+          ? { ...c, params: { ...c.params, burned: true } }
+          : c
+      )
+    }));
+  }
+
+  /** Clear burned flag — teaching “replace the LED”. */
+  replaceLed(id: string): void {
+    const c = this.doc().components.find((x) => x.id === id);
+    if (!c || c.modelKey !== 'led' || !c.params['burned']) return;
+    this.commit((doc) => ({
+      ...doc,
+      components: doc.components.map((x) =>
+        x.id === id ? { ...x, params: { ...x.params, burned: false } } : x
       )
     }));
   }
@@ -251,13 +314,20 @@ export class LabEditorStore {
 
   deleteSelected(): void {
     const ids = new Set(this.selectedIds());
-    if (!ids.size) return;
+    const wireIds = new Set(this.selectedWireIds());
+    if (!ids.size && !wireIds.size) return;
     this.commit((doc) => ({
       ...doc,
       components: doc.components.filter((c) => !ids.has(c.id)),
-      wires: doc.wires.filter((w) => !ids.has(w.a.componentId) && !ids.has(w.b.componentId))
+      wires: doc.wires.filter(
+        (w) =>
+          !wireIds.has(w.id) &&
+          !ids.has(w.a.componentId) &&
+          !ids.has(w.b.componentId)
+      )
     }));
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
   }
 
   duplicateSelected(): void {
@@ -357,39 +427,24 @@ export class LabEditorStore {
       })
     );
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
   }
 
   loadLedPreset(): void {
-    this.commit(() => createLedPreset());
-    this.selectedIds.set([]);
-    this.activeExamplePreset.set('led');
-    this.analysisMode.set('dcOp');
+    this.openExampleInNewTab('led', 'LED series', createLedPreset, 'dcOp');
   }
 
   loadRcPreset(): void {
-    this.commit(() => createRcStepPreset());
-    this.selectedIds.set([]);
-    this.activeExamplePreset.set('rc');
-    this.analysisMode.set('tran');
-    this.tStop.set(0.005);
-    this.dt.set(5e-5);
+    this.openExampleInNewTab('rc', 'RC charge', createRcStepPreset, 'tran', 0.005, 5e-5);
   }
 
   loadPotPreset(): void {
-    this.commit(() => createPotDividerPreset());
-    this.selectedIds.set([]);
-    this.activeExamplePreset.set('pot');
-    this.analysisMode.set('dcOp');
+    this.openExampleInNewTab('pot', 'Pot divider', createPotDividerPreset, 'dcOp');
   }
 
   loadPulsePreset(): void {
-    this.commit(() => createPulseRcPreset());
-    this.selectedIds.set([]);
-    this.activeExamplePreset.set('pulse');
-    this.analysisMode.set('tran');
-    this.tStop.set(0.01);
-    this.dt.set(5e-5);
+    this.openExampleInNewTab('pulse', 'Pulse RC', createPulseRcPreset, 'tran', 0.01, 5e-5);
   }
 
   newSchematic(): void {
@@ -398,6 +453,7 @@ export class LabEditorStore {
     }
     this.commit(() => emptyDocument());
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
     this.persistence.clear();
   }
@@ -423,7 +479,34 @@ export class LabEditorStore {
   escape(): void {
     this.setTool('select');
     this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
     this.probeTarget.set(null);
+  }
+
+  /** Open an example circuit in a new tab so the current tab is preserved. */
+  private openExampleInNewTab(
+    presetId: ExamplePresetId,
+    tabName: string,
+    factory: () => SchematicDocument,
+    mode: AnalysisMode,
+    tStop?: number,
+    dt?: number
+  ): void {
+    this.persist();
+    const doc = assignNets(factory());
+    const id = this.persistence.saveAs(tabName, doc);
+    this.history.clear();
+    this.doc.set(doc);
+    this.activeSlotId.set(id);
+    this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
+    this.activeExamplePreset.set(presetId);
+    this.analysisMode.set(mode);
+    if (tStop !== undefined) this.tStop.set(tStop);
+    if (dt !== undefined) this.dt.set(dt);
+    this.syncHistoryFlags();
+    this.refreshSlots(id);
+    this.bump();
   }
 
   private commit(mutator: (doc: SchematicDocument) => SchematicDocument): void {

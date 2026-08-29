@@ -5,6 +5,7 @@ namespace ElectroLab.CircuitSim.Models;
 
 /// <summary>
 /// Teaching LED model: when on, Vf + Ron series equivalent; when off, open circuit.
+/// BoolParams["burned"] = true → permanently open (teaching overload failure).
 /// </summary>
 public sealed class LedModel : IDeviceModel
 {
@@ -26,6 +27,9 @@ public sealed class LedModel : IDeviceModel
 
     public void ContributeDc(ElementInstance element, StampContext ctx, DcBiasHint? hint)
     {
+        if (IsBurned(element))
+            return;
+
         var on = hint?.LedOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
             return;
@@ -42,6 +46,9 @@ public sealed class LedModel : IDeviceModel
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
     {
+        if (IsBurned(element))
+            return 0;
+
         var on = hint?.LedOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
             return 0;
@@ -52,4 +59,9 @@ public sealed class LedModel : IDeviceModel
         var vc = ctx.NodeVoltage(solution, element.Pins["c"]);
         return (va - vc - vf) / ron;
     }
+
+    private static bool IsBurned(ElementInstance element)
+        => element.BoolParams is not null
+           && element.BoolParams.TryGetValue("burned", out var burned)
+           && burned;
 }

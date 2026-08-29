@@ -23,7 +23,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.title': 'Circuit Lab',
   'lab.intro': 'Build a schematic, wire pins, and run DC or transient analysis.',
   'lab.hint':
-    'Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. Ctrl/Cmd-click to multi-select; Ctrl+D duplicate; Ctrl+C/V copy/paste. In Wire mode, click an existing wire for a T-junction. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.',
+    'Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. In Wire mode, click an existing wire for a T-junction. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.',
 
   'lab.toolbar.select': 'Select',
   'lab.toolbar.wire': 'Wire',
@@ -36,7 +36,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.redo': 'Redo',
   'lab.toolbar.duplicate': 'Duplicate',
   'lab.toolbar.delete': 'Delete',
-  'lab.toolbar.presets': 'Example circuits',
+  'lab.toolbar.presets': 'Open example…',
   'lab.toolbar.ledPreset': 'LED series (DC)',
   'lab.toolbar.rcPreset': 'RC charge (transient)',
   'lab.toolbar.potPreset': 'Potentiometer divider (DC)',
@@ -108,6 +108,14 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.scope.empty': 'Run transient analysis to plot waveforms.',
 
   'lab.canvas.aria': 'Schematic canvas',
+
+  'lab.led.overloaded': 'Overloaded!',
+  'lab.led.failedOpen': 'Burned out!',
+  'lab.led.burnedWarning':
+    'LED {ids} burned out from too much current and is now an open circuit. Replace it and add enough series resistance.',
+  'lab.inspector.ledBurned':
+    'This LED burned out (open circuit). Current no longer flows through it. Replace the LED and use a proper series resistor (~220 Ω for 5 V).',
+  'lab.inspector.replaceLed': 'Replace LED',
 
   'lab.probe.netFinal': 'Net {id} (final): {v} V',
   'lab.probe.netAt': 'Net {id} @ {t} s: {v} V',

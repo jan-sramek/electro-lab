@@ -19,6 +19,7 @@ export class LabToolbarComponent {
   readonly canUndo = input(false);
   readonly canRedo = input(false);
   readonly canDelete = input(false);
+  readonly canDuplicate = input(false);
   readonly busy = input(false);
   readonly selectedPreset = input<ExamplePresetId | null>(null);
 

@@ -1,5 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Subject, catchError, of, switchMap, tap } from 'rxjs';
+import { Subject, catchError, debounceTime, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
 import { SimulateRequest, SimulateResponse } from '../api/circuit-api.types';
@@ -13,15 +13,31 @@ import {
 } from '../data/circuit-diagnostics';
 import { LabEditorStore } from './lab-editor.store';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { LED_BURN_A } from '../data/led-limits';
+
+function branchCurrentFromResult(res: SimulateResponse, id: string): number | null {
+  const dc = res.dcOp?.branchCurrents?.[id];
+  if (typeof dc === 'number') return dc;
+  const series = res.tran?.branchCurrents.find((s) => s.id === id);
+  if (!series?.values.length) return null;
+  return series.values.reduce(
+    (best, v) => (Math.abs(v) > Math.abs(best) ? v : best),
+    series.values[0]!
+  );
+}
 
 @Injectable()
 export class CircuitSimulationFacade {
   private readonly api = inject(CircuitApiClient);
   private readonly editor = inject(LabEditorStore);
   private readonly i18n = inject(I18nService);
-  private readonly simulate$ = new Subject<SimulateRequest>();
+  private readonly simulate$ = new Subject<{ body: SimulateRequest; showBusy: boolean }>();
+  /** Debounced auto-sim after schematic edits (no Run-button flicker). */
+  private readonly autoRun$ = new Subject<void>();
+  private showBusyForRequest = false;
 
   readonly result = signal<SimulateResponse | null>(null);
+  /** True only for an explicit toolbar Run — keeps the label from jumping on auto-sim. */
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly warnings = signal<string[]>([]);
@@ -88,13 +104,14 @@ export class CircuitSimulationFacade {
   constructor() {
     this.simulate$
       .pipe(
-        tap(() => {
-          this.busy.set(true);
+        tap((req) => {
+          this.showBusyForRequest = req.showBusy;
+          if (req.showBusy) this.busy.set(true);
         }),
-        switchMap((body) =>
-          this.api.simulate(body).pipe(
+        switchMap((req) =>
+          this.api.simulate(req.body).pipe(
             catchError((err) => {
-              this.busy.set(false);
+              if (this.showBusyForRequest) this.busy.set(false);
               const rawErrors: string[] =
                 err?.error?.errors ??
                 (err?.message ? [err.message] : [this.i18n.t('lab.sim.requestFailed')]);
@@ -113,7 +130,7 @@ export class CircuitSimulationFacade {
       .subscribe((res) => {
         if (!res) return;
         this.result.set(res);
-        this.busy.set(false);
+        if (this.showBusyForRequest) this.busy.set(false);
         const warn = [...(res.warnings ?? [])];
         this.warnings.set(warn);
         if (res.tran?.time?.length) {
@@ -125,8 +142,14 @@ export class CircuitSimulationFacade {
           if (errs.some(isSingularMatrixMessage)) {
             this.mergeSingularHighlights();
           }
+          return;
         }
+        this.applyLedOverloadFailures(res);
       });
+
+    this.autoRun$.pipe(debounceTime(280), takeUntilDestroyed()).subscribe(() => {
+      this.runInternal(false);
+    });
 
     effect(() => {
       this.editor.revision();
@@ -134,7 +157,7 @@ export class CircuitSimulationFacade {
       this.editor.tStop();
       this.editor.dt();
       this.editor.doc();
-      this.run();
+      this.autoRun$.next();
     });
   }
 
@@ -142,7 +165,12 @@ export class CircuitSimulationFacade {
     this.scrubIndex.set(idx);
   }
 
+  /** Explicit toolbar Run — shows busy state on the button. */
   run(): void {
+    this.runInternal(true);
+  }
+
+  private runInternal(showBusy: boolean): void {
     const doc = this.editor.doc();
     const mode = this.editor.analysisMode();
     const diags = diagnoseSchematic(doc, mode);
@@ -151,10 +179,20 @@ export class CircuitSimulationFacade {
 
     this.highlightComponentIds.set(diags.flatMap((d) => d.componentIds));
     this.highlightNetIds.set(diags.flatMap((d) => d.netIds));
-    this.warnings.set(warns.map((w) => this.i18n.t(w.messageKey)));
+    const warnKeys = warns.map((w) => this.i18n.t(w.messageKey));
+    const burned = doc.components.filter((c) => c.modelKey === 'led' && c.params['burned']);
+    if (burned.length) {
+      warnKeys.push(
+        this.i18n.t('lab.led.burnedWarning', { ids: burned.map((c) => c.id).join(', ') })
+      );
+      this.highlightComponentIds.set([
+        ...new Set([...this.highlightComponentIds(), ...burned.map((c) => c.id)])
+      ]);
+    }
+    this.warnings.set(warnKeys);
 
     if (errors.length > 0) {
-      this.busy.set(false);
+      if (showBusy) this.busy.set(false);
       this.error.set(errors.map((e) => this.i18n.t(e.messageKey)).join(' '));
       this.result.set(null);
       return;
@@ -164,6 +202,7 @@ export class CircuitSimulationFacade {
     if (circuit.elements.length === 0) {
       this.result.set(null);
       this.error.set(null);
+      if (showBusy) this.busy.set(false);
       return;
     }
 
@@ -185,7 +224,30 @@ export class CircuitSimulationFacade {
             circuit
           };
 
-    this.simulate$.next(body);
+    this.simulate$.next({ body, showBusy });
+  }
+
+  /**
+   * If an LED drew too much current, mark it burned (fail open) and re-sim via
+   * the store revision bump. Sticky until the student replaces the LED.
+   */
+  private applyLedOverloadFailures(res: SimulateResponse): void {
+    const burnedIds = this.editor
+      .doc()
+      .components.filter((c) => {
+        if (c.modelKey !== 'led' || c.params['burned']) return false;
+        const i = branchCurrentFromResult(res, c.id);
+        return typeof i === 'number' && Math.abs(i) >= LED_BURN_A;
+      })
+      .map((c) => c.id);
+    if (!burnedIds.length) return;
+
+    const note = this.i18n.t('lab.led.burnedWarning', { ids: burnedIds.join(', ') });
+    this.warnings.set([...this.warnings(), note]);
+    this.highlightComponentIds.set([
+      ...new Set([...this.highlightComponentIds(), ...burnedIds])
+    ]);
+    this.editor.markLedsBurned(burnedIds);
   }
 
   private mapEngineErrors(errors: string[]): string {

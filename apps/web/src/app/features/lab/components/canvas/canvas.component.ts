@@ -21,11 +21,21 @@ import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
+import { estimateWireCurrentAtoB } from '../../data/wire-current';
+import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
 
 interface DragState {
-  id: string;
-  ox: number;
-  oy: number;
+  ids: string[];
+  origins: Map<string, { x: number; y: number }>;
+  pointer0: { x: number; y: number };
+}
+
+interface MarqueeState {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  additive: boolean;
 }
 
 @Component({
@@ -41,6 +51,7 @@ export class SchematicCanvasComponent {
   readonly placeModel = input<string | null>(null);
   readonly selectedId = input<string | null>(null);
   readonly selectedIds = input<string[]>([]);
+  readonly selectedWireIds = input<string[]>([]);
   readonly result = input<SimulateResponse | null>(null);
   readonly scrubIndex = input(0);
   readonly probeTarget = input<{ kind: 'net' | 'component'; id: string } | null>(null);
@@ -49,18 +60,23 @@ export class SchematicCanvasComponent {
 
   readonly docChange = output<SchematicDocument>();
   readonly select = output<{ id: string | null; additive: boolean }>();
+  readonly selectMany = output<{ ids: string[]; additive: boolean }>();
+  readonly selectWire = output<{ id: string | null; additive: boolean }>();
   readonly probe = output<{ kind: 'net' | 'component'; id: string } | null>();
   readonly placeAt = output<{ x: number; y: number }>();
   readonly dropPlace = output<{ modelKey: string; x: number; y: number }>();
 
   readonly wireFrom = signal<PinRef | null>(null);
   readonly dragOver = signal(false);
+  /** Normalized marquee rect while dragging on empty canvas. */
+  readonly marqueeRect = signal<{ x: number; y: number; w: number; h: number } | null>(null);
   readonly lib = SYMBOL_LIBRARY;
 
   /** viewBox: x y w h */
   readonly view = signal({ x: 0, y: 0, w: 720, h: 400 });
   private pan: { x0: number; y0: number; vx: number; vy: number } | null = null;
   private drag: DragState | null = null;
+  private marquee: MarqueeState | null = null;
 
   readonly nettled = computed(() => assignNets(this.doc()));
 
@@ -71,17 +87,39 @@ export class SchematicCanvasComponent {
 
   readonly wirePaths = computed(() => {
     const d = this.nettled();
+    const res = this.result();
+    const live = !!res?.ok;
     const out: {
       id: string;
       d: string;
       pts: { x: number; y: number }[];
+      flow: { path: string; periodMs: number; strength: number } | null;
     }[] = [];
     for (const w of d.wires) {
       const a = this.endpoint(d, w.a);
       const b = this.endpoint(d, w.b);
       if (!a || !b) continue;
       const pts = orthogonalPolyline(a.x, a.y, b.x, b.y);
-      out.push({ id: w.id, d: polylineToPath(pts), pts });
+      const path = polylineToPath(pts);
+      let flow: { path: string; periodMs: number; strength: number } | null = null;
+      if (live) {
+        const iAlong = estimateWireCurrentAtoB(
+          w,
+          d.components,
+          d.wires,
+          (id) => this.currentOf(id)
+        );
+        if (Math.abs(iAlong) > 1e-6) {
+          const mag = Math.abs(iAlong);
+          const strength = Math.min(1, mag / 0.012);
+          const periodMs = Math.round(
+            Math.max(220, Math.min(900, 480 / Math.sqrt(strength + 0.2)))
+          );
+          const drawPts = iAlong >= 0 ? pts : [...pts].reverse();
+          flow = { path: polylineToPath(drawPts), periodMs, strength };
+        }
+      }
+      out.push({ id: w.id, d: path, pts, flow });
     }
     return out;
   });
@@ -175,16 +213,37 @@ export class SchematicCanvasComponent {
       this.placeAt.emit({ x: snap(pt.x), y: snap(pt.y) });
       return;
     }
+
     if (this.tool() === 'select') {
-      this.select.emit({ id: null, additive: false });
+      const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
+      const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
+      this.marquee = {
+        x0: pt.x,
+        y0: pt.y,
+        x1: pt.x,
+        y1: pt.y,
+        additive: ev.ctrlKey || ev.metaKey
+      };
+      this.marqueeRect.set({ x: pt.x, y: pt.y, w: 0, h: 0 });
       this.probe.emit(null);
+      (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
+      return;
     }
+
     if (this.tool() === 'wire') {
       this.wireFrom.set(null);
     }
   }
 
   onBackgroundPointerMove(ev: PointerEvent): void {
+    if (this.marquee) {
+      const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
+      const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
+      this.marquee.x1 = pt.x;
+      this.marquee.y1 = pt.y;
+      this.marqueeRect.set(this.normalizeMarquee(this.marquee));
+      return;
+    }
     if (!this.pan) return;
     const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
     const scale = this.view().w / svg.clientWidth;
@@ -198,6 +257,30 @@ export class SchematicCanvasComponent {
   }
 
   onBackgroundPointerUp(ev: PointerEvent): void {
+    if (this.marquee) {
+      const m = this.marquee;
+      const rect = this.normalizeMarquee(m);
+      const dragged = Math.hypot(m.x1 - m.x0, m.y1 - m.y0) > 4;
+      if (!dragged) {
+        if (!m.additive) {
+          this.select.emit({ id: null, additive: false });
+          this.selectWire.emit({ id: null, additive: false });
+        }
+      } else {
+        const ids = this.doc()
+          .components.filter((c) => this.boundsIntersectMarquee(c, rect))
+          .map((c) => c.id);
+        this.selectMany.emit({ ids, additive: m.additive });
+      }
+      this.marquee = null;
+      this.marqueeRect.set(null);
+      try {
+        (ev.currentTarget as Element).releasePointerCapture(ev.pointerId);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
     if (this.pan) {
       try {
         (ev.currentTarget as Element).releasePointerCapture(ev.pointerId);
@@ -206,6 +289,31 @@ export class SchematicCanvasComponent {
       }
     }
     this.pan = null;
+  }
+
+  private normalizeMarquee(m: MarqueeState): { x: number; y: number; w: number; h: number } {
+    const x = Math.min(m.x0, m.x1);
+    const y = Math.min(m.y0, m.y1);
+    return { x, y, w: Math.abs(m.x1 - m.x0), h: Math.abs(m.y1 - m.y0) };
+  }
+
+  private boundsIntersectMarquee(
+    c: SchematicComponent,
+    rect: { x: number; y: number; w: number; h: number }
+  ): boolean {
+    const def = SYMBOL_LIBRARY[c.modelKey];
+    if (!def) return false;
+    const pad = 8;
+    let bw = def.width + pad * 2;
+    let bh = def.height + pad * 2;
+    if (c.rotation === 90 || c.rotation === 270) {
+      const t = bw;
+      bw = bh;
+      bh = t;
+    }
+    const bx = c.x - bw / 2;
+    const by = c.y - bh / 2;
+    return bx < rect.x + rect.w && bx + bw > rect.x && by < rect.y + rect.h && by + bh > rect.y;
   }
 
   onSymbolPointerDown(ev: PointerEvent, c: SchematicComponent): void {
@@ -219,10 +327,25 @@ export class SchematicCanvasComponent {
     }
     if (tool === 'wire' || tool === 'place') return;
 
-    this.select.emit({ id: c.id, additive: ev.ctrlKey || ev.metaKey });
+    const additive = ev.ctrlKey || ev.metaKey;
+    if (additive) {
+      this.select.emit({ id: c.id, additive: true });
+      return;
+    }
+
+    const cur = this.selectedIds();
+    const ids = cur.includes(c.id) && cur.length > 0 ? [...cur] : [c.id];
+    if (!cur.includes(c.id) || cur.length === 0) {
+      this.select.emit({ id: c.id, additive: false });
+    }
+
     const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
     const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
-    this.drag = { id: c.id, ox: pt.x - c.x, oy: pt.y - c.y };
+    const origins = new Map<string, { x: number; y: number }>();
+    for (const comp of this.doc().components) {
+      if (ids.includes(comp.id)) origins.set(comp.id, { x: comp.x, y: comp.y });
+    }
+    this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y } };
     (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
   }
 
@@ -230,12 +353,22 @@ export class SchematicCanvasComponent {
     if (!this.drag) return;
     const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
     const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
-    const x = snap(pt.x - this.drag.ox);
-    const y = snap(pt.y - this.drag.oy);
-    const id = this.drag.id;
+    const primaryId = this.drag.ids[0];
+    const origin = this.drag.origins.get(primaryId);
+    if (!origin) return;
+    const rawDx = pt.x - this.drag.pointer0.x;
+    const rawDy = pt.y - this.drag.pointer0.y;
+    const dx = snap(origin.x + rawDx) - origin.x;
+    const dy = snap(origin.y + rawDy) - origin.y;
+    const moving = new Set(this.drag.ids);
     this.docChange.emit({
       ...this.doc(),
-      components: this.doc().components.map((c) => (c.id === id ? { ...c, x, y } : c))
+      components: this.doc().components.map((c) => {
+        if (!moving.has(c.id)) return c;
+        const o = this.drag!.origins.get(c.id);
+        if (!o) return c;
+        return { ...c, x: o.x + dx, y: o.y + dy };
+      })
     });
   }
 
@@ -318,10 +451,14 @@ export class SchematicCanvasComponent {
     }
 
     if (tool !== 'select') return;
-    this.docChange.emit({
-      ...this.doc(),
-      wires: this.doc().wires.filter((w) => w.id !== wireId)
+    this.selectWire.emit({
+      id: wireId,
+      additive: ev.ctrlKey || ev.metaKey
     });
+  }
+
+  isWireSelected(id: string): boolean {
+    return this.selectedWireIds().includes(id);
   }
 
   isHighlightedNet(net: string): boolean {
@@ -360,12 +497,30 @@ export class SchematicCanvasComponent {
 
   /**
    * LED teaching brightness from branch current.
-   * 0 A → off; ~20 mA (and above) → full glow.
+   * 0 A → off; ~20 mA → full glow. Burned LEDs stay dark (fail open).
    */
   ledBrightness(id: string): number {
+    const c = this.doc().components.find((x) => x.id === id);
+    if (c?.params['burned']) return 0;
     const i = this.currentOf(id);
     if (typeof i !== 'number' || i <= 1e-6) return 0;
-    return Math.min(1, i / 0.02);
+    return Math.min(1, i / LED_FULL_BRIGHT_A);
+  }
+
+  /**
+   * LED overload / “on fire” intensity for teaching.
+   * Sticky burned flag keeps the fire visual after the LED fails open.
+   */
+  ledBurn(id: string): number {
+    const c = this.doc().components.find((x) => x.id === id);
+    if (c?.params['burned']) return 1;
+    const i = this.currentOf(id);
+    if (typeof i !== 'number' || i < LED_BURN_A) return 0;
+    return Math.min(1, (i - LED_BURN_A) / 0.045);
+  }
+
+  isLedFailedOpen(id: string): boolean {
+    return !!this.doc().components.find((x) => x.id === id)?.params['burned'];
   }
 
   pinPos(c: SchematicComponent, pinName: string): { x: number; y: number } {

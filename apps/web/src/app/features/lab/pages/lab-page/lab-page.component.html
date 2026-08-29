@@ -11,7 +11,8 @@
     [dt]="editor.dt()"
     [canUndo]="editor.canUndo()"
     [canRedo]="editor.canRedo()"
-    [canDelete]="editor.selectedIds().length > 0"
+    [canDelete]="editor.selectedIds().length > 0 || editor.selectedWireIds().length > 0"
+    [canDuplicate]="editor.selectedIds().length > 0"
     [busy]="sim.busy()"
     [selectedPreset]="editor.activeExamplePreset()"
     (toolChange)="editor.setTool($event)"
@@ -29,15 +30,6 @@
     (run)="sim.run()"
   />
 
-  <app-circuit-tabs
-    [slots]="editor.slots()"
-    [activeId]="editor.activeSlotId()"
-    (activate)="editor.switchCircuitTab($event)"
-    (add)="editor.addCircuitTab()"
-    (close)="editor.closeCircuitTab($event)"
-    (rename)="editor.renameCircuitTab($event.id, $event.name)"
-  />
-
   @if (sim.error()) {
     <p class="error">{{ sim.error() }}</p>
   }
@@ -51,24 +43,37 @@
       <app-component-palette (place)="editor.onPalettePlace($event)" />
     </aside>
 
-    <div class="canvas-wrap">
-      <app-schematic-canvas
-        [doc]="editor.doc()"
-        [tool]="editor.tool()"
-        [placeModel]="editor.placeModel()"
-        [selectedId]="editor.selectedId()"
-        [selectedIds]="editor.selectedIds()"
-        [result]="sim.result()"
-        [scrubIndex]="sim.scrubIndex()"
-        [probeTarget]="editor.probeTarget()"
-        [highlightedIds]="sim.highlightedIds()"
-        [highlightedNets]="sim.highlightedNets()"
-        (docChange)="editor.onDocChange($event)"
-        (select)="editor.onSelect($event.id, $event.additive)"
-        (probe)="editor.onProbe($event)"
-        (placeAt)="editor.onPlaceAt($event)"
-        (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
-      />
+    <div class="center">
+      <div class="canvas-wrap">
+        <app-circuit-tabs
+          [slots]="editor.slots()"
+          [activeId]="editor.activeSlotId()"
+          (activate)="editor.switchCircuitTab($event)"
+          (add)="editor.addCircuitTab()"
+          (close)="editor.closeCircuitTab($event)"
+          (rename)="editor.renameCircuitTab($event.id, $event.name)"
+        />
+        <app-schematic-canvas
+          [doc]="editor.doc()"
+          [tool]="editor.tool()"
+          [placeModel]="editor.placeModel()"
+          [selectedId]="editor.selectedId()"
+          [selectedIds]="editor.selectedIds()"
+          [selectedWireIds]="editor.selectedWireIds()"
+          [result]="sim.result()"
+          [scrubIndex]="sim.scrubIndex()"
+          [probeTarget]="editor.probeTarget()"
+          [highlightedIds]="sim.highlightedIds()"
+          [highlightedNets]="sim.highlightedNets()"
+          (docChange)="editor.onDocChange($event)"
+          (select)="editor.onSelect($event.id, $event.additive)"
+          (selectMany)="editor.setSelection($event.ids, $event.additive)"
+          (selectWire)="editor.onSelectWire($event.id, $event.additive)"
+          (probe)="editor.onProbe($event)"
+          (placeAt)="editor.onPlaceAt($event)"
+          (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
+        />
+      </div>
       <p class="hint">{{ 'lab.hint' | t }}</p>
     </div>
 
@@ -79,6 +84,7 @@
         (paramChange)="editor.onParamChange($event)"
         (rotate)="editor.rotateSelected()"
         (remove)="editor.deleteSelected()"
+        (replaceLed)="onReplaceLed()"
       />
       <app-results-panel [result]="sim.result()" />
       @if (editor.analysisMode() === 'tran') {

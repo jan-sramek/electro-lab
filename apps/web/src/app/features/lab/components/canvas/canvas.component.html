@@ -6,6 +6,7 @@
   [class.tool-place]="tool() === 'place'"
   [class.tool-wire]="tool() === 'wire'"
   [class.tool-probe]="tool() === 'probe'"
+  [class.tool-select]="tool() === 'select'"
   [class.drop-target]="dragOver()"
   (wheel)="onWheel($event)"
   (dragover)="onDragOver($event)"
@@ -24,7 +25,13 @@
   />
 
   @for (w of wirePaths(); track w.id) {
-    <path class="wire" [attr.d]="w.d" (click)="onWireClick($event, w.id)" />
+    <path
+      class="wire"
+      [class.selected]="isWireSelected(w.id)"
+      [class.has-flow]="!!w.flow"
+      [attr.d]="w.d"
+      (click)="onWireClick($event, w.id)"
+    />
   }
 
   @for (j of junctionDots(); track j.x + ',' + j.y) {
@@ -55,12 +62,17 @@
         [modelKey]="c.modelKey"
         [closed]="!!c.params['closed']"
         [ledBrightness]="ledBrightness(c.id)"
+        [ledBurn]="ledBurn(c.id)"
       ></g>
 
       @if (c.modelKey !== 'junction') {
         <text x="0" y="52" text-anchor="middle" class="label">{{ c.id }}</text>
       }
-      @if (c.modelKey !== 'junction' && currentOf(c.id) !== null) {
+      @if (c.modelKey === 'led' && ledBurn(c.id) > 0.08) {
+        <text x="0" y="66" text-anchor="middle" class="burn-label">
+          {{ (isLedFailedOpen(c.id) ? 'lab.led.failedOpen' : 'lab.led.overloaded') | t }}
+        </text>
+      } @else if (c.modelKey !== 'junction' && currentOf(c.id) !== null) {
         <text x="0" y="66" text-anchor="middle" class="meas">
           {{ currentOf(c.id)! * 1000 | number: '1.1-2' }} mA
         </text>
@@ -80,6 +92,26 @@
     }
   }
 
+  <!-- Current flow on top so it isn’t hidden under parts (esp. battery− ↔ ground). -->
+  @for (w of wirePaths(); track w.id) {
+    @if (w.flow; as flow) {
+      <path
+        class="wire-flow"
+        [attr.d]="flow.path"
+        [style.--flow-period]="flow.periodMs + 'ms'"
+        [style.opacity]="0.65 + flow.strength * 0.35"
+        pointer-events="none"
+      />
+      <path
+        class="wire-flow-core"
+        [attr.d]="flow.path"
+        [style.--flow-period]="flow.periodMs + 'ms'"
+        [style.opacity]="0.55 + flow.strength * 0.45"
+        pointer-events="none"
+      />
+    }
+  }
+
   @for (tag of netTags(); track tag.net) {
     <text
       class="node-tag"
@@ -91,5 +123,15 @@
       {{ tag.net }}
       {{ voltageOf(tag.net) !== null ? (voltageOf(tag.net)! | number: '1.2-2') + ' V' : '' }}
     </text>
+  }
+
+  @if (marqueeRect(); as box) {
+    <rect
+      class="marquee"
+      [attr.x]="box.x"
+      [attr.y]="box.y"
+      [attr.width]="box.w"
+      [attr.height]="box.h"
+    />
   }
 </svg>

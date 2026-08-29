@@ -48,14 +48,14 @@
       </label>
     }
   </div>
-  <div class="tool-group">
+  <div class="tool-group tool-group-end">
     <button type="button" (click)="undo.emit()" [disabled]="!canUndo()">
       {{ 'lab.toolbar.undo' | t }}
     </button>
     <button type="button" (click)="redo.emit()" [disabled]="!canRedo()">
       {{ 'lab.toolbar.redo' | t }}
     </button>
-    <button type="button" (click)="duplicate.emit()" [disabled]="!canDelete()">
+    <button type="button" (click)="duplicate.emit()" [disabled]="!canDuplicate()">
       {{ 'lab.toolbar.duplicate' | t }}
     </button>
     <button type="button" class="danger" (click)="remove.emit()" [disabled]="!canDelete()">
@@ -77,8 +77,11 @@
       <input type="file" accept="application/json,.json" (change)="onImportFile($event)" />
     </label>
     <button type="button" (click)="newSchematic.emit()">{{ 'lab.toolbar.new' | t }}</button>
-    <button type="button" class="primary" (click)="run.emit()" [disabled]="busy()">
-      {{ busy() ? ('lab.toolbar.running' | t) : ('lab.toolbar.run' | t) }}
+    <button type="button" class="primary run-btn" (click)="run.emit()" [disabled]="busy()">
+      <span class="run-slot">
+        <span [class.on]="!busy()">{{ 'lab.toolbar.run' | t }}</span>
+        <span [class.on]="busy()">{{ 'lab.toolbar.running' | t }}</span>
+      </span>
     </button>
   </div>
 </div>

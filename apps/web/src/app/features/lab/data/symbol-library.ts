@@ -70,7 +70,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'a', ox: 0, oy: -40 },
       { name: 'c', ox: 0, oy: 40 }
     ],
-    defaultParams: { vf: 2, ron: 20 },
+    defaultParams: { vf: 2, ron: 20, burned: false },
     paramDefs: [
       { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.1, unit: 'V' },
       {

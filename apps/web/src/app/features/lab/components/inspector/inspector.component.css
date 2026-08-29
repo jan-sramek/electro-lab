@@ -55,3 +55,31 @@ input[type='number'] {
   color: #64748b;
   font-size: 0.85rem;
 }
+
+.burn-note {
+  margin: 0 0 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 6px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #c2410c;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.replace {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid #fb923c;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #c2410c;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.replace:hover {
+  background: #ffedd5;
+}

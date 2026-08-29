@@ -63,6 +63,11 @@ export class LabPageComponent implements OnInit {
     }
   }
 
+  onReplaceLed(): void {
+    const id = this.editor.selectedId();
+    if (id) this.editor.replaceLed(id);
+  }
+
   @HostListener('window:keydown', ['$event'])
   onKey(ev: KeyboardEvent): void {
     const tag = (ev.target as HTMLElement)?.tagName;
@@ -89,7 +94,7 @@ export class LabPageComponent implements OnInit {
       this.editor.pasteClipboard();
     } else if (ev.key === 'Delete' || ev.key === 'Backspace') {
       if (inField) return;
-      if (this.editor.selectedIds().length) {
+      if (this.editor.selectedIds().length || this.editor.selectedWireIds().length) {
         ev.preventDefault();
         this.editor.deleteSelected();
       }

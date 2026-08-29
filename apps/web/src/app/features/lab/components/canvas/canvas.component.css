@@ -1,15 +1,17 @@
 .schematic {
   width: 100%;
   height: auto;
+  aspect-ratio: 720 / 400;
   display: block;
   background:
     linear-gradient(#eef2f7 1px, transparent 1px) 0 0 / 20px 20px,
     linear-gradient(90deg, #eef2f7 1px, transparent 1px) 0 0 / 20px 20px,
     #fbfcfe;
-  border: 1px solid #d8dee6;
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   touch-action: none;
   user-select: none;
+  overflow: hidden;
 }
 
 .schematic.tool-place,
@@ -23,6 +25,10 @@
 
 .schematic.tool-probe {
   cursor: help;
+}
+
+.schematic.tool-select .bg {
+  cursor: crosshair;
 }
 
 .schematic.drop-target {
@@ -41,8 +47,53 @@
   cursor: pointer;
 }
 
+.wire.has-flow {
+  stroke: #0f766e;
+  stroke-width: 3;
+}
+
 .wire:hover {
-  stroke: #b91c1c;
+  stroke: #0b6e4f;
+}
+
+.wire.selected {
+  stroke: #0b6e4f;
+  stroke-width: 3.5;
+}
+
+.wire-flow {
+  fill: none;
+  stroke: #10b981;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 10 8;
+  animation: wire-flow var(--flow-period, 550ms) linear infinite;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1.5px rgba(16, 185, 129, 0.85));
+}
+
+.wire-flow-core {
+  fill: none;
+  stroke: #ecfdf5;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dasharray: 10 8;
+  animation: wire-flow var(--flow-period, 550ms) linear infinite;
+  pointer-events: none;
+}
+
+@keyframes wire-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wire-flow,
+  .wire-flow-core {
+    animation: none;
+    stroke-dasharray: 6 6;
+  }
 }
 
 .symbol {
@@ -53,6 +104,13 @@
   fill: transparent;
   stroke: none;
   pointer-events: all;
+}
+
+.symbol.selected .hit {
+  fill: rgba(11, 110, 79, 0.08);
+  stroke: #0b6e4f;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
 }
 
 .symbol.selected .label {
@@ -78,6 +136,14 @@
 .meas {
   fill: #0b6e4f;
   font-size: 10px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.burn-label {
+  fill: #c2410c;
+  font-size: 10px;
+  font-weight: 700;
   font-family: 'Segoe UI', system-ui, sans-serif;
   pointer-events: none;
 }
@@ -109,4 +175,12 @@
 .node-tag.error-net {
   fill: #b91c1c;
   font-weight: 700;
+}
+
+.marquee {
+  fill: rgba(11, 110, 79, 0.12);
+  stroke: #0b6e4f;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3;
+  pointer-events: none;
 }

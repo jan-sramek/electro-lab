@@ -29,7 +29,32 @@ import { Component, input } from '@angular/core';
         }
       }
       @case ('led') {
-        @if (ledBrightness() > 0.02) {
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-6" rx="22" ry="26" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 8 C -10 0, -12 -14, -2 -28 C 2 -18, 8 -8, 0 8 Z"
+            />
+            <svg:path
+              class="flame flame-b"
+              d="M -6 6 C -14 -2, -8 -18, -4 -24 C -2 -14, 2 -4, -6 6 Z"
+            />
+            <svg:path
+              class="flame flame-c"
+              d="M 6 6 C 14 -2, 10 -16, 5 -22 C 4 -12, 0 -2, 6 6 Z"
+            />
+            <svg:path
+              class="flame-core"
+              d="M 0 4 C -5 -2, -4 -12, 0 -20 C 4 -12, 5 -2, 0 4 Z"
+            />
+            <svg:g class="smoke" [attr.opacity]="ledBurn() * 0.7">
+              <svg:circle class="smoke-puff puff-1" cx="-8" cy="-34" r="5" />
+              <svg:circle class="smoke-puff puff-2" cx="2" cy="-40" r="6" />
+              <svg:circle class="smoke-puff puff-3" cx="10" cy="-36" r="4" />
+            </svg:g>
+          </svg:g>
+        } @else if (ledBrightness() > 0.02) {
           <svg:ellipse
             cx="0"
             cy="4"
@@ -43,10 +68,17 @@ import { Component, input } from '@angular/core';
         <svg:polygon
           points="0,-10 -14,14 14,14"
           class="led"
+          [class.led-charred]="ledBurn() > 0.08"
           [attr.fill]="ledFill()"
         />
         <svg:line x1="-14" y1="14" x2="14" y2="14" class="sym thick" />
         <svg:line x1="0" y1="14" x2="0" y2="40" class="sym" />
+        @if (ledBurn() > 0.35) {
+          <svg:g class="led-crack" pointer-events="none">
+            <svg:line x1="-6" y1="-2" x2="4" y2="10" />
+            <svg:line x1="2" y1="0" x2="-4" y2="12" />
+          </svg:g>
+        }
       }
       @case ('diode') {
         <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
@@ -121,10 +153,87 @@ import { Component, input } from '@angular/core';
       stroke-width: 2;
       pointer-events: all;
     }
+    .led.led-charred {
+      stroke: #1c1917;
+    }
     .led-glow {
       fill: #ff4d6d;
       pointer-events: none;
       filter: blur(1.5px);
+    }
+    .fire-glow {
+      fill: #fb923c;
+      filter: blur(4px);
+    }
+    .flame {
+      stroke: none;
+      pointer-events: none;
+      transform-origin: 0px 8px;
+      animation: flicker 0.35s ease-in-out infinite alternate;
+    }
+    .flame-a {
+      fill: #ea580c;
+    }
+    .flame-b {
+      fill: #f97316;
+      animation-duration: 0.28s;
+      animation-delay: -0.1s;
+    }
+    .flame-c {
+      fill: #fb923c;
+      animation-duration: 0.32s;
+      animation-delay: -0.18s;
+    }
+    .flame-core {
+      fill: #fef08a;
+      stroke: none;
+      pointer-events: none;
+      transform-origin: 0px 4px;
+      animation: flicker 0.25s ease-in-out infinite alternate;
+    }
+    .smoke-puff {
+      fill: #78716c;
+      stroke: none;
+      transform-origin: center;
+      animation: smoke-rise 1.4s ease-out infinite;
+    }
+    .puff-2 {
+      animation-delay: 0.35s;
+      fill: #a8a29e;
+    }
+    .puff-3 {
+      animation-delay: 0.7s;
+      fill: #57534e;
+    }
+    .led-crack line {
+      stroke: #fef3c7;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+    @keyframes flicker {
+      from {
+        transform: scaleY(0.92) scaleX(1.04);
+      }
+      to {
+        transform: scaleY(1.08) scaleX(0.96);
+      }
+    }
+    @keyframes smoke-rise {
+      0% {
+        transform: translate(0, 0) scale(0.6);
+        opacity: 0.55;
+      }
+      100% {
+        transform: translate(4px, -16px) scale(1.35);
+        opacity: 0;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .flame,
+      .flame-core,
+      .smoke-puff {
+        animation: none;
+      }
     }
     .diode {
       fill: #12263a;
@@ -162,16 +271,28 @@ export class SymbolGlyphComponent {
   readonly closed = input(true);
   /** 0 = off, 1 = full brightness (teaching scale ~20 mA). */
   readonly ledBrightness = input(0);
+  /** 0 = ok, 1 = fully overloaded / on fire (teaching scale from ~35 mA). */
+  readonly ledBurn = input(0);
 
   ledFill(): string {
-    const b = Math.max(0, Math.min(1, this.ledBrightness()));
-    const r = Math.round(226 + (255 - 226) * b);
-    const g = Math.round(232 + (61 - 232) * b);
-    const bl = Math.round(240 + (109 - 240) * b);
+    const burn = Math.max(0, Math.min(1, this.ledBurn()));
+    if (burn > 0.08) {
+      // Char toward black/brown as overload rises.
+      const t = Math.min(1, burn);
+      const r = Math.round(120 - 70 * t);
+      const g = Math.round(70 - 45 * t);
+      const b = Math.round(55 - 35 * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    const bright = Math.max(0, Math.min(1, this.ledBrightness()));
+    const r = Math.round(226 + (255 - 226) * bright);
+    const g = Math.round(232 + (61 - 232) * bright);
+    const bl = Math.round(240 + (109 - 240) * bright);
     return `rgb(${r}, ${g}, ${bl})`;
   }
 
   ledGlowOpacity(): number {
+    if (this.ledBurn() > 0.08) return 0;
     return Math.max(0, Math.min(1, this.ledBrightness())) * 0.55;
   }
 }
