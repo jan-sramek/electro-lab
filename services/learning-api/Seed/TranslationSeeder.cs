@@ -33,8 +33,24 @@ public static class TranslationSeeder
             "Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.",
         ["lab.hint.wire"] =
             "Wire mode: click a pin to start (blue preview follows the cursor), then click another pin — or click an existing wire to make a T-junction. Click empty canvas to cancel.",
+        ["lab.hint.probe"] =
+            "Probe mode: click a part body to read branch current (mA), or a net/wire node for voltage (V). The value appears in the status banner. In Transient, scrub the scope — the probe and canvas follow that time.",
+        ["lab.hint.led"] =
+            "LED series: Run DC. Current flows battery → resistor → LED → ground. Try lowering the resistor until the LED burns out (~35 mA), then Replace LED and restore ~220 Ω.",
         ["lab.hint.ledFade"] =
             "LED fade: 1) Keep the switch Closed and Run — the capacitor charges and the LED lights. 2) Uncheck Closed. 3) Run again — the capacitor discharges through the resistor and the LED fades. After the switch opens, current only flows on the LED side (that is expected).",
+        ["lab.hint.rc"] =
+            "RC charge: Transient from 0 V. Scrub the scope to watch the capacitor voltage rise toward the supply through R. Compare τ ≈ R·C with the curve.",
+        ["lab.hint.pot"] =
+            "Potentiometer divider: Run DC, then change Wiper (0–1) in the inspector — the mid-point voltage tracks the wiper. Probe the wiper net to read it.",
+        ["lab.hint.pulse"] =
+            "Pulse into RC: Transient — the pulse source steps high then low. Scrub through the edges to see charge and discharge on the capacitor.",
+        ["lab.hint.opamp"] =
+            "Op-amp inverting amp (teaching ideal VCVS, no supply rails). Run DC — gain ≈ −Rf/Rin. Probe the output net; try changing Rf or Rin.",
+        ["lab.hint.ac"] =
+            "AC RC low-pass: set analysis to AC and pick a frequency. Below the cutoff the load sees more of the source; far above it, the capacitor shunts AC to ground. Nonlinear parts are open in AC.",
+        ["lab.hint.bjt"] =
+            "BJT LED switch (teaching model: base diode + CE on-resistance). Run DC with base driven — collector current lights the LED. Remove base drive (or raise Rb) to turn it off.",
 
         ["lab.toolbar.select"] = "Select",
         ["lab.toolbar.wire"] = "Wire",
@@ -84,6 +100,10 @@ public static class TranslationSeeder
         ["lab.symbol.switch"] = "Switch",
         ["lab.symbol.bjt_npn"] = "NPN BJT",
         ["lab.symbol.op_amp"] = "Op-amp",
+        ["lab.modelNote.op_amp"] =
+            "Teaching model: ideal voltage-controlled voltage source (no supply rails or saturation).",
+        ["lab.modelNote.bjt_npn"] =
+            "Teaching model: base diode + collector–emitter on-resistance (not a SPICE BJT).",
         ["lab.symbol.current_source"] = "Current source",
         ["lab.symbol.capacitor"] = "Capacitor",
         ["lab.symbol.inductor"] = "Inductor",
@@ -107,6 +127,7 @@ public static class TranslationSeeder
         ["lab.param.onResistance"] = "On resistance",
         ["lab.param.closed"] = "Closed",
         ["lab.param.openAt"] = "Auto-open at (−1 = off)",
+        ["lab.param.closeAt"] = "Auto-close at (−1 = off)",
         ["lab.param.current"] = "Current",
         ["lab.param.capacitance"] = "Capacitance",
         ["lab.param.inductance"] = "Inductance",
@@ -147,6 +168,11 @@ public static class TranslationSeeder
         ["lab.status.error"] = "Error",
         ["lab.status.warning"] = "Warning",
         ["lab.status.probe"] = "Probe",
+        ["lab.status.info"] = "Info",
+        ["lab.capIc.ready"] =
+            "Capacitor charge stored (≈ {v} V). Open the switch and Run again to watch the LED fade.",
+        ["lab.capIc.injecting"] =
+            "Discharging from stored capacitor voltage (≈ {v} V). Scrub the scope to watch the fade.",
 
         ["lab.led.overloaded"] = "Overloaded!",
         ["lab.led.failedOpen"] = "Burned out!",

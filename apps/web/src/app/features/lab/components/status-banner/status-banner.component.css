@@ -48,6 +48,19 @@
   color: #c2410c;
 }
 
+.item.info {
+  color: #0f766e;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  font-weight: 600;
+}
+
+.item.info .kind {
+  color: #0d9488;
+}
+
 .item.probe {
   color: #1e40af;
   padding: 0.35rem 0.55rem;

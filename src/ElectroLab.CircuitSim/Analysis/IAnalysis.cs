@@ -15,6 +15,12 @@ public sealed class AnalysisOptions
     public double TStop { get; init; } = 0.005;
     public double Dt { get; init; } = 5e-5;
 
+    /// <summary>
+    /// When true, seed capacitor voltages and inductor currents from a DC solve at t=0
+    /// (capacitors open, inductors short) before the transient. Overrides <c>params.ic</c>.
+    /// </summary>
+    public bool InitFromDc { get; init; }
+
     /// <summary>Single-frequency AC analysis point (Hz), used when FStart/FStop are not both set.</summary>
     public double Freq { get; init; } = 1000;
 

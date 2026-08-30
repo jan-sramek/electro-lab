@@ -292,9 +292,9 @@ export class LabEditorStore {
         if (c.modelKey === 'led' && ev.key === 'color' && typeof ev.value === 'number') {
           params = { ...params, vf: ledColorById(ev.value).vf };
         }
-        // Manual Closed toggle cancels timed auto-open so the switch feels interactive.
+        // Manual Closed toggle cancels timed auto-open/close so the switch feels interactive.
         if (c.modelKey === 'switch' && ev.key === 'closed') {
-          params = { ...params, openAt: -1 };
+          params = { ...params, openAt: -1, closeAt: -1 };
         }
         return { ...c, params };
       })
@@ -467,7 +467,7 @@ export class LabEditorStore {
   }
 
   loadLedFadePreset(): void {
-    this.openExampleInNewTab('ledFade', 'LED fade', createLedFadePreset, 'tran', 3.0, 0.002);
+    this.openExampleInNewTab('ledFade', 'LED fade', createLedFadePreset, 'tran', 6.0, 0.002);
     this.probeTarget.set({ kind: 'component', id: 'D1' });
     this.selectedIds.set(['S1']);
   }

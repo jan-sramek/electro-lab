@@ -1,4 +1,4 @@
-@if (error() || warnings().length || probe()) {
+@if (error() || warnings().length || info() || probe()) {
   <div class="status" role="status" aria-live="polite">
     @if (error(); as err) {
       <p class="item error" role="alert">
@@ -10,6 +10,12 @@
       <p class="item warn">
         <span class="kind">{{ 'lab.status.warning' | t }}</span>
         {{ w }}
+      </p>
+    }
+    @if (info(); as i) {
+      <p class="item info">
+        <span class="kind">{{ 'lab.status.info' | t }}</span>
+        {{ i }}
       </p>
     }
     @if (probe(); as p) {

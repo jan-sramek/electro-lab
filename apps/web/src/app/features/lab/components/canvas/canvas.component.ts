@@ -581,17 +581,24 @@ export class SchematicCanvasComponent {
     return !!this.doc().components.find((x) => x.id === id)?.params['burned'];
   }
 
-  /** Switch glyph follows scrub time when openAt ≥ 0 (mid-transient open). */
+  /** Switch glyph follows scrub time when openAt/closeAt timeline is active. */
   switchClosed(c: SchematicComponent): boolean {
     if (c.modelKey !== 'switch') return !!c.params['closed'];
     const openAt = c.params['openAt'];
-    if (typeof openAt === 'number' && openAt >= 0) {
-      const res = this.result();
-      if (res?.tran?.time?.length) {
-        const idx = Math.max(0, Math.min(this.scrubIndex(), res.tran.time.length - 1));
-        const t = res.tran.time[idx] ?? 0;
-        return t < openAt;
+    const closeAt = c.params['closeAt'];
+    const hasOpen = typeof openAt === 'number' && openAt >= 0;
+    const hasClose = typeof closeAt === 'number' && closeAt >= 0;
+    const res = this.result();
+    if ((hasOpen || hasClose) && res?.tran?.time?.length) {
+      const idx = Math.max(0, Math.min(this.scrubIndex(), res.tran.time.length - 1));
+      const t = res.tran.time[idx] ?? 0;
+      if (hasOpen && hasClose) {
+        return closeAt! <= openAt!
+          ? t >= closeAt! && t < openAt!
+          : !(t >= openAt! && t < closeAt!);
       }
+      if (hasOpen) return t < openAt!;
+      return t >= closeAt!;
     }
     return !!c.params['closed'];
   }

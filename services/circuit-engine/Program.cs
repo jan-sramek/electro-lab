@@ -51,7 +51,8 @@ app.MapPost("/api/circuit/simulate", (SimulateRequest request, CircuitSimulator 
         options = new AnalysisOptions
         {
             TStop = request.Analysis?.TStop is > 0 ? request.Analysis.TStop.Value : 0.005,
-            Dt = request.Analysis?.Dt is > 0 ? request.Analysis.Dt.Value : 5e-5
+            Dt = request.Analysis?.Dt is > 0 ? request.Analysis.Dt.Value : 5e-5,
+            InitFromDc = request.Analysis?.InitFromDc ?? false
         };
     }
     else if (analysisType.Equals("ac", StringComparison.OrdinalIgnoreCase))
@@ -134,6 +135,7 @@ internal sealed class AnalysisDto
     public string Type { get; set; } = "dcOp";
     public double? TStop { get; set; }
     public double? Dt { get; set; }
+    public bool? InitFromDc { get; set; }
     public double? Freq { get; set; }
     public double? FStart { get; set; }
     public double? FStop { get; set; }

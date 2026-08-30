@@ -51,6 +51,7 @@
           [error]="sim.error()"
           [warnings]="sim.warnings()"
           [probe]="sim.probeSummary()"
+          [info]="sim.capIcStatus()"
         />
         <app-schematic-canvas
           [doc]="editor.doc()"
@@ -73,16 +74,7 @@
           (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
         />
       </div>
-      <p class="hint">
-        {{
-          (editor.tool() === 'wire'
-            ? 'lab.hint.wire'
-            : editor.activeExamplePreset() === 'ledFade'
-              ? 'lab.hint.ledFade'
-              : 'lab.hint'
-          ) | t
-        }}
-      </p>
+      <p class="hint">{{ hintKey() | t }}</p>
     </div>
 
     <aside class="side">

@@ -21,7 +21,12 @@
               [ledColor]="ledThumbColor(lib[key])"
             ></g>
           </svg>
-          <span class="name">{{ lib[key].label | t }}</span>
+          <span class="name">
+            {{ lib[key].label | t }}
+            @if (lib[key].teachingNote; as note) {
+              <span class="note">{{ note | t }}</span>
+            }
+          </span>
         </button>
       </li>
     }

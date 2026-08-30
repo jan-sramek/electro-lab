@@ -2,6 +2,9 @@
   <h2>{{ 'lab.inspector.title' | t }}</h2>
   @if (selected(); as c) {
     <p class="meta"><code>{{ c.id }}</code> · {{ label() | t }}</p>
+    @if (teachingNote(); as note) {
+      <p class="model-note">{{ note | t }}</p>
+    }
     @if (ledBurned()) {
       <p class="burn-note">{{ 'lab.inspector.ledBurned' | t }}</p>
       <button type="button" class="replace" (click)="replaceLed.emit()">

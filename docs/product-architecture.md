@@ -24,7 +24,7 @@
 
 ## Transport (Lab ↔ CircuitEngine)
 
-DC operating point uses **HTTP POST** (`/api/circuit/simulate`). No WebSocket in Phase A.
+Simulation uses **HTTP POST** (`/api/circuit/simulate`) for DC, transient, and AC. No WebSocket in Phase A.
 Optional streaming (WebSocket/SSE) only if later transient/live modes need it.
 
 ## i18n
@@ -34,16 +34,19 @@ Optional streaming (WebSocket/SSE) only if later transient/live modes need it.
 - Angular loads at startup (`I18nService`); English fallback is embedded so Lab works if the API is down.
 - First locale seeded: **en**. Add rows for other locales later with the same keys.
 
+## Lab (shipped)
+
+- DC operating point, fixed-step transient (`tStop`/`dt`), and single-frequency (or sweep-capable) **AC** analysis
+- Multi-trace scope with time scrub driving canvas/probe; probe tool for net V / branch I
+- Wire-current animation (KCL fill); status banner for errors / warnings / IC / probe
+- Duplicate / clipboard / JSON import-export; named local circuit tabs
+- Teaching pack: battery, R, C (optional `ic`), L, LED/diode, switch (`openAt` / `closeAt`), pulse, pot, ammeter/voltmeter, ideal op-amp (VCVS), switch-like NPN BJT, AC source
+- Example presets including LED series, **LED fade** (two-run capacitor IC carry-over), RC, pot, pulse, op-amp invert, AC RC LPF, BJT LED switch
+- Transient option `initFromDc` to seed C/L state from a DC solve at t = 0
+
 ## Deferred (by design)
 
-- **AC analysis** product mode.
-- Learn catalog / quizzes and LearningApi auth/progress (i18n slice exists).
-- SPICE-level semiconductor models (op-amps, BJT/MOS).
-- WebSocket / SSE streaming for live transient playback.
-
-## Lab v1 (done)
-
-- DC + fixed-step transient with editable `tStop`/`dt`
-- Multi-trace scope with time scrub driving canvas/probe
-- Duplicate / clipboard / JSON import-export; named local circuit slots
-- Teaching pack includes potentiometer and pulse voltage source
+- Learn catalog / quizzes and LearningApi auth/progress (i18n slice exists)
+- SPICE-level semiconductors (real op-amps, BJT/MOS) and AC bias linearization of nonlinear devices
+- Transformers; WebSocket / SSE streaming for live transient playback
+- Bode UI for AC sweeps (engine can list frequencies; Lab emphasizes a single `f` today)

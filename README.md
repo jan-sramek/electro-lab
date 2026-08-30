@@ -14,7 +14,7 @@ See [docs/product-architecture.md](docs/product-architecture.md).
 
 ## Lab
 
-Interactive schematic editor: place parts from the palette, wire pin-to-pin, inspect params, run **DC** or **transient** analysis (scope for `tran`). Schematics autosave to `localStorage`.
+Interactive schematic editor: place parts from the palette, wire pin-to-pin, inspect params, run **DC**, **transient**, or **AC** analysis (scope for `tran`). Schematics autosave to `localStorage`. Example circuits include LED fade with capacitor initial-condition carry-over.
 
 ## Quick start (Docker Compose)
 

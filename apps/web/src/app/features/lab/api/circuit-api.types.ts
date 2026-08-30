@@ -4,6 +4,7 @@ export interface SimulateRequest {
     type: string;
     tStop?: number;
     dt?: number;
+    initFromDc?: boolean;
     freq?: number;
     fStart?: number;
     fStop?: number;

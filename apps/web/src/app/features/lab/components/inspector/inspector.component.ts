@@ -34,6 +34,11 @@ export class InspectorPanelComponent {
     return c ? (SYMBOL_LIBRARY[c.modelKey]?.label ?? c.modelKey) : '';
   });
 
+  readonly teachingNote = computed(() => {
+    const c = this.selected();
+    return c ? (SYMBOL_LIBRARY[c.modelKey]?.teachingNote ?? null) : null;
+  });
+
   readonly ledBurned = computed(() => {
     const c = this.selected();
     return !!c && c.modelKey === 'led' && !!c.params['burned'];

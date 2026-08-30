@@ -22,6 +22,8 @@ export interface SymbolDef {
   modelKey: string;
   /** i18n key, e.g. lab.symbol.battery */
   label: string;
+  /** Optional i18n key — teaching approximation note in inspector / palette. */
+  teachingNote?: string;
   /** If true, omitted from CircuitEngine netlist; used only for grounding. */
   schematicOnly?: boolean;
   pins: PinDef[];
@@ -72,6 +74,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   op_amp: {
     modelKey: 'op_amp',
     label: 'lab.symbol.op_amp',
+    teachingNote: 'lab.modelNote.op_amp',
     pins: [
       { name: 'inp', ox: -40, oy: -16 },
       { name: 'inn', ox: -40, oy: 16 },
@@ -87,6 +90,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   bjt_npn: {
     modelKey: 'bjt_npn',
     label: 'lab.symbol.bjt_npn',
+    teachingNote: 'lab.modelNote.bjt_npn',
     pins: [
       { name: 'c', ox: 0, oy: -40 },
       { name: 'b', ox: -40, oy: 0 },
@@ -227,12 +231,20 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'a', ox: -50, oy: 0 },
       { name: 'b', ox: 50, oy: 0 }
     ],
-    defaultParams: { closed: true, openAt: -1 },
+    defaultParams: { closed: true, openAt: -1, closeAt: -1 },
     paramDefs: [
       { key: 'closed', label: 'lab.param.closed', type: 'boolean' },
       {
         key: 'openAt',
         label: 'lab.param.openAt',
+        type: 'number',
+        min: -1,
+        step: 0.1,
+        unit: 's'
+      },
+      {
+        key: 'closeAt',
+        label: 'lab.param.closeAt',
         type: 'number',
         min: -1,
         step: 0.1,

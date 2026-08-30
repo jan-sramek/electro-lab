@@ -38,7 +38,7 @@ public sealed class TransientAnalysis : IAnalysis
         {
             if (el.Model.Equals("capacitor", StringComparison.OrdinalIgnoreCase))
             {
-                // Optional params.ic = initial V(a)-V(b); default 0.
+                // Optional params.ic = initial V(a)-V(b); default 0. Overridden by InitFromDc.
                 el.Params.TryGetValue("ic", out var ic);
                 state.CapVoltage[el.Id] = ic;
             }
@@ -50,11 +50,17 @@ public sealed class TransientAnalysis : IAnalysis
                 state.Bias.BjtOn[el.Id] = true;
         }
 
+        var warnings = new List<string>();
+        if (opts.InitFromDc)
+        {
+            if (!TrySeedFromDc(circuit, models, nodes, state, out var seedError))
+                return SimulationResult.Fail(Type, seedError ?? "initFromDc DC seed failed.");
+            warnings.Add("tran: capacitor/inductor state seeded from DC (initFromDc).");
+        }
+
         var times = new List<double>();
         var voltageSeries = nodes.ToDictionary(n => n, _ => new List<double>(), StringComparer.Ordinal);
         var currentSeries = models.ToDictionary(m => m.el.Id, _ => new List<double>(), StringComparer.Ordinal);
-
-        var warnings = new List<string>();
         var steps = (int)Math.Ceiling(opts.TStop / opts.Dt);
         if (steps > 20_000)
             return SimulationResult.Fail(Type, "tran step count exceeds 20000; increase dt or reduce tStop.");
@@ -161,6 +167,100 @@ public sealed class TransientAnalysis : IAnalysis
                     .ToList()
             }
         };
+    }
+
+    /// <summary>
+    /// DC operating point at switch timeline t=0; copy C voltages and L currents into state.
+    /// </summary>
+    private static bool TrySeedFromDc(
+        Circuit circuit,
+        List<(ElementInstance el, IDeviceModel model)> models,
+        HashSet<string> nodes,
+        TransientState state,
+        out string? error)
+    {
+        error = null;
+        var ctx = new StampContext(nodes, circuit.Ground);
+        foreach (var (el, model) in models)
+            model.RegisterExtras(el, ctx);
+
+        ctx.BeginStamp();
+        foreach (var (el, model) in models)
+            model.ContributeDc(el, ctx, state.Bias);
+
+        if (!ctx.TrySolve(out var solution, out var lastError))
+        {
+            error = lastError ?? "initFromDc: DC seed solve failed.";
+            return false;
+        }
+
+        // Settle piecewise devices a few times (same as dcOp).
+        for (var iter = 0; iter < 4; iter++)
+        {
+            var changed = false;
+            foreach (var (el, model) in models)
+            {
+                if (IsPiecewiseDiode(el.Model))
+                {
+                    var va = ctx.NodeVoltage(solution, el.Pins["a"]);
+                    var vc = ctx.NodeVoltage(solution, el.Pins["c"]);
+                    var vf = el.Params["vf"];
+                    var current = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
+                    var previouslyOn = state.Bias.LedOn[el.Id];
+                    var nextOn = previouslyOn ? current > 1e-12 : va - vc >= vf;
+                    if (nextOn != previouslyOn)
+                    {
+                        state.Bias.LedOn[el.Id] = nextOn;
+                        changed = true;
+                    }
+                }
+                else if (IsPiecewiseBjt(el.Model))
+                {
+                    var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
+                    var ve = ctx.NodeVoltage(solution, el.Pins["e"]);
+                    var vf = el.Params["vf"];
+                    var rb = el.Params["rb"];
+                    var previouslyOn = state.Bias.BjtOn[el.Id];
+                    var baseCurrent = previouslyOn ? (vb - ve - vf) / rb : 0;
+                    var nextOn = previouslyOn ? baseCurrent > 1e-12 : vb - ve >= vf;
+                    if (nextOn != previouslyOn)
+                    {
+                        state.Bias.BjtOn[el.Id] = nextOn;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (!changed) break;
+
+            ctx = new StampContext(nodes, circuit.Ground);
+            foreach (var (el, model) in models)
+                model.RegisterExtras(el, ctx);
+            ctx.BeginStamp();
+            foreach (var (el, model) in models)
+                model.ContributeDc(el, ctx, state.Bias);
+            if (!ctx.TrySolve(out solution, out lastError))
+            {
+                error = lastError ?? "initFromDc: DC seed settle failed.";
+                return false;
+            }
+        }
+
+        foreach (var (el, model) in models)
+        {
+            if (el.Model.Equals("capacitor", StringComparison.OrdinalIgnoreCase))
+            {
+                var va = ctx.NodeVoltage(solution, el.Pins["a"]);
+                var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
+                state.CapVoltage[el.Id] = va - vb;
+            }
+            else if (el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase))
+            {
+                state.IndCurrent[el.Id] = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
+            }
+        }
+
+        return true;
     }
 
     private static HashSet<string> CollectNodes(Circuit circuit, List<(ElementInstance el, IDeviceModel model)> models)

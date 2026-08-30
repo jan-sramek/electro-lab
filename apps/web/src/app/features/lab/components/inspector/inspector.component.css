@@ -10,6 +10,17 @@
   color: #64748b;
 }
 
+.model-note {
+  margin: -0.35rem 0 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 label {
   display: flex;
   flex-direction: column;

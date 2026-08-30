@@ -57,6 +57,8 @@ export class CircuitSimulationFacade {
   /** Last final capacitor voltages after a successful tran (for open-switch discharge). */
   private storedCapIc = new Map<string, number>();
   private storedCapFingerprint = '';
+  /** Reactive summary for status banner (max |Vc| among stored caps). */
+  private readonly storedCapIcVolts = signal<number | null>(null);
   /** True when the last request injected capacitor IC (discharge / fade run). */
   private lastRunInjectedIc = false;
 
@@ -70,6 +72,20 @@ export class CircuitSimulationFacade {
   });
 
   readonly highlightedNets = computed(() => this.highlightNetIds());
+
+  /** Banner line when Lab has stored Vc for a discharge re-run. */
+  readonly capIcStatus = computed(() => {
+    this.editor.revision();
+    const v = this.storedCapIcVolts();
+    if (v === null || this.storedCapIc.size === 0) return null;
+    const fp = schematicCapFingerprint(this.editor.doc());
+    if (fp !== this.storedCapFingerprint) return null;
+    const vs = Math.abs(v).toFixed(2);
+    if (allSwitchesOpen(this.editor.doc())) {
+      return this.i18n.t('lab.capIc.injecting', { v: vs });
+    }
+    return this.i18n.t('lab.capIc.ready', { v: vs });
+  });
 
   readonly probeSummary = computed(() => {
     const p = this.editor.probeTarget();
@@ -289,6 +305,7 @@ export class CircuitSimulationFacade {
     // Always refresh store after a successful tran on the current topology.
     this.storedCapFingerprint = fp;
     this.storedCapIc = finalCapVoltagesFromTran(doc, res);
+    this.publishCapIcVolts();
   }
 
   private clearCapIcIfStale(): void {
@@ -296,7 +313,20 @@ export class CircuitSimulationFacade {
     if (fp !== this.storedCapFingerprint) {
       this.storedCapIc = new Map();
       this.storedCapFingerprint = '';
+      this.storedCapIcVolts.set(null);
     }
+  }
+
+  private publishCapIcVolts(): void {
+    if (this.storedCapIc.size === 0) {
+      this.storedCapIcVolts.set(null);
+      return;
+    }
+    let best = 0;
+    for (const v of this.storedCapIc.values()) {
+      if (Math.abs(v) > Math.abs(best)) best = v;
+    }
+    this.storedCapIcVolts.set(best);
   }
 
   /** Explicit toolbar Run — shows busy state on the button. */
@@ -335,12 +365,6 @@ export class CircuitSimulationFacade {
     this.clearCapIcIfStale();
     const injectIc = mode === 'tran' && allSwitchesOpen(doc) && this.storedCapIc.size > 0;
     this.lastRunInjectedIc = injectIc;
-    if (injectIc) {
-      const note = this.i18n.t('lab.led.fadeDischargeHint');
-      if (!this.warnings().includes(note)) {
-        this.warnings.set([...this.warnings(), note]);
-      }
-    }
 
     const circuit = compileNetlistWithCapIc(doc, this.storedCapIc, injectIc);
     if (circuit.elements.length === 0) {

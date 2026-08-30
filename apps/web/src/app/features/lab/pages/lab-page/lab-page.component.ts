@@ -34,6 +34,16 @@ export class LabPageComponent implements OnInit {
   readonly editor = inject(LabEditorStore);
   readonly sim = inject(CircuitSimulationFacade);
 
+  /** Context hint under the canvas: tool mode first, then example preset, else generic. */
+  hintKey(): string {
+    const tool = this.editor.tool();
+    if (tool === 'wire') return 'lab.hint.wire';
+    if (tool === 'probe') return 'lab.hint.probe';
+    const preset = this.editor.activeExamplePreset();
+    if (preset) return `lab.hint.${preset}`;
+    return 'lab.hint';
+  }
+
   ngOnInit(): void {
     this.editor.initFromStorage();
   }
