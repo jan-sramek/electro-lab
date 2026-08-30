@@ -7,7 +7,7 @@ import { SchematicCanvasComponent } from '../../components/canvas/canvas.compone
 import { InspectorPanelComponent } from '../../components/inspector/inspector.component';
 import { LabToolbarComponent } from '../../components/toolbar/toolbar.component';
 import { ResultsPanelComponent } from '../../components/results-panel/results-panel.component';
-import { ProbeSummaryComponent } from '../../components/probe-summary/probe-summary.component';
+import { StatusBannerComponent } from '../../components/status-banner/status-banner.component';
 import { ScopeComponent } from '../../components/scope/scope.component';
 import { CircuitTabsComponent } from '../../components/circuit-tabs/circuit-tabs.component';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
@@ -21,7 +21,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
     InspectorPanelComponent,
     LabToolbarComponent,
     ResultsPanelComponent,
-    ProbeSummaryComponent,
+    StatusBannerComponent,
     ScopeComponent,
     CircuitTabsComponent,
     TranslatePipe

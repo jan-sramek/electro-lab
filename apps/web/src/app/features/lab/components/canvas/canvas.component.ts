@@ -21,8 +21,9 @@ import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
-import { estimateWireCurrentAtoB } from '../../data/wire-current';
+import { estimateAllWireCurrents } from '../../data/wire-current';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
+import { normalizeLedColorId } from '../../data/led-colors';
 
 interface DragState {
   ids: string[];
@@ -89,6 +90,9 @@ export class SchematicCanvasComponent {
     const d = this.nettled();
     const res = this.result();
     const live = !!res?.ok;
+    const wireCurrents = live
+      ? estimateAllWireCurrents(d.components, d.wires, (id) => this.currentOf(id))
+      : null;
     const out: {
       id: string;
       d: string;
@@ -102,13 +106,8 @@ export class SchematicCanvasComponent {
       const pts = orthogonalPolyline(a.x, a.y, b.x, b.y);
       const path = polylineToPath(pts);
       let flow: { path: string; periodMs: number; strength: number } | null = null;
-      if (live) {
-        const iAlong = estimateWireCurrentAtoB(
-          w,
-          d.components,
-          d.wires,
-          (id) => this.currentOf(id)
-        );
+      if (wireCurrents) {
+        const iAlong = wireCurrents.get(w.id) ?? 0;
         if (Math.abs(iAlong) > 1e-6) {
           const mag = Math.abs(iAlong);
           const strength = Math.min(1, mag / 0.012);
@@ -540,6 +539,11 @@ export class SchematicCanvasComponent {
 
   isLedFailedOpen(id: string): boolean {
     return !!this.doc().components.find((x) => x.id === id)?.params['burned'];
+  }
+
+  ledColorOf(c: { modelKey: string; params: Record<string, number | boolean> }): number {
+    if (c.modelKey !== 'led') return 0;
+    return normalizeLedColorId(c.params['color']);
   }
 
   pinPos(c: SchematicComponent, pinName: string): { x: number; y: number } {

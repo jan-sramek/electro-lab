@@ -1,0 +1,22 @@
+@if (error() || warnings().length || probe()) {
+  <div class="status" role="status" aria-live="polite">
+    @if (error(); as err) {
+      <p class="item error" role="alert">
+        <span class="kind">{{ 'lab.status.error' | t }}</span>
+        {{ err }}
+      </p>
+    }
+    @for (w of warnings(); track w) {
+      <p class="item warn">
+        <span class="kind">{{ 'lab.status.warning' | t }}</span>
+        {{ w }}
+      </p>
+    }
+    @if (probe(); as p) {
+      <p class="item probe">
+        <span class="kind">{{ 'lab.status.probe' | t }}</span>
+        {{ p }}
+      </p>
+    }
+  </div>
+}

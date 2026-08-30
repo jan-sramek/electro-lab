@@ -43,7 +43,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.rcPreset': 'RC charge (transient)',
   'lab.toolbar.potPreset': 'Potentiometer divider (DC)',
   'lab.toolbar.pulsePreset': 'Pulse into RC (transient)',
-  'lab.toolbar.opampPreset': 'Op-amp buffer (DC)',
+  'lab.toolbar.opampPreset': 'Op-amp inverting (DC)',
   'lab.toolbar.acPreset': 'AC RC low-pass',
   'lab.toolbar.bjtPreset': 'BJT LED switch (DC)',
   'lab.toolbar.export': 'Export',
@@ -90,6 +90,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.param.senseResistance': 'Sense resistance',
   'lab.param.resistance': 'Resistance',
   'lab.param.forwardV': 'Forward V',
+  'lab.param.ledColor': 'Color',
   'lab.param.onResistance': 'On resistance',
   'lab.param.closed': 'Closed',
   'lab.param.current': 'Current',
@@ -129,8 +130,17 @@ export const EN_FALLBACK: Record<string, string> = {
 
   'lab.canvas.aria': 'Schematic canvas',
 
+  'lab.status.error': 'Error',
+  'lab.status.warning': 'Warning',
+  'lab.status.probe': 'Probe',
+
   'lab.led.overloaded': 'Overloaded!',
   'lab.led.failedOpen': 'Burned out!',
+  'lab.led.color.red': 'Red',
+  'lab.led.color.green': 'Green',
+  'lab.led.color.yellow': 'Yellow',
+  'lab.led.color.blue': 'Blue',
+  'lab.led.color.white': 'White',
   'lab.led.burnedWarning':
     'LED {ids} burned out from too much current and is now an open circuit. Replace it and add enough series resistance.',
   'lab.inspector.ledBurned':

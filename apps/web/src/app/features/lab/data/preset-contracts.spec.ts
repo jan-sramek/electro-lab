@@ -1,4 +1,4 @@
-import { compileNetlist } from './schematic.model';
+import { compileNetlist, orthogonalPolyline, pinWorldPos } from './schematic.model';
 import { createLedPreset } from './presets/led-series.preset';
 import { createRcStepPreset } from './presets/rc-step.preset';
 import { createPotDividerPreset } from './presets/pot-divider.preset';
@@ -7,6 +7,46 @@ import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
 import { createAcRcPreset } from './presets/ac-rc.preset';
 import { createBjtSwitchPreset } from './presets/bjt-switch.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
+import { SchematicDocument } from './schematic.model';
+
+/** Long horizontal segments that share the same y and overlap in x (supply/return collision). */
+function overlappingHorizontalRails(docs: SchematicDocument[]): string[] {
+  const hits: string[] = [];
+  for (const doc of docs) {
+    const segs: { y: number; x1: number; x2: number; id: string }[] = [];
+    for (const w of doc.wires) {
+      const ca = doc.components.find((c) => c.id === w.a.componentId);
+      const cb = doc.components.find((c) => c.id === w.b.componentId);
+      if (!ca || !cb) continue;
+      const a = pinWorldPos(ca, w.a.pin);
+      const b = pinWorldPos(cb, w.b.pin);
+      if (!a || !b) continue;
+      const pts = orthogonalPolyline(a.x, a.y, b.x, b.y);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p = pts[i]!;
+        const q = pts[i + 1]!;
+        if (Math.abs(p.y - q.y) > 0.5) continue;
+        segs.push({
+          y: p.y,
+          x1: Math.min(p.x, q.x),
+          x2: Math.max(p.x, q.x),
+          id: w.id
+        });
+      }
+    }
+    for (let i = 0; i < segs.length; i++) {
+      for (let j = i + 1; j < segs.length; j++) {
+        const A = segs[i]!;
+        const B = segs[j]!;
+        if (Math.abs(A.y - B.y) > 0.5) continue;
+        const overlap = Math.min(A.x2, B.x2) - Math.max(A.x1, B.x1);
+        // Ignore short shared stubs at a pin; flag long coincident rails.
+        if (overlap > 15) hits.push(`${A.id} ∩ ${B.id} @ y=${A.y}`);
+      }
+    }
+  }
+  return hits;
+}
 
 describe('Lab preset contracts', () => {
   it('compiles LED preset with expected models', () => {
@@ -39,6 +79,19 @@ describe('Lab preset contracts', () => {
     const bjt = compileNetlist(createBjtSwitchPreset());
     expect(bjt.elements.some((e) => e.model === 'bjt_npn')).toBeTrue();
     expect(bjt.elements.some((e) => e.model === 'ammeter')).toBeTrue();
+  });
+
+  it('avoids long overlapping horizontal wire rails (supply vs return)', () => {
+    const hits = overlappingHorizontalRails([
+      createLedPreset(),
+      createRcStepPreset(),
+      createPotDividerPreset(),
+      createPulseRcPreset(),
+      createOpAmpBufferPreset(),
+      createAcRcPreset(),
+      createBjtSwitchPreset()
+    ]);
+    expect(hits).withContext(hits.join('; ')).toEqual([]);
   });
 
   it('flags shorted voltage source', () => {

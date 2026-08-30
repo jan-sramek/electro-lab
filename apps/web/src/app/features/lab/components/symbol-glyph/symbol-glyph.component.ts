@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
 
 /** Shared schematic glyph for canvas and palette thumbs. */
 @Component({
@@ -97,6 +98,7 @@ import { Component, input } from '@angular/core';
             rx="26"
             ry="28"
             class="led-glow"
+            [attr.fill]="ledGlowFill()"
             [attr.opacity]="ledGlowOpacity()"
           />
         }
@@ -193,7 +195,6 @@ import { Component, input } from '@angular/core';
       stroke: #1c1917;
     }
     .led-glow {
-      fill: #ff4d6d;
       pointer-events: none;
       filter: blur(1.5px);
     }
@@ -322,11 +323,16 @@ export class SymbolGlyphComponent {
   readonly ledBrightness = input(0);
   /** 0 = ok, 1 = fully overloaded / on fire (teaching scale from ~35 mA). */
   readonly ledBurn = input(0);
+  /** LED color preset id (see led-colors.ts). */
+  readonly ledColor = input(0);
+
+  private preset() {
+    return ledColorById(normalizeLedColorId(this.ledColor()));
+  }
 
   ledFill(): string {
     const burn = Math.max(0, Math.min(1, this.ledBurn()));
     if (burn > 0.08) {
-      // Char toward black/brown as overload rises.
       const t = Math.min(1, burn);
       const r = Math.round(120 - 70 * t);
       const g = Math.round(70 - 45 * t);
@@ -334,10 +340,16 @@ export class SymbolGlyphComponent {
       return `rgb(${r}, ${g}, ${b})`;
     }
     const bright = Math.max(0, Math.min(1, this.ledBrightness()));
-    const r = Math.round(226 + (255 - 226) * bright);
-    const g = Math.round(232 + (61 - 232) * bright);
-    const bl = Math.round(240 + (109 - 240) * bright);
-    return `rgb(${r}, ${g}, ${bl})`;
+    const { off, lit } = this.preset();
+    const r = Math.round(off[0] + (lit[0] - off[0]) * bright);
+    const g = Math.round(off[1] + (lit[1] - off[1]) * bright);
+    const b = Math.round(off[2] + (lit[2] - off[2]) * bright);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  ledGlowFill(): string {
+    const { glow } = this.preset();
+    return `rgb(${glow[0]}, ${glow[1]}, ${glow[2]})`;
   }
 
   ledGlowOpacity(): number {

@@ -29,11 +29,15 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
     case 'battery':
     case 'pulse_source':
     case 'ac_source':
-    case 'op_amp':
-      if (pin === 'p' || pin === 'out') return branchI;
+      if (pin === 'p') return branchI;
       if (pin === 'n') return -branchI;
       return 0;
+    case 'op_amp':
+      // Branch current is output current (out → ground VCVS).
+      if (pin === 'out') return branchI;
+      return 0;
     case 'bjt_npn':
+      // Branch current is Ic (c → e). Base is handled by the base resistor's current.
       if (pin === 'c') return -branchI;
       if (pin === 'e') return branchI;
       return 0;
@@ -42,8 +46,10 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
       if (pin === 'p') return -branchI;
       return 0;
     case 'potentiometer':
+      // Branch current is Ia→w. Unloaded wiper ⇒ same I through b; wiper open ⇒ 0 at w.
       if (pin === 'a') return -branchI;
-      if (pin === 'w') return branchI;
+      if (pin === 'b') return branchI;
+      if (pin === 'w') return 0;
       return 0;
     default:
       return 0;
@@ -73,7 +79,7 @@ export function wireCurrentAtoB(
 }
 
 function isPassiveNetNode(modelKey: string): boolean {
-  return modelKey === 'ground' || modelKey === 'junction';
+  return modelKey === 'ground' || modelKey === 'junction' || modelKey === 'voltmeter';
 }
 
 /** Largest |branch current| among real devices — used when a source current is missing. */
@@ -95,10 +101,144 @@ function wiresAtPin(wires: SchematicWire[], ref: PinRef): SchematicWire[] {
   return wires.filter((w) => pinKey(w.a) === k || pinKey(w.b) === k);
 }
 
+function componentOf(
+  components: SchematicComponent[],
+  id: string
+): SchematicComponent | undefined {
+  return components.find((c) => c.id === id);
+}
+
+/**
+ * Current leaving a pin into its attached wires.
+ * Ground / junction / voltmeter inject 0 (KCL only).
+ * Returns null when the device branch current is unknown.
+ */
+function pinInjectedOutflow(
+  components: SchematicComponent[],
+  ref: PinRef,
+  currentOf: (id: string) => number | null
+): number | null {
+  const c = componentOf(components, ref.componentId);
+  if (!c) return null;
+  if (isPassiveNetNode(c.modelKey)) return 0;
+  const i = currentOf(c.id);
+  if (typeof i !== 'number') return null;
+  return pinOutflowAmps(c.modelKey, ref.pin, i);
+}
+
+/** Current leaving `pin` through wire `w` given I along w from a→b. */
+function leavingThroughWire(w: SchematicWire, pin: PinRef, iAlongAtoB: number): number {
+  return pinKey(w.a) === pinKey(pin) ? iAlongAtoB : -iAlongAtoB;
+}
+
+/**
+ * Estimate I along every wire (A→B) by seeding degree-1 device pins, then
+ * closing KCL at multi-wire junctions/ground so return paths and T-splits fill in.
+ */
+export function estimateAllWireCurrents(
+  components: SchematicComponent[],
+  wires: SchematicWire[],
+  currentOf: (id: string) => number | null
+): Map<string, number> {
+  const along = new Map<string, number>();
+  if (!wires.length) return along;
+
+  const pinRefs = new Map<string, PinRef>();
+  for (const w of wires) {
+    pinRefs.set(pinKey(w.a), w.a);
+    pinRefs.set(pinKey(w.b), w.b);
+  }
+
+  const trySeed = (): boolean => {
+    let changed = false;
+    for (const w of wires) {
+      if (along.has(w.id)) continue;
+      const countA = wiresAtPin(wires, w.a).length;
+      const countB = wiresAtPin(wires, w.b).length;
+      const oa = pinInjectedOutflow(components, w.a, currentOf);
+      const ob = pinInjectedOutflow(components, w.b, currentOf);
+
+      if (countA === 1 && oa !== null && Math.abs(oa) > 1e-15) {
+        along.set(w.id, oa);
+        changed = true;
+        continue;
+      }
+      if (countB === 1 && ob !== null && Math.abs(ob) > 1e-15) {
+        along.set(w.id, -ob);
+        changed = true;
+      }
+    }
+    return changed;
+  };
+
+  const tryKcl = (): boolean => {
+    let changed = false;
+    for (const pin of pinRefs.values()) {
+      const required = pinInjectedOutflow(components, pin, currentOf);
+      if (required === null) continue;
+
+      const ws = wiresAtPin(wires, pin);
+      let knownLeaving = 0;
+      const unknown: SchematicWire[] = [];
+      for (const w of ws) {
+        const i = along.get(w.id);
+        if (i === undefined) {
+          unknown.push(w);
+          continue;
+        }
+        knownLeaving += leavingThroughWire(w, pin, i);
+      }
+      if (unknown.length !== 1) continue;
+
+      const w = unknown[0]!;
+      const needLeave = required - knownLeaving;
+      const iAlong =
+        pinKey(w.a) === pinKey(pin) ? needLeave : -needLeave;
+      along.set(w.id, iAlong);
+      changed = true;
+    }
+    return changed;
+  };
+
+  // Iterate: seed unique pins ↔ KCL at multi-wire nodes (junctions / ground).
+  for (let n = 0; n < wires.length + 4; n++) {
+    const a = trySeed();
+    const b = tryKcl();
+    if (!a && !b) break;
+  }
+
+  // Fallback for leftover wires (missing branch currents, etc.).
+  const hint = seriesCurrentHint(components, currentOf);
+  for (const w of wires) {
+    if (along.has(w.id)) continue;
+    const ca = componentOf(components, w.a.componentId);
+    const cb = componentOf(components, w.b.componentId);
+    const ia = currentOf(w.a.componentId);
+    const ib = currentOf(w.b.componentId);
+
+    let i = wireCurrentAtoB(ca?.modelKey, w.a.pin, ia, cb?.modelKey, w.b.pin, ib);
+    if (Math.abs(i) < 1e-12 && hint != null) {
+      const mag = Math.abs(hint);
+      const countA = wiresAtPin(wires, w.a).length;
+      const countB = wiresAtPin(wires, w.b).length;
+      if (countA === 1 && ca && !isPassiveNetNode(ca.modelKey)) {
+        i = pinOutflowAmps(ca.modelKey, w.a.pin, mag);
+      } else if (countB === 1 && cb && !isPassiveNetNode(cb.modelKey)) {
+        i = -pinOutflowAmps(cb.modelKey, w.b.pin, mag);
+      } else {
+        i = wireCurrentAtoB(ca?.modelKey, w.a.pin, mag, cb?.modelKey, w.b.pin, mag);
+      }
+    }
+    if (Math.abs(i) > 1e-15) along.set(w.id, i);
+  }
+
+  return along;
+}
+
 /**
  * Current along wire from A toward B, preferring the endpoint that has exactly
- * one attached wire (avoids ambiguous ground/T nodes). Falls back to a series
- * hint so battery↔ground return wires still animate if V-source current is absent.
+ * one attached wire (avoids ambiguous ground/T nodes). Falls back to KCL fill
+ * across the whole net so junction/ground segments still animate.
  */
 export function estimateWireCurrentAtoB(
   wire: SchematicWire,
@@ -106,35 +246,5 @@ export function estimateWireCurrentAtoB(
   wires: SchematicWire[],
   currentOf: (id: string) => number | null
 ): number {
-  const ca = components.find((c) => c.id === wire.a.componentId);
-  const cb = components.find((c) => c.id === wire.b.componentId);
-  const ia = currentOf(wire.a.componentId);
-  const ib = currentOf(wire.b.componentId);
-
-  const countA = wiresAtPin(wires, wire.a).length;
-  const countB = wiresAtPin(wires, wire.b).length;
-
-  // Prefer a unique device pin (typical series / return-to-ground case).
-  if (countA === 1 && ca && !isPassiveNetNode(ca.modelKey) && typeof ia === 'number') {
-    return pinOutflowAmps(ca.modelKey, wire.a.pin, ia);
-  }
-  if (countB === 1 && cb && !isPassiveNetNode(cb.modelKey) && typeof ib === 'number') {
-    return -pinOutflowAmps(cb.modelKey, wire.b.pin, ib);
-  }
-
-  let i = wireCurrentAtoB(ca?.modelKey, wire.a.pin, ia, cb?.modelKey, wire.b.pin, ib);
-  if (Math.abs(i) > 1e-12) return i;
-
-  const hint = seriesCurrentHint(components, currentOf);
-  if (hint == null) return 0;
-
-  // Substitute |hint| as conventional +supply / +forward current for direction.
-  const mag = Math.abs(hint);
-  if (countA === 1 && ca && !isPassiveNetNode(ca.modelKey)) {
-    return pinOutflowAmps(ca.modelKey, wire.a.pin, mag);
-  }
-  if (countB === 1 && cb && !isPassiveNetNode(cb.modelKey)) {
-    return -pinOutflowAmps(cb.modelKey, wire.b.pin, mag);
-  }
-  return wireCurrentAtoB(ca?.modelKey, wire.a.pin, mag, cb?.modelKey, wire.b.pin, mag);
+  return estimateAllWireCurrents(components, wires, currentOf).get(wire.id) ?? 0;
 }

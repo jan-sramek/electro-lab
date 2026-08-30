@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SchematicComponent } from '../../data/schematic.model';
 import { SYMBOL_LIBRARY, ParamDef } from '../../data/symbol-library';
@@ -19,6 +19,16 @@ export class InspectorPanelComponent {
   readonly remove = output<void>();
   readonly replaceLed = output<void>();
 
+  /** In-progress number field text — committed on blur/Enter only (avoids sim on "8" while typing "800"). */
+  private readonly numberDrafts = signal<Record<string, number | string>>({});
+
+  constructor() {
+    effect(() => {
+      this.selected()?.id;
+      this.numberDrafts.set({});
+    });
+  }
+
   readonly label = computed(() => {
     const c = this.selected();
     return c ? (SYMBOL_LIBRARY[c.modelKey]?.label ?? c.modelKey) : '';
@@ -35,13 +45,39 @@ export class InspectorPanelComponent {
     return SYMBOL_LIBRARY[c.modelKey]?.paramDefs ?? [];
   });
 
-  onNumber(key: string, raw: number | string | null): void {
-    const value = Number(raw);
+  numberDisplay(c: SchematicComponent, key: string): number | string {
+    const draft = this.numberDrafts()[this.draftKey(c.id, key)];
+    if (draft !== undefined) return draft;
+    return c.params[key] as number;
+  }
+
+  onNumberDraft(componentId: string, key: string, raw: number | string | null): void {
+    const dk = this.draftKey(componentId, key);
+    this.numberDrafts.update((d) => ({ ...d, [dk]: raw ?? '' }));
+  }
+
+  onNumberCommit(componentId: string, key: string): void {
+    const dk = this.draftKey(componentId, key);
+    const draft = this.numberDrafts()[dk];
+    if (draft === undefined) return;
+    this.numberDrafts.update((d) => {
+      const { [dk]: _, ...rest } = d;
+      return rest;
+    });
+    const value = Number(draft);
     if (!Number.isFinite(value)) return;
+    this.paramChange.emit({ key, value });
+  }
+
+  onEnum(key: string, value: number): void {
     this.paramChange.emit({ key, value });
   }
 
   onBool(key: string, value: boolean): void {
     this.paramChange.emit({ key, value: Boolean(value) });
+  }
+
+  private draftKey(componentId: string, paramKey: string): string {
+    return `${componentId}:${paramKey}`;
   }
 }

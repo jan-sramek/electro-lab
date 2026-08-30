@@ -32,14 +32,6 @@
     (run)="sim.run()"
   />
 
-  @if (sim.error()) {
-    <p class="error">{{ sim.error() }}</p>
-  }
-  @if (sim.warnings().length) {
-    <p class="warn">{{ sim.warnings().join('; ') }}</p>
-  }
-  <app-probe-summary [summary]="sim.probeSummary()" />
-
   <div class="lab-layout">
     <aside class="side">
       <app-component-palette (place)="editor.onPalettePlace($event)" />
@@ -54,6 +46,11 @@
           (add)="editor.addCircuitTab()"
           (close)="editor.closeCircuitTab($event)"
           (rename)="editor.renameCircuitTab($event.id, $event.name)"
+        />
+        <app-status-banner
+          [error]="sim.error()"
+          [warnings]="sim.warnings()"
+          [probe]="sim.probeSummary()"
         />
         <app-schematic-canvas
           [doc]="editor.doc()"

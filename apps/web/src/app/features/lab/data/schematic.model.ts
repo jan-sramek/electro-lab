@@ -125,32 +125,32 @@ export function createComponent(
     pins[p.name] = { net: '', ox: p.ox, oy: p.oy };
   }
   const prefix =
-    modelKey === 'battery'
+    def.modelKey === 'battery'
       ? 'V'
-      : modelKey === 'resistor'
+      : def.modelKey === 'resistor'
         ? 'R'
-        : modelKey === 'led' || modelKey === 'diode'
+        : def.modelKey === 'led' || def.modelKey === 'diode'
           ? 'D'
-          : modelKey === 'switch'
+          : def.modelKey === 'switch'
             ? 'S'
-            : modelKey === 'current_source'
+            : def.modelKey === 'current_source'
               ? 'I'
-              : modelKey === 'capacitor'
+              : def.modelKey === 'capacitor'
                 ? 'C'
-                  : modelKey === 'inductor'
+                  : def.modelKey === 'inductor'
                   ? 'L'
-                  : modelKey === 'potentiometer'
+                  : def.modelKey === 'potentiometer'
                     ? 'POT'
-                    : modelKey === 'pulse_source'
+                    : def.modelKey === 'pulse_source'
                       ? 'VP'
-                      : modelKey === 'ground'
+                      : def.modelKey === 'ground'
                         ? 'GND'
-                        : modelKey === 'junction'
+                        : def.modelKey === 'junction'
                           ? 'J'
                           : 'X';
   return {
     id: id ?? nextId(prefix),
-    modelKey,
+    modelKey: def.modelKey,
     x,
     y,
     rotation: 0,
@@ -242,7 +242,9 @@ export function compileNetlist(doc: SchematicDocument) {
           id: c.id,
           model: c.modelKey,
           pins,
-          params: { ...c.params }
+          params: Object.fromEntries(
+            Object.entries(c.params).filter(([key]) => key !== 'color')
+          )
         };
       })
   };

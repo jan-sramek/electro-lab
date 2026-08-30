@@ -1,6 +1,7 @@
 import { Component, output } from '@angular/core';
-import { PALETTE_ORDER, SYMBOL_LIBRARY } from '../../data/symbol-library';
+import { PALETTE_ORDER, SYMBOL_LIBRARY, SymbolDef } from '../../data/symbol-library';
 import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
+import { normalizeLedColorId } from '../../data/led-colors';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 
@@ -21,5 +22,10 @@ export class ComponentPaletteComponent {
     ev.dataTransfer.setData(PALETTE_DRAG_MIME, modelKey);
     ev.dataTransfer.setData('text/plain', modelKey);
     ev.dataTransfer.effectAllowed = 'copy';
+  }
+
+  ledThumbColor(def: SymbolDef): number {
+    if (def.modelKey !== 'led') return 0;
+    return normalizeLedColorId(def.defaultParams['color']);
   }
 }

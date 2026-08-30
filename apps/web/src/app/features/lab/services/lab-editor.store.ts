@@ -17,6 +17,7 @@ import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
 import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
 import { createAcRcPreset } from '../data/presets/ac-rc.preset';
 import { createBjtSwitchPreset } from '../data/presets/bjt-switch.preset';
+import { ledColorById } from '../data/led-colors';
 import {
   CircuitSlot,
   SchematicHistory,
@@ -276,9 +277,14 @@ export class LabEditorStore {
     if (!id) return;
     this.commit((doc) => ({
       ...doc,
-      components: doc.components.map((c) =>
-        c.id === id ? { ...c, params: { ...c.params, [ev.key]: ev.value } } : c
-      )
+      components: doc.components.map((c) => {
+        if (c.id !== id) return c;
+        let params = { ...c.params, [ev.key]: ev.value };
+        if (c.modelKey === 'led' && ev.key === 'color' && typeof ev.value === 'number') {
+          params = { ...params, vf: ledColorById(ev.value).vf };
+        }
+        return { ...c, params };
+      })
     }));
   }
 
@@ -460,7 +466,7 @@ export class LabEditorStore {
   }
 
   loadOpAmpPreset(): void {
-    this.openExampleInNewTab('opamp', 'Op-amp buffer', createOpAmpBufferPreset, 'dcOp');
+    this.openExampleInNewTab('opamp', 'Op-amp invert', createOpAmpBufferPreset, 'dcOp');
   }
 
   loadAcPreset(): void {

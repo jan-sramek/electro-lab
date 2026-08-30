@@ -63,16 +63,13 @@
         [closed]="!!c.params['closed']"
         [ledBrightness]="ledBrightness(c.id)"
         [ledBurn]="ledBurn(c.id)"
+        [ledColor]="ledColorOf(c)"
       ></g>
 
       @if (c.modelKey !== 'junction') {
         <text x="0" y="52" text-anchor="middle" class="label">{{ c.id }}</text>
       }
-      @if (c.modelKey === 'led' && ledBurn(c.id) > 0.08) {
-        <text x="0" y="66" text-anchor="middle" class="burn-label">
-          {{ (isLedFailedOpen(c.id) ? 'lab.led.failedOpen' : 'lab.led.overloaded') | t }}
-        </text>
-      } @else if (c.modelKey === 'voltmeter' && voltmeterReading(c) !== null) {
+      @if (c.modelKey === 'voltmeter' && voltmeterReading(c) !== null) {
         <text x="0" y="66" text-anchor="middle" class="meas">
           {{ voltmeterReading(c)! | number: '1.2-3' }} V
         </text>
@@ -83,6 +80,7 @@
       } @else if (
         c.modelKey !== 'junction' &&
         c.modelKey !== 'voltmeter' &&
+        !(c.modelKey === 'led' && isLedFailedOpen(c.id)) &&
         currentOf(c.id) !== null
       ) {
         <text x="0" y="66" text-anchor="middle" class="meas">

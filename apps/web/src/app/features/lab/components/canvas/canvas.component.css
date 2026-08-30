@@ -140,14 +140,6 @@
   pointer-events: none;
 }
 
-.burn-label {
-  fill: #c2410c;
-  font-size: 10px;
-  font-weight: 700;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  pointer-events: none;
-}
-
 .pin {
   fill: #fff;
   stroke: #1d4ed8;

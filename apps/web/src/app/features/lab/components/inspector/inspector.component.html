@@ -18,13 +18,24 @@
           />
           {{ p.label | t }}
         </label>
+      } @else if (p.type === 'enum') {
+        <label>
+          {{ p.label | t }}
+          <select [ngModel]="c.params[p.key]" (ngModelChange)="onEnum(p.key, $event)">
+            @for (opt of p.options ?? []; track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label | t }}</option>
+            }
+          </select>
+        </label>
       } @else {
         <label>
           {{ p.label | t }}@if (p.unit) { ({{ p.unit }}) }
           <input
             type="number"
-            [ngModel]="c.params[p.key]"
-            (ngModelChange)="onNumber(p.key, $event)"
+            [ngModel]="numberDisplay(c, p.key)"
+            (ngModelChange)="onNumberDraft(c.id, p.key, $event)"
+            (blur)="onNumberCommit(c.id, p.key)"
+            (keydown.enter)="onNumberCommit(c.id, p.key)"
             [step]="p.step ?? 1"
             [min]="p.min ?? null"
           />

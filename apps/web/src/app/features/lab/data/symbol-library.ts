@@ -1,11 +1,15 @@
+import { LED_COLORS } from './led-colors';
+
 export interface ParamDef {
   key: string;
   /** i18n key, e.g. lab.param.voltage */
   label: string;
-  type: 'number' | 'boolean';
+  type: 'number' | 'boolean' | 'enum';
   min?: number;
   step?: number;
   unit?: string;
+  /** For type === 'enum': option value + i18n label key. */
+  options?: { value: number; label: string }[];
 }
 
 export interface PinDef {
@@ -173,8 +177,14 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'a', ox: 0, oy: -40 },
       { name: 'c', ox: 0, oy: 40 }
     ],
-    defaultParams: { vf: 2, ron: 20, burned: false },
+    defaultParams: { color: 0, vf: 2, ron: 20, burned: false },
     paramDefs: [
+      {
+        key: 'color',
+        label: 'lab.param.ledColor',
+        type: 'enum',
+        options: LED_COLORS.map((o) => ({ value: o.id, label: o.labelKey }))
+      },
       { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.1, unit: 'V' },
       {
         key: 'ron',
