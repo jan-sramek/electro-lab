@@ -3,7 +3,7 @@ import { Subject, catchError, debounceTime, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
 import { SimulateRequest, SimulateResponse } from '../api/circuit-api.types';
-import { parseHighlightedIds } from '../data/schematic.model';
+import { AnalysisMode, SchematicDocument, SchematicComponent, assignNets, parseHighlightedIds } from '../data/schematic.model';
 import {
   allSwitchesOpen,
   compileNetlistWithCapIc,
@@ -21,6 +21,18 @@ import { LabEditorStore } from './lab-editor.store';
 import { SchematicPersistence } from './schematic-persistence';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { LED_BURN_A } from '../data/led-limits';
+import { BJT_BASE_BURN_A } from '../data/bjt-limits';
+import {
+  AMMETER_BURN_A,
+  BurnKind,
+  CAP_DEFAULT_VMAX,
+  DIODE_BURN_A,
+  RESISTOR_BURN_W,
+  burnKindOf,
+  burnWarningKey,
+  canBurnOut
+} from '../data/burnout';
+import { isBjtNpnPart } from '../data/symbol-library';
 
 function peakBranchCurrent(res: SimulateResponse, id: string): number | null {
   const dc = res.dcOp?.branchCurrents?.[id];
@@ -49,6 +61,124 @@ function nodeVoltageFromResult(res: SimulateResponse, net: string, scrubIndex: n
   if (!series?.values.length) return null;
   const idx = Math.min(Math.max(0, scrubIndex), series.values.length - 1);
   return series.values[idx] ?? null;
+}
+
+/** Teaching Ib from BE companion + current into the base pin from series feeders. */
+function baseCurrentAt(
+  res: SimulateResponse,
+  doc: SchematicDocument,
+  c: SchematicComponent,
+  sampleIndex: number | 'last' | 'peak'
+): number | null {
+  const bNet = c.pins['b']?.net;
+  const eNet = c.pins['e']?.net;
+  if (!bNet || !eNet) return null;
+  const vf = typeof c.params['vf'] === 'number' ? (c.params['vf'] as number) : 0.7;
+  const rb = typeof c.params['rb'] === 'number' ? (c.params['rb'] as number) : 0;
+  if (!(rb > 0)) return null;
+
+  const ibFromVoltage = (idx: number): number => {
+    const vb = nodeVoltageFromResult(res, bNet, idx);
+    const ve = nodeVoltageFromResult(res, eNet, idx);
+    if (vb == null || ve == null) return 0;
+    const ib = (vb - ve - vf) / rb;
+    return ib > 1e-12 ? ib : 0;
+  };
+
+  const ibFromFeeders = (pick: (id: string) => number | null): number => {
+    let best = 0;
+    for (const other of doc.components) {
+      if (other.id === c.id || other.params['burned']) continue;
+      const pinsOnBase = Object.values(other.pins).filter((p) => p.net === bNet);
+      if (pinsOnBase.length !== 1) continue;
+      const i = pick(other.id);
+      if (typeof i === 'number') best = Math.max(best, Math.abs(i));
+    }
+    return best;
+  };
+
+  if (res.dcOp?.nodeVoltages) {
+    return Math.max(ibFromVoltage(0), ibFromFeeders((id) => peakBranchCurrent(res, id)));
+  }
+  const n = res.tran?.time?.length ?? 0;
+  if (!n) return null;
+  if (sampleIndex === 'last') {
+    return Math.max(
+      ibFromVoltage(n - 1),
+      ibFromFeeders((id) => sustainedBranchCurrent(res, id))
+    );
+  }
+  if (sampleIndex === 'peak') {
+    let best = 0;
+    for (let i = 0; i < n; i++) best = Math.max(best, ibFromVoltage(i));
+    return Math.max(best, ibFromFeeders((id) => peakBranchCurrent(res, id)));
+  }
+  return Math.max(
+    ibFromVoltage(sampleIndex),
+    ibFromFeeders((id) => sustainedBranchCurrent(res, id))
+  );
+}
+
+function peakBaseCurrent(
+  res: SimulateResponse,
+  doc: SchematicDocument,
+  c: SchematicComponent
+): number | null {
+  return baseCurrentAt(res, doc, c, res.tran?.time?.length ? 'peak' : 0);
+}
+
+function sustainedBaseCurrent(
+  res: SimulateResponse,
+  doc: SchematicDocument,
+  c: SchematicComponent
+): number | null {
+  return baseCurrentAt(res, doc, c, res.tran?.time?.length ? 'last' : 0);
+}
+
+function pinVoltageAbsAt(
+  res: SimulateResponse,
+  c: SchematicComponent,
+  pinA: string,
+  pinB: string,
+  sampleIndex: number | 'last' | 'peak'
+): number | null {
+  const aNet = c.pins[pinA]?.net;
+  const bNet = c.pins[pinB]?.net;
+  if (!aNet || !bNet) return null;
+  const vAt = (idx: number): number => {
+    const va = nodeVoltageFromResult(res, aNet, idx);
+    const vb = nodeVoltageFromResult(res, bNet, idx);
+    if (va == null || vb == null) return 0;
+    return Math.abs(va - vb);
+  };
+  if (res.dcOp?.nodeVoltages) return vAt(0);
+  const n = res.tran?.time?.length ?? 0;
+  if (!n) return null;
+  if (sampleIndex === 'last') return vAt(n - 1);
+  if (sampleIndex === 'peak') {
+    let best = 0;
+    for (let i = 0; i < n; i++) best = Math.max(best, vAt(i));
+    return best;
+  }
+  return vAt(sampleIndex);
+}
+
+function peakPinVoltageAbs(
+  res: SimulateResponse,
+  c: SchematicComponent,
+  pinA: string,
+  pinB: string
+): number | null {
+  return pinVoltageAbsAt(res, c, pinA, pinB, res.tran?.time?.length ? 'peak' : 0);
+}
+
+function sustainedPinVoltageAbs(
+  res: SimulateResponse,
+  c: SchematicComponent,
+  pinA: string,
+  pinB: string
+): number | null {
+  return pinVoltageAbsAt(res, c, pinA, pinB, res.tran?.time?.length ? 'last' : 0);
 }
 
 @Injectable()
@@ -234,6 +364,11 @@ export class CircuitSimulationFacade {
           return;
         }
         this.applyLedOverloadFailures(res);
+        this.applyBjtBaseOverloadFailures(res);
+        this.applyDiodeOverloadFailures(res);
+        this.applyResistorPowerFailures(res);
+        this.applyCapacitorOvervoltageFailures(res);
+        this.applyAmmeterOverloadFailures(res);
       });
 
     this.autoRun$.pipe(debounceTime(280), takeUntilDestroyed()).subscribe(() => {
@@ -406,11 +541,19 @@ export class CircuitSimulationFacade {
     this.highlightComponentIds.set(diags.flatMap((d) => d.componentIds));
     this.highlightNetIds.set(diags.flatMap((d) => d.netIds));
     const warnKeys = warns.map((w) => this.i18n.t(w.messageKey));
-    const burned = doc.components.filter((c) => c.modelKey === 'led' && c.params['burned']);
+    const burned = doc.components.filter((c) => canBurnOut(c.modelKey) && c.params['burned']);
     if (burned.length) {
-      warnKeys.push(
-        this.i18n.t('lab.led.burnedWarning', { ids: burned.map((c) => c.id).join(', ') })
-      );
+      const byKind = new Map<string, string[]>();
+      for (const c of burned) {
+        const kind = burnKindOf(c.modelKey);
+        if (!kind) continue;
+        const list = byKind.get(kind) ?? [];
+        list.push(c.id);
+        byKind.set(kind, list);
+      }
+      for (const [kind, ids] of byKind) {
+        warnKeys.push(this.i18n.t(burnWarningKey(kind as BurnKind), { ids: ids.join(', ') }));
+      }
       this.highlightComponentIds.set([
         ...new Set([...this.highlightComponentIds(), ...burned.map((c) => c.id)])
       ]);
@@ -506,7 +649,161 @@ export class CircuitSimulationFacade {
     this.highlightComponentIds.set([
       ...new Set([...this.highlightComponentIds(), ...sustainedBurnIds])
     ]);
-    this.editor.markLedsBurned(sustainedBurnIds);
+    this.editor.markBurned(sustainedBurnIds);
+  }
+
+  /**
+   * Teaching BJT burnout from base current Ib = (Vb−Ve−Vf)/rb (model BE branch).
+   * Branch current on Q is Ic — do not use it for this check.
+   */
+  private applyBjtBaseOverloadFailures(res: SimulateResponse): void {
+    const doc = assignNets(this.editor.doc());
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+
+    for (const c of doc.components) {
+      if (!isBjtNpnPart(c.modelKey) || c.params['burned']) continue;
+      const peak = peakBaseCurrent(res, doc, c);
+      if (peak != null && peak >= BJT_BASE_BURN_A) peakBurnIds.push(c.id);
+      const sustained = sustainedBaseCurrent(res, doc, c);
+      if (sustained != null && sustained >= BJT_BASE_BURN_A) sustainedBurnIds.push(c.id);
+    }
+
+    const notes = [...this.warnings()];
+    if (peakBurnIds.length && !sustainedBurnIds.length) {
+      notes.push(
+        this.i18n.t('lab.bjt.peakBaseOverloadWarning', { ids: peakBurnIds.join(', ') })
+      );
+      this.highlightComponentIds.set([
+        ...new Set([...this.highlightComponentIds(), ...peakBurnIds])
+      ]);
+      this.warnings.set(notes);
+      return;
+    }
+
+    if (!sustainedBurnIds.length) return;
+
+    notes.push(this.i18n.t('lab.bjt.burnedWarning', { ids: sustainedBurnIds.join(', ') }));
+    this.warnings.set(notes);
+    this.highlightComponentIds.set([
+      ...new Set([...this.highlightComponentIds(), ...sustainedBurnIds])
+    ]);
+    this.editor.markBurned(sustainedBurnIds);
+  }
+
+  /** Silicon diode overload — same fail-open teaching as LED, higher current threshold. */
+  private applyDiodeOverloadFailures(res: SimulateResponse): void {
+    this.applyBranchCurrentBurn(
+      res,
+      (c) => c.modelKey === 'diode',
+      DIODE_BURN_A,
+      'lab.diode.peakOverloadWarning',
+      'lab.diode.burnedWarning'
+    );
+  }
+
+  /** Ammeter fuse — burned open if series current is far beyond a teaching meter range. */
+  private applyAmmeterOverloadFailures(res: SimulateResponse): void {
+    this.applyBranchCurrentBurn(
+      res,
+      (c) => c.modelKey === 'ammeter',
+      AMMETER_BURN_A,
+      'lab.ammeter.peakOverloadWarning',
+      'lab.ammeter.burnedWarning'
+    );
+  }
+
+  private applyBranchCurrentBurn(
+    res: SimulateResponse,
+    match: (c: SchematicComponent) => boolean,
+    limitA: number,
+    peakKey: string,
+    burnKey: string
+  ): void {
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of this.editor.doc().components) {
+      if (!match(c) || c.params['burned']) continue;
+      const peak = peakBranchCurrent(res, c.id);
+      if (typeof peak === 'number' && Math.abs(peak) >= limitA) peakBurnIds.push(c.id);
+      const sustained = sustainedBranchCurrent(res, c.id);
+      if (typeof sustained === 'number' && Math.abs(sustained) >= limitA) {
+        sustainedBurnIds.push(c.id);
+      }
+    }
+    this.publishBurnResult(peakBurnIds, sustainedBurnIds, peakKey, burnKey);
+  }
+
+  /** ¼ W resistor teaching burnout from P = I²R. */
+  private applyResistorPowerFailures(res: SimulateResponse): void {
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of this.editor.doc().components) {
+      if (c.modelKey !== 'resistor' || c.params['burned']) continue;
+      const r = typeof c.params['r'] === 'number' ? (c.params['r'] as number) : 0;
+      if (!(r > 0)) continue;
+      const peakI = peakBranchCurrent(res, c.id);
+      if (typeof peakI === 'number' && peakI * peakI * r >= RESISTOR_BURN_W) {
+        peakBurnIds.push(c.id);
+      }
+      const sustI = sustainedBranchCurrent(res, c.id);
+      if (typeof sustI === 'number' && sustI * sustI * r >= RESISTOR_BURN_W) {
+        sustainedBurnIds.push(c.id);
+      }
+    }
+    this.publishBurnResult(
+      peakBurnIds,
+      sustainedBurnIds,
+      'lab.resistor.peakOverloadWarning',
+      'lab.resistor.burnedWarning'
+    );
+  }
+
+  /** Capacitor overvoltage vs params.vmax (default 16 V). */
+  private applyCapacitorOvervoltageFailures(res: SimulateResponse): void {
+    const doc = assignNets(this.editor.doc());
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of doc.components) {
+      if (c.modelKey !== 'capacitor' || c.params['burned']) continue;
+      const vmax =
+        typeof c.params['vmax'] === 'number' ? (c.params['vmax'] as number) : CAP_DEFAULT_VMAX;
+      if (!(vmax > 0)) continue;
+      const peak = peakPinVoltageAbs(res, c, 'a', 'b');
+      if (peak != null && peak >= vmax) peakBurnIds.push(c.id);
+      const sustained = sustainedPinVoltageAbs(res, c, 'a', 'b');
+      if (sustained != null && sustained >= vmax) sustainedBurnIds.push(c.id);
+    }
+    this.publishBurnResult(
+      peakBurnIds,
+      sustainedBurnIds,
+      'lab.capacitor.peakOverloadWarning',
+      'lab.capacitor.burnedWarning'
+    );
+  }
+
+  private publishBurnResult(
+    peakBurnIds: string[],
+    sustainedBurnIds: string[],
+    peakKey: string,
+    burnKey: string
+  ): void {
+    const notes = [...this.warnings()];
+    if (peakBurnIds.length && !sustainedBurnIds.length) {
+      notes.push(this.i18n.t(peakKey, { ids: peakBurnIds.join(', ') }));
+      this.highlightComponentIds.set([
+        ...new Set([...this.highlightComponentIds(), ...peakBurnIds])
+      ]);
+      this.warnings.set(notes);
+      return;
+    }
+    if (!sustainedBurnIds.length) return;
+    notes.push(this.i18n.t(burnKey, { ids: sustainedBurnIds.join(', ') }));
+    this.warnings.set(notes);
+    this.highlightComponentIds.set([
+      ...new Set([...this.highlightComponentIds(), ...sustainedBurnIds])
+    ]);
+    this.editor.markBurned(sustainedBurnIds);
   }
 
   /** Soft tip when an LED sits reverse-biased / dark with significant |V|. */

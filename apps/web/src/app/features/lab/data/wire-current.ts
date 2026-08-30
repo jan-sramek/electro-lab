@@ -1,4 +1,5 @@
 import { PinRef, SchematicComponent, SchematicWire, pinKey } from './schematic.model';
+import { simModelOf } from './symbol-library';
 
 /**
  * Conventional current leaving a schematic pin into attached wires (amperes),
@@ -12,12 +13,17 @@ import { PinRef, SchematicComponent, SchematicWire, pinKey } from './schematic.m
  * Current source (+I): leaves n, enters p (engine comment).
  */
 export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): number {
-  switch (modelKey) {
+  switch (simModelOf(modelKey)) {
     case 'resistor':
     case 'capacitor':
     case 'inductor':
     case 'switch':
     case 'ammeter':
+      if (pin === 'a') return -branchI;
+      if (pin === 'b') return branchI;
+      return 0;
+    case 'relay':
+      // Branch current is contact I (a→b). Coil pins have no reported branch I.
       if (pin === 'a') return -branchI;
       if (pin === 'b') return branchI;
       return 0;

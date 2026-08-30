@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { LabEditorStore, ExamplePresetId } from '../../services/lab-editor.store';
 import { CircuitSimulationFacade } from '../../services/circuit-simulation.facade';
 import { SchematicPersistence } from '../../services/schematic-persistence';
@@ -33,6 +34,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 export class LabPageComponent implements OnInit {
   readonly editor = inject(LabEditorStore);
   readonly sim = inject(CircuitSimulationFacade);
+  private readonly route = inject(ActivatedRoute);
 
   /** Context hint under the canvas: tool mode first, then example preset, else generic. */
   hintKey(): string {
@@ -46,6 +48,12 @@ export class LabPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.editor.initFromStorage();
+    const example = this.route.snapshot.queryParamMap.get('example');
+    if (example === 'bjt' || example === 'bc547') {
+      this.onLoadPreset('bjt');
+    } else if (example === 'relay') {
+      this.onLoadPreset('relay');
+    }
   }
 
   onLoadPreset(id: ExamplePresetId): void {
@@ -74,6 +82,9 @@ export class LabPageComponent implements OnInit {
       case 'bjt':
         this.editor.loadBjtPreset();
         break;
+      case 'relay':
+        this.editor.loadRelayPreset();
+        break;
     }
   }
 
@@ -85,9 +96,9 @@ export class LabPageComponent implements OnInit {
     }
   }
 
-  onReplaceLed(): void {
+  onReplaceBurned(): void {
     const id = this.editor.selectedId();
-    if (id) this.editor.replaceLed(id);
+    if (id) this.editor.replaceBurned(id);
   }
 
   @HostListener('window:keydown', ['$event'])

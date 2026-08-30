@@ -36,6 +36,13 @@ describe('wire current direction', () => {
     expect(pinOutflowAmps('potentiometer', 'b', 0.001)).toBeCloseTo(0.001);
   });
 
+  it('relay contact +I (a→b); coil pins report 0', () => {
+    expect(pinOutflowAmps('relay', 'a', 0.05)).toBeCloseTo(-0.05);
+    expect(pinOutflowAmps('relay', 'b', 0.05)).toBeCloseTo(0.05);
+    expect(pinOutflowAmps('relay', 'cp', 0.05)).toBe(0);
+    expect(pinOutflowAmps('relay', 'cn', 0.05)).toBe(0);
+  });
+
   it('LED series wires: flow V+ → switch → R → LED → gnd, and gnd → V−', () => {
     const I = 0.0125;
     expect(wireCurrentAtoB('battery', 'p', I, 'switch', 'a', I)).toBeGreaterThan(0);
@@ -130,7 +137,7 @@ describe('wire current direction', () => {
       return null;
     };
     const currents = estimateAllWireCurrents(doc.components, doc.wires, currentOf);
-    for (const id of ['W6', 'W7', 'W8', 'W9', 'W10']) {
+    for (const id of ['W7', 'W8', 'W9', 'W10', 'W11']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);

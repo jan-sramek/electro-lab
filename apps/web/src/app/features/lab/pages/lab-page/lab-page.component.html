@@ -88,7 +88,7 @@
         (paramChange)="editor.onParamChange($event)"
         (rotate)="editor.rotateSelected()"
         (remove)="editor.deleteSelected()"
-        (replaceLed)="onReplaceLed()"
+        (replaceBurned)="onReplaceBurned()"
       />
       <app-results-panel [result]="sim.result()" />
       @if (editor.analysisMode() === 'tran') {

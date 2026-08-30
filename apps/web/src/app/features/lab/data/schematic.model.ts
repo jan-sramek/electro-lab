@@ -1,4 +1,4 @@
-import { SYMBOL_LIBRARY, symbolOf } from './symbol-library';
+import { SYMBOL_LIBRARY, simModelOf, symbolOf } from './symbol-library';
 
 export interface SchematicPin {
   net: string;
@@ -124,30 +124,43 @@ export function createComponent(
   for (const p of def.pins) {
     pins[p.name] = { net: '', ox: p.ox, oy: p.oy };
   }
+  const sim = simModelOf(def.modelKey);
   const prefix =
-    def.modelKey === 'battery'
+    sim === 'battery'
       ? 'V'
-      : def.modelKey === 'resistor'
+      : sim === 'resistor'
         ? 'R'
-        : def.modelKey === 'led' || def.modelKey === 'diode'
+        : sim === 'led' || sim === 'diode'
           ? 'D'
-          : def.modelKey === 'switch'
+          : sim === 'switch'
             ? 'S'
-            : def.modelKey === 'current_source'
+            : sim === 'current_source'
               ? 'I'
-              : def.modelKey === 'capacitor'
+              : sim === 'capacitor'
                 ? 'C'
-                  : def.modelKey === 'inductor'
+                : sim === 'inductor'
                   ? 'L'
-                  : def.modelKey === 'potentiometer'
+                  : sim === 'potentiometer'
                     ? 'POT'
-                    : def.modelKey === 'pulse_source'
+                    : sim === 'pulse_source'
                       ? 'VP'
-                      : def.modelKey === 'ground'
-                        ? 'GND'
-                        : def.modelKey === 'junction'
-                          ? 'J'
-                          : 'X';
+                      : sim === 'bjt_npn'
+                        ? 'Q'
+                        : sim === 'relay'
+                          ? 'K'
+                          : sim === 'op_amp'
+                            ? 'U'
+                            : sim === 'ammeter'
+                              ? 'AM'
+                              : sim === 'voltmeter'
+                                ? 'VM'
+                                : sim === 'ac_source'
+                                  ? 'AC'
+                                  : def.modelKey === 'ground'
+                                    ? 'GND'
+                                    : def.modelKey === 'junction'
+                                      ? 'J'
+                                      : 'X';
   return {
     id: id ?? nextId(prefix),
     modelKey: def.modelKey,
@@ -240,7 +253,7 @@ export function compileNetlist(doc: SchematicDocument) {
         }
         return {
           id: c.id,
-          model: c.modelKey,
+          model: simModelOf(c.modelKey),
           pins,
           params: Object.fromEntries(
             Object.entries(c.params).filter(([key]) => key !== 'color')

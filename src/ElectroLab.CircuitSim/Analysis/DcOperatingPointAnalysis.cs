@@ -37,6 +37,8 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                 hint.LedOn[el.Id] = true;
             if (IsPiecewiseBjt(el.Model))
                 hint.BjtOn[el.Id] = true;
+            if (IsPiecewiseRelay(el.Model))
+                hint.RelayOn[el.Id] = false;
         }
 
         string? lastError = null;
@@ -96,6 +98,11 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                         changed = true;
                     }
                 }
+                else if (IsPiecewiseRelay(el.Model))
+                {
+                    if (RelayModel.UpdateCoilBias(el, ctx, solution!, hint))
+                        changed = true;
+                }
                 else if (IsOpAmp(el.Model))
                 {
                     if (OpAmpModel.UpdateRailBias(el, ctx, solution!, hint))
@@ -107,7 +114,7 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                 break;
 
             if (iter == 5)
-                warnings.Add("Diode/LED/BJT/op-amp bias iteration did not fully settle; using last state.");
+                warnings.Add("Diode/LED/BJT/relay/op-amp bias iteration did not fully settle; using last state.");
         }
 
         foreach (var (id, rail) in hint.OpAmpRail)
@@ -169,6 +176,9 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
 
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPiecewiseRelay(string model) =>
+        model.Equals("relay", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsOpAmp(string model) =>
         model.Equals("op_amp", StringComparison.OrdinalIgnoreCase);

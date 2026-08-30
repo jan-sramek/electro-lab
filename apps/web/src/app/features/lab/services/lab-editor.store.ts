@@ -18,7 +18,9 @@ import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
 import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
 import { createAcRcPreset } from '../data/presets/ac-rc.preset';
 import { createBjtSwitchPreset } from '../data/presets/bjt-switch.preset';
+import { createRelayDiodePreset } from '../data/presets/relay-diode.preset';
 import { ledColorById } from '../data/led-colors';
+import { canBurnOut } from '../data/burnout';
 import {
   CircuitSlot,
   SchematicHistory,
@@ -34,7 +36,8 @@ export type ExamplePresetId =
   | 'pulse'
   | 'opamp'
   | 'ac'
-  | 'bjt';
+  | 'bjt'
+  | 'relay';
 
 @Injectable()
 export class LabEditorStore {
@@ -318,33 +321,53 @@ export class LabEditorStore {
     }));
   }
 
-  /** Mark LEDs as failed-open after overload (sticky until replaced). */
-  markLedsBurned(ids: string[]): void {
+  /** Mark burnable parts as failed-open after overload (sticky until replaced). */
+  markBurned(ids: string[]): void {
     const set = new Set(ids);
     const needs = this.doc().components.some(
-      (c) => set.has(c.id) && c.modelKey === 'led' && !c.params['burned']
+      (c) => set.has(c.id) && canBurnOut(c.modelKey) && !c.params['burned']
     );
     if (!needs) return;
     this.commit((doc) => ({
       ...doc,
       components: doc.components.map((c) =>
-        set.has(c.id) && c.modelKey === 'led'
+        set.has(c.id) && canBurnOut(c.modelKey)
           ? { ...c, params: { ...c.params, burned: true } }
           : c
       )
     }));
   }
 
-  /** Clear burned flag — teaching “replace the LED”. */
-  replaceLed(id: string): void {
+  /** Clear burned flag — teaching “replace the part”. */
+  replaceBurned(id: string): void {
     const c = this.doc().components.find((x) => x.id === id);
-    if (!c || c.modelKey !== 'led' || !c.params['burned']) return;
+    if (!c || !canBurnOut(c.modelKey) || !c.params['burned']) return;
     this.commit((doc) => ({
       ...doc,
       components: doc.components.map((x) =>
         x.id === id ? { ...x, params: { ...x.params, burned: false } } : x
       )
     }));
+  }
+
+  /** @deprecated Use markBurned */
+  markLedsBurned(ids: string[]): void {
+    this.markBurned(ids);
+  }
+
+  /** @deprecated Use markBurned */
+  markBjtsBurned(ids: string[]): void {
+    this.markBurned(ids);
+  }
+
+  /** @deprecated Use replaceBurned */
+  replaceBjt(id: string): void {
+    this.replaceBurned(id);
+  }
+
+  /** @deprecated Use replaceBurned */
+  replaceLed(id: string): void {
+    this.replaceBurned(id);
   }
 
   rotateSelected(): void {
@@ -510,7 +533,11 @@ export class LabEditorStore {
   }
 
   loadBjtPreset(): void {
-    this.openExampleInNewTab('bjt', 'BJT switch', createBjtSwitchPreset, 'dcOp');
+    this.openExampleInNewTab('bjt', 'BC547 LED switch', createBjtSwitchPreset, 'dcOp');
+  }
+
+  loadRelayPreset(): void {
+    this.openExampleInNewTab('relay', 'Relay + diode', createRelayDiodePreset, 'dcOp');
   }
 
   newSchematic(): void {
@@ -605,7 +632,8 @@ export class LabEditorStore {
       p === 'pulse' ||
       p === 'opamp' ||
       p === 'ac' ||
-      p === 'bjt'
+      p === 'bjt' ||
+      p === 'relay'
     ) {
       this.activeExamplePreset.set(p);
     } else {

@@ -52,6 +52,8 @@ public sealed class TransientAnalysis : IAnalysis
                 state.Bias.LedOn[el.Id] = true;
             if (IsPiecewiseBjt(el.Model))
                 state.Bias.BjtOn[el.Id] = true;
+            if (IsPiecewiseRelay(el.Model))
+                state.Bias.RelayOn[el.Id] = false;
         }
 
         var warnings = new List<string>();
@@ -118,6 +120,11 @@ public sealed class TransientAnalysis : IAnalysis
                             state.Bias.BjtOn[el.Id] = nextOn;
                             changed = true;
                         }
+                    }
+                    else if (IsPiecewiseRelay(el.Model))
+                    {
+                        if (RelayModel.UpdateCoilBias(el, ctx, solution, state.Bias))
+                            changed = true;
                     }
                     else if (IsOpAmp(el.Model))
                     {
@@ -245,6 +252,11 @@ public sealed class TransientAnalysis : IAnalysis
                             changed = true;
                         }
                     }
+                    else if (IsPiecewiseRelay(el.Model))
+                    {
+                        if (RelayModel.UpdateCoilBias(el, ctx, solution, state.Bias))
+                            changed = true;
+                    }
                     else if (IsOpAmp(el.Model))
                     {
                         if (OpAmpModel.UpdateRailBias(el, ctx, solution, state.Bias))
@@ -308,6 +320,9 @@ public sealed class TransientAnalysis : IAnalysis
 
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPiecewiseRelay(string model) =>
+        model.Equals("relay", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsOpAmp(string model) =>
         model.Equals("op_amp", StringComparison.OrdinalIgnoreCase);

@@ -7,6 +7,7 @@ import { createPulseRcPreset } from './presets/pulse-rc.preset';
 import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
 import { createAcRcPreset } from './presets/ac-rc.preset';
 import { createBjtSwitchPreset } from './presets/bjt-switch.preset';
+import { createRelayDiodePreset } from './presets/relay-diode.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
 import { SchematicDocument } from './schematic.model';
 
@@ -82,7 +83,7 @@ describe('Lab preset contracts', () => {
     expect(pulse.elements.some((e) => e.model === 'pulse_source')).toBeTrue();
   });
 
-  it('compiles op-amp, AC, and BJT presets', () => {
+  it('compiles op-amp, AC, BJT, and relay presets', () => {
     const oa = compileNetlist(createOpAmpBufferPreset());
     expect(oa.elements.some((e) => e.model === 'op_amp')).toBeTrue();
     const ac = compileNetlist(createAcRcPreset());
@@ -90,7 +91,15 @@ describe('Lab preset contracts', () => {
     expect(ac.elements.every((e) => e.model !== 'voltmeter')).toBeTrue();
     const bjt = compileNetlist(createBjtSwitchPreset());
     expect(bjt.elements.some((e) => e.model === 'bjt_npn')).toBeTrue();
+    expect(bjt.elements.some((e) => e.id === 'Q1')).toBeTrue();
+    expect(createBjtSwitchPreset().components.some((c) => c.modelKey === 'bc547')).toBeTrue();
     expect(bjt.elements.some((e) => e.model === 'ammeter')).toBeTrue();
+    expect(bjt.elements.some((e) => e.model === 'switch')).toBeTrue();
+    const relay = compileNetlist(createRelayDiodePreset());
+    expect(relay.elements.some((e) => e.model === 'relay')).toBeTrue();
+    expect(relay.elements.some((e) => e.model === 'diode' && e.id === 'Dfly')).toBeTrue();
+    expect(relay.elements.some((e) => e.model === 'led')).toBeTrue();
+    expect(relay.elements.some((e) => e.model === 'switch')).toBeTrue();
   });
 
   it('avoids long overlapping horizontal wire rails (supply vs return)', () => {
@@ -102,7 +111,8 @@ describe('Lab preset contracts', () => {
       createPulseRcPreset(),
       createOpAmpBufferPreset(),
       createAcRcPreset(),
-      createBjtSwitchPreset()
+      createBjtSwitchPreset(),
+      createRelayDiodePreset()
     ]);
     expect(hits).withContext(hits.join('; ')).toEqual([]);
   });

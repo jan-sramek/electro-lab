@@ -63,10 +63,10 @@
       />
       <g
         appSymbolGlyph
-        [modelKey]="c.modelKey"
-        [closed]="switchClosed(c)"
+        [modelKey]="glyphKeyOf(c.modelKey)"
+        [closed]="contactsClosed(c)"
         [ledBrightness]="ledBrightness(c.id)"
-        [ledBurn]="ledBurn(c.id)"
+        [ledBurn]="deviceBurn(c)"
         [ledColor]="ledColorOf(c)"
       ></g>
 
@@ -84,7 +84,7 @@
       } @else if (
         c.modelKey !== 'junction' &&
         c.modelKey !== 'voltmeter' &&
-        !(c.modelKey === 'led' && isLedFailedOpen(c.id)) &&
+        !isDeviceFailedOpen(c) &&
         currentOf(c.id) !== null
       ) {
         <text x="0" y="66" text-anchor="middle" class="meas">

@@ -16,4 +16,4 @@ Compose maps Postgres to host **5433** (avoids clashing with a local 5432). Conn
 
 ## Schema
 
-Table `translations` (`locale`, `key`, `value`) — composite PK. Seed inserts English keys once; later locales add rows with the same keys.
+Table `translations` (`locale`, `key`, `value`) — composite PK. English rows are upserted from `TranslationSeeder` on startup (code catalog is source of truth). Other locales add rows with the same keys.

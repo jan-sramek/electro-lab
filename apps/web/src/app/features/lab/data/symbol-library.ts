@@ -20,6 +20,13 @@ export interface PinDef {
 
 export interface SymbolDef {
   modelKey: string;
+  /**
+   * CircuitEngine model when different from the Lab part id (e.g. BC547 → bjt_npn).
+   * Keeps named discrete parts in the palette without new SPICE models.
+   */
+  simModel?: string;
+  /** Glyph switch key when the part reuses another symbol (defaults to simModel ?? modelKey). */
+  glyphKey?: string;
   /** i18n key, e.g. lab.symbol.battery */
   label: string;
   /** Optional i18n key — teaching approximation note in inspector / palette. */
@@ -31,6 +38,22 @@ export interface SymbolDef {
   paramDefs: ParamDef[];
   width: number;
   height: number;
+}
+
+/** Engine model key for simulate / wire-current physics. */
+export function simModelOf(modelKey: string): string {
+  const def = SYMBOL_LIBRARY[modelKey];
+  return def?.simModel ?? def?.modelKey ?? modelKey;
+}
+
+/** SVG glyph key for canvas and palette thumbs. */
+export function glyphKeyOf(modelKey: string): string {
+  const def = SYMBOL_LIBRARY[modelKey];
+  return def?.glyphKey ?? def?.simModel ?? def?.modelKey ?? modelKey;
+}
+
+export function isBjtNpnPart(modelKey: string): boolean {
+  return simModelOf(modelKey) === 'bjt_npn';
 }
 
 export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
@@ -99,7 +122,8 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'b', ox: -40, oy: 0 },
       { name: 'e', ox: 0, oy: 40 }
     ],
-    defaultParams: { vf: 0.7, rb: 1000, ron: 10 },
+    // Small internal rb — external base resistor sets Ib; low RB can burn the part (~25 mA).
+    defaultParams: { vf: 0.7, rb: 10, ron: 10, burned: false },
     paramDefs: [
       { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.05, unit: 'V' },
       {
@@ -107,7 +131,43 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         label: 'lab.param.baseResistance',
         type: 'number',
         min: 1,
-        step: 100,
+        step: 5,
+        unit: 'Ω'
+      },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.1,
+        step: 1,
+        unit: 'Ω'
+      }
+    ],
+    width: 40,
+    height: 56
+  },
+  /** Common TO-92 NPN — same teaching switch model as bjt_npn (not a SPICE BC547). */
+  bc547: {
+    modelKey: 'bc547',
+    simModel: 'bjt_npn',
+    glyphKey: 'bjt_npn',
+    label: 'lab.symbol.bc547',
+    teachingNote: 'lab.modelNote.bc547',
+    pins: [
+      { name: 'c', ox: 0, oy: -40 },
+      { name: 'b', ox: -40, oy: 0 },
+      { name: 'e', ox: 0, oy: 40 }
+    ],
+    // Small internal rb so a low external base resistor can burn the part (~25 mA Ib).
+    defaultParams: { vf: 0.7, rb: 10, ron: 10, burned: false },
+    paramDefs: [
+      { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.05, unit: 'V' },
+      {
+        key: 'rb',
+        label: 'lab.param.baseResistance',
+        type: 'number',
+        min: 1,
+        step: 5,
         unit: 'Ω'
       },
       {
@@ -125,11 +185,12 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   ammeter: {
     modelKey: 'ammeter',
     label: 'lab.symbol.ammeter',
+    teachingNote: 'lab.modelNote.ammeter',
     pins: [
       { name: 'a', ox: -40, oy: 0 },
       { name: 'b', ox: 40, oy: 0 }
     ],
-    defaultParams: { r: 0.01 },
+    defaultParams: { r: 0.01, burned: false },
     paramDefs: [
       {
         key: 'r',
@@ -163,7 +224,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'a', ox: -50, oy: 0 },
       { name: 'b', ox: 50, oy: 0 }
     ],
-    defaultParams: { r: 220 },
+    defaultParams: { r: 220, burned: false },
     paramDefs: [
       {
         key: 'r',
@@ -174,6 +235,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         unit: 'Ω'
       }
     ],
+    teachingNote: 'lab.modelNote.resistor',
     width: 56,
     height: 24
   },
@@ -208,11 +270,12 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   diode: {
     modelKey: 'diode',
     label: 'lab.symbol.diode',
+    teachingNote: 'lab.modelNote.diode',
     pins: [
       { name: 'a', ox: -40, oy: 0 },
       { name: 'c', ox: 40, oy: 0 }
     ],
-    defaultParams: { vf: 0.7, ron: 10 },
+    defaultParams: { vf: 0.7, ron: 10, burned: false },
     paramDefs: [
       { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.05, unit: 'V' },
       {
@@ -257,6 +320,70 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     width: 56,
     height: 28
   },
+  relay: {
+    modelKey: 'relay',
+    label: 'lab.symbol.relay',
+    teachingNote: 'lab.modelNote.relay',
+    pins: [
+      { name: 'cp', ox: -40, oy: -28 },
+      { name: 'cn', ox: -40, oy: 28 },
+      { name: 'a', ox: 40, oy: -20 },
+      { name: 'b', ox: 40, oy: 20 }
+    ],
+    defaultParams: {
+      rCoil: 400,
+      vPull: 3.5,
+      ron: 0.1,
+      closed: false,
+      openAt: -1,
+      closeAt: -1
+    },
+    paramDefs: [
+      {
+        key: 'rCoil',
+        label: 'lab.param.rCoil',
+        type: 'number',
+        min: 1,
+        step: 10,
+        unit: 'Ω'
+      },
+      {
+        key: 'vPull',
+        label: 'lab.param.vPull',
+        type: 'number',
+        min: 0,
+        step: 0.1,
+        unit: 'V'
+      },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.01,
+        step: 0.1,
+        unit: 'Ω'
+      },
+      { key: 'closed', label: 'lab.param.closed', type: 'boolean' },
+      {
+        key: 'openAt',
+        label: 'lab.param.openAt',
+        type: 'number',
+        min: -1,
+        step: 0.1,
+        unit: 's'
+      },
+      {
+        key: 'closeAt',
+        label: 'lab.param.closeAt',
+        type: 'number',
+        min: -1,
+        step: 0.1,
+        unit: 's'
+      }
+    ],
+    width: 56,
+    height: 56
+  },
   current_source: {
     modelKey: 'current_source',
     label: 'lab.symbol.current_source',
@@ -274,11 +401,12 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   capacitor: {
     modelKey: 'capacitor',
     label: 'lab.symbol.capacitor',
+    teachingNote: 'lab.modelNote.capacitor',
     pins: [
       { name: 'a', ox: -40, oy: 0 },
       { name: 'b', ox: 40, oy: 0 }
     ],
-    defaultParams: { c: 1e-6 },
+    defaultParams: { c: 1e-6, vmax: 16, burned: false },
     paramDefs: [
       {
         key: 'c',
@@ -287,6 +415,14 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         min: 1e-12,
         step: 1e-7,
         unit: 'F'
+      },
+      {
+        key: 'vmax',
+        label: 'lab.param.capVmax',
+        type: 'number',
+        min: 1,
+        step: 1,
+        unit: 'V'
       },
       {
         key: 'ic',
@@ -405,7 +541,9 @@ export const PALETTE_ORDER = [
   'led',
   'diode',
   'switch',
+  'relay',
   'bjt_npn',
+  'bc547',
   'op_amp',
   'current_source',
   'capacitor',

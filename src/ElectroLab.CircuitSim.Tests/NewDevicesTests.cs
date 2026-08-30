@@ -134,6 +134,141 @@ public class NewDevicesTests
     }
 
     [Fact]
+    public void BurnedBjt_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VB", "battery", Pins(("p", "nb"), ("n", "gnd")), P(("v", 5))),
+                El("VC", "battery", Pins(("p", "nc"), ("n", "gnd")), P(("v", 10))),
+                El("RC", "resistor", Pins(("a", "nc"), ("b", "c")), P(("r", 100))),
+                El(
+                    "Q1",
+                    "bjt_npn",
+                    Pins(("c", "c"), ("b", "nb"), ("e", "gnd")),
+                    P(("vf", 0.7), ("rb", 25), ("ron", 10)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["Q1"]) < 1e-9);
+        Assert.Equal(10.0, result.DcOp.NodeVoltages["c"], 2);
+    }
+
+    [Fact]
+    public void Relay_ContactsOpen_WhenCoilBelowPullIn()
+    {
+        // Coil across 2 V with vPull=3.5 → open contacts → no load current.
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VC", "battery", Pins(("p", "coil"), ("n", "gnd")), P(("v", 2))),
+                El("VL", "battery", Pins(("p", "load"), ("n", "gnd")), P(("v", 5))),
+                El("RL", "resistor", Pins(("a", "load"), ("b", "sw")), P(("r", 100))),
+                El(
+                    "K1",
+                    "relay",
+                    Pins(("cp", "coil"), ("cn", "gnd"), ("a", "sw"), ("b", "gnd")),
+                    P(("rCoil", 400), ("vPull", 3.5), ("ron", 0.1))
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["K1"]) < 1e-6);
+        Assert.True(Math.Abs(result.DcOp.BranchCurrents["RL"]) < 1e-6);
+        Assert.Equal(5.0, result.DcOp.NodeVoltages["load"], 2);
+    }
+
+    [Fact]
+    public void Relay_ContactsClose_WhenCoilAbovePullIn()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VC", "battery", Pins(("p", "coil"), ("n", "gnd")), P(("v", 5))),
+                El("VL", "battery", Pins(("p", "load"), ("n", "gnd")), P(("v", 5))),
+                El("RL", "resistor", Pins(("a", "load"), ("b", "sw")), P(("r", 100))),
+                El(
+                    "K1",
+                    "relay",
+                    Pins(("cp", "coil"), ("cn", "gnd"), ("a", "sw"), ("b", "gnd")),
+                    P(("rCoil", 400), ("vPull", 3.5), ("ron", 0.1))
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.BranchCurrents["RL"] > 0.04, $"Iload={result.DcOp.BranchCurrents["RL"]}");
+        Assert.True(result.DcOp.NodeVoltages["sw"] < 0.5);
+    }
+
+    [Fact]
+    public void Relay_ManualClosed_ForcesContacts_WithoutCoilDrive()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VL", "battery", Pins(("p", "load"), ("n", "gnd")), P(("v", 5))),
+                El("RL", "resistor", Pins(("a", "load"), ("b", "sw")), P(("r", 100))),
+                El(
+                    "K1",
+                    "relay",
+                    Pins(("cp", "nc"), ("cn", "gnd"), ("a", "sw"), ("b", "gnd")),
+                    P(("rCoil", 400), ("vPull", 3.5), ("ron", 0.1)),
+                    new Dictionary<string, bool> { ["closed"] = true }
+                ),
+                El("RB", "resistor", Pins(("a", "nc"), ("b", "gnd")), P(("r", 1e6)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.BranchCurrents["RL"] > 0.04);
+    }
+
+    [Fact]
+    public void Relay_CloseAtTimeline_ClosesContactsInTransient()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VL", "battery", Pins(("p", "load"), ("n", "gnd")), P(("v", 5))),
+                El("RL", "resistor", Pins(("a", "load"), ("b", "sw")), P(("r", 100))),
+                El(
+                    "K1",
+                    "relay",
+                    Pins(("cp", "nc"), ("cn", "gnd"), ("a", "sw"), ("b", "gnd")),
+                    P(("rCoil", 400), ("vPull", 3.5), ("ron", 0.1), ("closeAt", 0.005), ("openAt", -1)),
+                    new Dictionary<string, bool> { ["closed"] = false }
+                ),
+                El("RB", "resistor", Pins(("a", "nc"), ("b", "gnd")), P(("r", 1e6)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new AnalysisOptions { TStop = 0.01, Dt = 0.001 });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var iK = result.Tran!.BranchCurrents.First(s => s.Id == "K1").Values;
+        Assert.True(Math.Abs(iK[0]) < 1e-6, "open at t=0");
+        Assert.True(iK[^1] > 0.04, $"closed by end, I={iK[^1]}");
+    }
+
+    [Fact]
     public void AcAnalysis_RcLowPass_MagnitudeAtCutoff()
     {
         // R=1k, C=159.155nF → fc = 1/(2*pi*R*C) ≈ 1000 Hz. At fc, |Vout/Vin| = 1/sqrt(2).

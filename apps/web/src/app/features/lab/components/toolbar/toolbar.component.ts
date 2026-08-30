@@ -57,7 +57,8 @@ export class LabToolbarComponent {
       value === 'pulse' ||
       value === 'opamp' ||
       value === 'ac' ||
-      value === 'bjt'
+      value === 'bjt' ||
+      value === 'relay'
     ) {
       this.loadPreset.emit(value);
     }

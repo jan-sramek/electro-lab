@@ -8,6 +8,7 @@ namespace ElectroLab.CircuitSim.Models;
 /// <summary>
 /// Teaching capacitor: open in DC; Backward Euler companion in transient.
 /// Optional <c>params.ic</c> sets initial voltage V(a)−V(b) at t=0 of a transient.
+/// BoolParams["burned"] = true → permanently open (teaching overvoltage failure).
 /// </summary>
 public sealed class CapacitorModel : IDeviceModel
 {
@@ -40,6 +41,9 @@ public sealed class CapacitorModel : IDeviceModel
         TransientState state,
         double dt)
     {
+        if (DeviceBurned.IsBurned(element))
+            return;
+
         var c = element.Params["c"];
         var g = c / dt;
         var a = element.Pins["a"];
@@ -58,6 +62,9 @@ public sealed class CapacitorModel : IDeviceModel
         TransientState state,
         double dt)
     {
+        if (DeviceBurned.IsBurned(element))
+            return 0;
+
         var c = element.Params["c"];
         var g = c / dt;
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
@@ -68,12 +75,16 @@ public sealed class CapacitorModel : IDeviceModel
 
     public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
     {
+        if (DeviceBurned.IsBurned(element))
+            return;
         var y = new Complex(0, omega * element.Params["c"]);
         ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], y);
     }
 
     public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
     {
+        if (DeviceBurned.IsBurned(element))
+            return 0;
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
         var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
         var y = new Complex(0, omega * element.Params["c"]);

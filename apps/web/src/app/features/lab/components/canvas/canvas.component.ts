@@ -16,13 +16,14 @@ import {
   snap,
   splitWireAtJunction
 } from '../../data/schematic.model';
-import { SYMBOL_LIBRARY } from '../../data/symbol-library';
+import { SYMBOL_LIBRARY, glyphKeyOf } from '../../data/symbol-library';
 import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 import { estimateAllWireCurrents } from '../../data/wire-current';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
+import { canBurnOut } from '../../data/burnout';
 import { normalizeLedColorId } from '../../data/led-colors';
 
 interface DragState {
@@ -74,6 +75,7 @@ export class SchematicCanvasComponent {
   /** Normalized marquee rect while dragging on empty canvas. */
   readonly marqueeRect = signal<{ x: number; y: number; w: number; h: number } | null>(null);
   readonly lib = SYMBOL_LIBRARY;
+  readonly glyphKeyOf = glyphKeyOf;
 
   /** viewBox: x y w h */
   readonly view = signal({ x: 0, y: 0, w: 720, h: 400 });
@@ -587,8 +589,27 @@ export class SchematicCanvasComponent {
     return Math.min(1, (i - LED_BURN_A) / 0.045);
   }
 
+  /** LED or other burnable overload visual (sticky burned → full fire). */
+  deviceBurn(c: SchematicComponent): number {
+    if (c.modelKey === 'led') return this.ledBurn(c.id);
+    if (canBurnOut(c.modelKey) && c.params['burned']) return 1;
+    return 0;
+  }
+
   isLedFailedOpen(id: string): boolean {
     return !!this.doc().components.find((x) => x.id === id)?.params['burned'];
+  }
+
+  /** Hide branch current when a burnable part failed open. */
+  isDeviceFailedOpen(c: SchematicComponent): boolean {
+    return canBurnOut(c.modelKey) && !!c.params['burned'];
+  }
+
+  /** Switch / relay contact glyph: timeline override, then closed flag, else coil voltage for relay. */
+  contactsClosed(c: SchematicComponent): boolean {
+    if (c.modelKey === 'switch') return this.switchClosed(c);
+    if (c.modelKey === 'relay') return this.relayClosed(c);
+    return !!c.params['closed'];
   }
 
   /** Switch glyph follows scrub time when openAt/closeAt timeline is active. */
@@ -613,6 +634,39 @@ export class SchematicCanvasComponent {
       if (closeAt !== null) return t >= closeAt;
     }
     return !!c.params['closed'];
+  }
+
+  /** Relay contacts: timeline / manual closed, else |Vcoil| ≥ vPull from sim. */
+  relayClosed(c: SchematicComponent): boolean {
+    if (c.modelKey !== 'relay') return !!c.params['closed'];
+    const openAtRaw = c.params['openAt'];
+    const closeAtRaw = c.params['closeAt'];
+    const openAt = typeof openAtRaw === 'number' ? openAtRaw : null;
+    const closeAt = typeof closeAtRaw === 'number' ? closeAtRaw : null;
+    const hasOpen = openAt !== null && openAt >= 0;
+    const hasClose = closeAt !== null && closeAt >= 0;
+    const res = this.result();
+    if ((hasOpen || hasClose) && res?.tran?.time?.length) {
+      const idx = Math.max(0, Math.min(this.scrubIndex(), res.tran.time.length - 1));
+      const t = res.tran.time[idx] ?? 0;
+      if (hasOpen && hasClose && openAt !== null && closeAt !== null) {
+        return closeAt <= openAt
+          ? t >= closeAt && t < openAt
+          : !(t >= openAt && t < closeAt);
+      }
+      if (hasOpen && openAt !== null) return t < openAt;
+      if (closeAt !== null) return t >= closeAt;
+    }
+    if (c.params['closed']) return true;
+
+    const cp = c.pins['cp']?.net;
+    const cn = c.pins['cn']?.net;
+    if (!cp || !cn) return false;
+    const vPull = typeof c.params['vPull'] === 'number' ? (c.params['vPull'] as number) : 3.5;
+    const vp = this.voltageOf(cp);
+    const vn = this.voltageOf(cn);
+    if (vp === null || vn === null) return false;
+    return Math.abs(vp - vn) >= vPull;
   }
 
   ledColorOf(c: { modelKey: string; params: Record<string, number | boolean> }): number {
@@ -659,6 +713,8 @@ export class SchematicCanvasComponent {
     if (pin === 'n') return '−';
     if ((modelKey === 'led' || modelKey === 'diode') && pin === 'a') return 'A';
     if ((modelKey === 'led' || modelKey === 'diode') && pin === 'c') return 'K';
+    if (modelKey === 'relay' && pin === 'cp') return '+';
+    if (modelKey === 'relay' && pin === 'cn') return '−';
     return pin;
   }
 

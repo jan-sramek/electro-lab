@@ -77,6 +77,83 @@ public class DcOperatingPointTests
     }
 
     [Fact]
+    public void BurnedDiode_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "n2")), P(("r", 100))),
+                El(
+                    "D1",
+                    "diode",
+                    Pins(("a", "n2"), ("c", "gnd")),
+                    P(("vf", 0.7), ("ron", 10)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["D1"]) < 1e-9);
+        Assert.True(Math.Abs(result.DcOp.BranchCurrents["R1"]) < 1e-9);
+    }
+
+    [Fact]
+    public void BurnedResistor_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El(
+                    "R1",
+                    "resistor",
+                    Pins(("a", "n1"), ("b", "gnd")),
+                    P(("r", 10)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["R1"]) < 1e-9);
+        Assert.Equal(5, result.DcOp.NodeVoltages["n1"], 3);
+    }
+
+    [Fact]
+    public void BurnedAmmeter_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El(
+                    "AM1",
+                    "ammeter",
+                    Pins(("a", "n1"), ("b", "n2")),
+                    P(("r", 0.01)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                ),
+                El("R1", "resistor", Pins(("a", "n2"), ("b", "gnd")), P(("r", 100)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["AM1"]) < 1e-9);
+        Assert.True(Math.Abs(result.DcOp.BranchCurrents["R1"]) < 1e-9);
+    }
+
+    [Fact]
     public void OpenSwitch_BlocksCurrent()
     {
         var circuit = new Circuit

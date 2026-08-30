@@ -46,17 +46,20 @@
 |-------|------|--------|----|-----------|-----|
 | `battery` | `p`, `n` | `v`, optional `esr` ≥ 0 | Ideal V (+ Thévenin ESR) | Same | AC short (+ ESR) |
 | `ac_source` | `p`, `n` | `mag`, `phase` (°); optional `freq` (Hz) | 0 V (short) | `mag·sin(2π·freq·t + phase)` when `freq` > 0; else 0 V | Phasor `mag∠phase` |
-| `resistor` | `a`, `b` | `r` | Linear G | Same | Same |
-| `led` / `diode` | `a`, `c` | `vf`, `ron` | Piecewise | Same | Open (+warning) |
+| `resistor` | `a`, `b` | `r`; bool `burned` | Linear G; burned → open | Same | Same |
+| `led` / `diode` | `a`, `c` | `vf`, `ron`; bool `burned` | Piecewise; burned → open | Same | Open (+warning) |
 | `switch` | `a`, `b` | `closed`; optional `openAt` / `closeAt` (s, ≥0; −1 = unused) | Ron/Roff from timeline at t=0, else `closed` | Same; `openAt` alone → open for `t ≥ openAt`; `closeAt` alone → closed for `t ≥ closeAt`; both with `closeAt ≤ openAt` → closed on `[closeAt, openAt)` | Same as DC |
-| `bjt_npn` | `c`, `b`, `e` | `vf`, `rb`, `ron` | Piecewise switch | Same | Open (+warning) |
+| `bjt_npn` | `c`, `b`, `e` | `vf`, `rb`, `ron`; bool `burned` | Piecewise switch; burned → open (Lab burns on sustained Ib ≳ 25 mA) | Same | Open (+warning) |
+| `relay` | `cp`, `cn`, `a`, `b` | `rCoil`, `vPull`, `ron`; bool `closed`; optional `openAt`/`closeAt` | Coil R always; contacts Ron when `|Vcoil|≥vPull` or override | Same | Coil R; contacts open (+warning) |
 | `op_amp` | `inp`, `inn`, `out` | `gain` (default 1e5); optional `vMax`/`vMin` (default ±15) | Finite-gain VCVS to gnd, clamped to rails | Same | Linear VCVS (unclamped) |
 | `current_source` | `p`, `n` | `i` | Ideal I | Same | Open (no AC) |
-| `capacitor` | `a`, `b` | `c`; optional `ic` (V, initial V(a)−V(b) for tran) | Open (+warning) | BE companion from `ic` (default 0) or from DC when `initFromDc` | `jωC` |
+| `capacitor` | `a`, `b` | `c`; optional `ic` (V); optional Lab `vmax`; bool `burned` | Open (+warning); burned stays open | BE companion; burned → open | `jωC`; burned → open |
 | `inductor` | `a`, `b` | `l`; optional `ic` (A, initial I a→b for tran) | Near-short | BE companion from `ic` (default 0) or from DC when `initFromDc` | `1/(jωL)` |
 | `potentiometer` | `a`, `w`, `b` | `r`, `pos` (0–1) | Two series R | Same | Same |
 | `pulse_source` | `p`, `n` | `v1`, `v2`, `td`, `pw` | Uses `v1` | Pulse | AC short |
-| `ammeter` | `a`, `b` | `r` (sense, default 0.01) | Series sense R | Same | Same |
+| `ammeter` | `a`, `b` | `r` (sense, default 0.01); bool `burned` | Series sense R; burned → open | Same | Same |
+
+Lab may place **named catalog parts** (e.g. `bc547`) that compile to these engine models via `simModel` — same pins/params, teaching approximation only (not datasheet/SPICE).
 
 Schematic-only (not sent to CircuitEngine): Lab `ground` forces connected nets to `circuit.ground`; Lab `voltmeter` shows V(p)−V(n) from results without loading the circuit.
 

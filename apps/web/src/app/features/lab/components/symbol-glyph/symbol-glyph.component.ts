@@ -32,19 +32,56 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:text x="-22" y="20" class="oa-mark">−</svg:text>
       }
       @case ('bjt_npn') {
-        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
-        <svg:line x1="-8" y1="-18" x2="-8" y2="18" class="sym thick" />
-        <svg:line x1="-8" y1="-10" x2="0" y2="-28" class="sym" />
-        <svg:line x1="-8" y1="10" x2="0" y2="28" class="sym" />
-        <svg:line x1="0" y1="-28" x2="0" y2="-40" class="sym" />
-        <svg:line x1="0" y1="28" x2="0" y2="40" class="sym" />
-        <svg:polyline class="sym" fill="none" points="-2,22 0,28 6,22" />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="-4" cy="-4" rx="18" ry="22" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 8 C -10 0, -12 -14, -2 -28 C 2 -18, 8 -8, 0 8 Z"
+            />
+          </svg:g>
+        }
+        <svg:line
+          x1="-36"
+          y1="0"
+          x2="-8"
+          y2="0"
+          class="sym"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:line
+          x1="-8"
+          y1="-18"
+          x2="-8"
+          y2="18"
+          class="sym thick"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:line x1="-8" y1="-10" x2="0" y2="-28" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-8" y1="10" x2="0" y2="28" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="0" y1="-28" x2="0" y2="-40" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="0" y1="28" x2="0" y2="40" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:polyline
+          class="sym"
+          [class.bjt-charred]="ledBurn() > 0.08"
+          fill="none"
+          points="-2,22 0,28 6,22"
+        />
       }
       @case ('ammeter') {
-        <svg:circle cx="0" cy="0" r="18" class="sym" />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-8" rx="18" ry="20" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 4 C -8 -2, -10 -14, -2 -24 C 2 -16, 6 -6, 0 4 Z"
+            />
+          </svg:g>
+        }
+        <svg:circle cx="0" cy="0" r="18" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
         <svg:text x="0" y="5" text-anchor="middle" class="meter-letter">A</svg:text>
-        <svg:line x1="-36" y1="0" x2="-18" y2="0" class="sym" />
-        <svg:line x1="18" y1="0" x2="36" y2="0" class="sym" />
+        <svg:line x1="-36" y1="0" x2="-18" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="18" y1="0" x2="36" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
       }
       @case ('voltmeter') {
         <svg:circle cx="0" cy="0" r="18" class="sym" />
@@ -53,8 +90,18 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:line x1="18" y1="0" x2="36" y2="0" class="sym" />
       }
       @case ('resistor') {
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-10" rx="22" ry="18" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 2 C -10 -4, -12 -16, -2 -26 C 2 -16, 8 -6, 0 2 Z"
+            />
+          </svg:g>
+        }
         <svg:polyline
           class="sym"
+          [class.bjt-charred]="ledBurn() > 0.08"
           fill="none"
           points="-40,0 -28,-12 -16,12 -4,-12 8,12 20,-12 32,0 40,0"
         />
@@ -66,6 +113,26 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
           <svg:line x1="-26" y1="0" x2="26" y2="0" class="sym thick" />
         } @else {
           <svg:line x1="-26" y1="0" x2="18" y2="-16" class="sym thick" />
+        }
+      }
+      @case ('relay') {
+        <svg:rect x="-28" y="-18" width="20" height="36" class="sym" fill="none" />
+        <svg:path
+          class="sym"
+          fill="none"
+          d="M -24 -10 C -20 -18, -12 -18, -12 -10 C -12 -2, -20 -2, -20 -10 M -20 -10 C -16 -18, -8 -18, -8 -10"
+        />
+        <svg:line x1="-36" y1="-28" x2="-28" y2="-18" class="sym" />
+        <svg:line x1="-36" y1="28" x2="-28" y2="18" class="sym" />
+        <svg:text x="-40" y="-30" class="polarity-mark pin-hint">+</svg:text>
+        <svg:circle cx="20" cy="-20" r="3" class="sym fill" />
+        <svg:circle cx="20" cy="20" r="3" class="sym fill" />
+        <svg:line x1="20" y1="-20" x2="36" y2="-20" class="sym" />
+        <svg:line x1="20" y1="20" x2="36" y2="20" class="sym" />
+        @if (closed()) {
+          <svg:line x1="20" y1="-20" x2="20" y2="20" class="sym thick" />
+        } @else {
+          <svg:line x1="20" y1="-20" x2="28" y2="8" class="sym thick" />
         }
       }
       @case ('led') {
@@ -124,10 +191,23 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         }
       }
       @case ('diode') {
-        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
-        <svg:polygon points="-8,0 -8,-14 12,0 -8,14" class="diode" />
-        <svg:line x1="12" y1="-14" x2="12" y2="14" class="sym thick" />
-        <svg:line x1="12" y1="0" x2="36" y2="0" class="sym" />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-8" rx="18" ry="20" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 4 C -8 -2, -10 -14, -2 -24 C 2 -16, 6 -6, 0 4 Z"
+            />
+          </svg:g>
+        }
+        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:polygon
+          points="-8,0 -8,-14 12,0 -8,14"
+          class="diode"
+          [class.led-charred]="ledBurn() > 0.08"
+        />
+        <svg:line x1="12" y1="-14" x2="12" y2="14" class="sym thick" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="12" y1="0" x2="36" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
         <svg:text x="-28" y="-10" class="polarity-mark pin-hint">A</svg:text>
         <svg:text x="22" y="-10" class="polarity-mark pin-hint">K</svg:text>
       }
@@ -138,10 +218,19 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:text x="0" y="-28" text-anchor="middle" class="polarity-mark">+</svg:text>
       }
       @case ('capacitor') {
-        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
-        <svg:line x1="-8" y1="-18" x2="-8" y2="18" class="sym thick" />
-        <svg:line x1="8" y1="-18" x2="8" y2="18" class="sym thick" />
-        <svg:line x1="8" y1="0" x2="36" y2="0" class="sym" />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-10" rx="18" ry="18" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 2 C -8 -4, -10 -14, -2 -24 C 2 -16, 6 -6, 0 2 Z"
+            />
+          </svg:g>
+        }
+        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-8" y1="-18" x2="-8" y2="18" class="sym thick" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="8" y1="-18" x2="8" y2="18" class="sym thick" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="8" y1="0" x2="36" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
       }
       @case ('inductor') {
         <svg:path
@@ -199,7 +288,7 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
       stroke-width: 2;
       pointer-events: all;
     }
-    .led.led-charred {
+    .bjt-charred {
       stroke: #1c1917;
     }
     .led-glow {

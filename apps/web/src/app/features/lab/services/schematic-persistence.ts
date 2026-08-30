@@ -1,9 +1,25 @@
 import { Injectable } from '@angular/core';
 import { AnalysisMode, SchematicDocument, cloneDoc } from '../data/schematic.model';
+import { isBjtNpnPart } from '../data/symbol-library';
 
 const LEGACY_KEY = 'electro-lab.schematic.v1';
 const SLOTS_KEY = 'electro-lab.circuits.v1';
 const CAP_IC_KEY = 'electro-lab.cap-ic.v1';
+
+/**
+ * Old NPN default used rb=1000 which self-limits Ib (~4 mA at 5 V) so burnout never fired.
+ * Migrate that legacy default to the teaching value (10 Ω).
+ */
+function migrateLegacyBjtRb(doc: SchematicDocument): SchematicDocument {
+  let changed = false;
+  const components = doc.components.map((c) => {
+    if (!isBjtNpnPart(c.modelKey)) return c;
+    if (c.params['rb'] !== 1000) return c;
+    changed = true;
+    return { ...c, params: { ...c.params, rb: 10 } };
+  });
+  return changed ? { ...doc, components } : doc;
+}
 
 /** Per-tab analysis settings — survive F5 so examples like LED fade keep Transient + tStop. */
 export interface SlotSimState {
@@ -183,7 +199,8 @@ export class SchematicPersistence {
       if (slot.id !== lib.activeId) {
         this.writeLibrary({ ...lib, activeId: slot.id });
       }
-      return { activeId: slot.id, doc: cloneDoc(slot.doc) };
+      const doc = migrateLegacyBjtRb(cloneDoc(slot.doc));
+      return { activeId: slot.id, doc };
     }
     const id = `slot_${Date.now()}`;
     const slot: CircuitSlot = {
@@ -194,7 +211,7 @@ export class SchematicPersistence {
     };
     this.writeLibrary({ schemaVersion: 1, activeId: id, slots: [slot] });
     localStorage.removeItem(LEGACY_KEY);
-    return { activeId: id, doc: cloneDoc(seed) };
+    return { activeId: id, doc: migrateLegacyBjtRb(cloneDoc(seed)) };
   }
 
   nextDefaultName(slots: CircuitSlot[]): string {
@@ -209,7 +226,7 @@ export class SchematicPersistence {
     const slot = lib.slots.find((s) => s.id === id);
     if (!slot) return null;
     this.writeLibrary({ ...lib, activeId: id });
-    return cloneDoc(slot.doc);
+    return migrateLegacyBjtRb(cloneDoc(slot.doc));
   }
 
   rename(id: string, name: string): void {

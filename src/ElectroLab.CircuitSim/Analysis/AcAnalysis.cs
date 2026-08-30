@@ -11,13 +11,13 @@ namespace ElectroLab.CircuitSim.Analysis;
 /// Teaching AC (phasor / small-signal) analysis at one frequency, or a log sweep between
 /// options.FStart and options.FStop. Linear devices (resistor, capacitor, inductor,
 /// potentiometer, switch, battery/pulse as an AC short, ac_source, op_amp) are stamped with
-/// their frequency-dependent admittance. Nonlinear teaching devices (led, diode, bjt_npn) are
-/// left open with a warning, since small-signal linearization around a DC bias point is out of
-/// scope for this v1.
+/// their frequency-dependent admittance. Nonlinear teaching devices (led, diode, bjt_npn, relay
+/// contacts) are left open with a warning, since small-signal linearization around a DC bias
+/// point is out of scope for this v1. Relay coil resistance is still stamped in AC.
 /// </summary>
 public sealed class AcAnalysis : IAnalysis
 {
-    private static readonly string[] NonlinearModels = ["led", "diode", "bjt_npn"];
+    private static readonly string[] NonlinearModels = ["led", "diode", "bjt_npn", "relay"];
 
     public string Type => "ac";
 

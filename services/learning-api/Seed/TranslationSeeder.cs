@@ -56,8 +56,9 @@ public static class TranslationSeeder
         ["lab.hint.ac"] =
             "AC RC low-pass: set analysis to AC and pick a frequency. Below the cutoff the load sees more of the source; far above it, the capacitor shunts AC to ground. Nonlinear parts are open in AC.",
         ["lab.hint.bjt"] =
-            "BJT LED switch (teaching model: base diode + CE on-resistance). Run DC with base driven — collector current lights the LED. Remove base drive (or raise Rb) to turn it off.",
-
+            "BC547 LED switch: Run DC with S1 Closed — base current turns Q1 on and the LED lights. Open S1 (uncheck Closed) and Run again — the LED goes out. Probe AM1 for collector current; try changing RB.",
+        ["lab.hint.relay"] =
+            "Relay + diode: Run DC with S1 Closed — coil energizes K1 and the LED lights through the contacts. Dfly is the flyback diode across the coil (cathode to coil+). Open S1 — contacts open and the LED goes out.",
         ["lab.toolbar.select"] = "Select",
         ["lab.toolbar.wire"] = "Wire",
         ["lab.toolbar.probe"] = "Probe",
@@ -81,7 +82,8 @@ public static class TranslationSeeder
         ["lab.toolbar.pulsePreset"] = "Pulse into RC (transient)",
         ["lab.toolbar.opampPreset"] = "Op-amp inverting (DC)",
         ["lab.toolbar.acPreset"] = "AC RC low-pass",
-        ["lab.toolbar.bjtPreset"] = "BJT LED switch (DC)",
+        ["lab.toolbar.bjtPreset"] = "BC547 LED switch (DC)",
+        ["lab.toolbar.relayPreset"] = "Relay + flyback diode (DC)",
         ["lab.toolbar.export"] = "Export",
         ["lab.toolbar.import"] = "Import",
         ["lab.toolbar.new"] = "New",
@@ -105,12 +107,26 @@ public static class TranslationSeeder
         ["lab.symbol.led"] = "LED",
         ["lab.symbol.diode"] = "Diode",
         ["lab.symbol.switch"] = "Switch",
+        ["lab.symbol.relay"] = "Relay",
         ["lab.symbol.bjt_npn"] = "NPN BJT",
+        ["lab.symbol.bc547"] = "BC547",
         ["lab.symbol.op_amp"] = "Op-amp",
         ["lab.modelNote.op_amp"] =
             "Teaching model: finite-gain VCVS with clamp to vMax/vMin (default ±15 V). AC stays linear (unclamped).",
         ["lab.modelNote.bjt_npn"] =
-            "Teaching model: base diode + collector–emitter on-resistance (not a SPICE BJT).",
+            "Teaching model: base diode + small internal rb + collector–emitter on-resistance (not SPICE). Use an external base resistor — Ib above ~25 mA burns it open.",
+        ["lab.modelNote.bc547"] =
+            "BC547-style NPN (TO-92). Teaching switch model — use a base resistor; Ib above ~25 mA burns the part open (not a datasheet/SPICE transistor).",
+        ["lab.modelNote.resistor"] =
+            "¼ W teaching resistor — sustained power above ~0.25 W burns it open.",
+        ["lab.modelNote.diode"] =
+            "Teaching silicon diode. Current above ~100 mA burns it open.",
+        ["lab.modelNote.capacitor"] =
+            "Teaching capacitor. Voltage above vmax (default 16 V) burns it open.",
+        ["lab.modelNote.ammeter"] =
+            "Series sense ammeter. Current above ~200 mA burns the meter open (do not place across a supply).",
+        ["lab.modelNote.relay"] =
+            "Teaching SPST relay: coil resistance between +/−; contacts close when |Vcoil| ≥ pull-in (or Closed / timeline override).",
         ["lab.symbol.current_source"] = "Current source",
         ["lab.symbol.capacitor"] = "Capacitor",
         ["lab.symbol.inductor"] = "Inductor",
@@ -140,6 +156,9 @@ public static class TranslationSeeder
         ["lab.param.closeAt"] = "Auto-close at (−1 = off)",
         ["lab.param.current"] = "Current",
         ["lab.param.capacitance"] = "Capacitance",
+        ["lab.param.capVmax"] = "Max voltage",
+        ["lab.param.rCoil"] = "Coil resistance",
+        ["lab.param.vPull"] = "Pull-in voltage",
         ["lab.param.capIc"] = "Initial V (tran)",
         ["lab.param.inductance"] = "Inductance",
         ["lab.param.inductorIc"] = "Initial I (tran)",
@@ -200,6 +219,26 @@ public static class TranslationSeeder
             "LED {ids} peaked above ~35 mA during the run (spike). It was not permanently burned — lower resistance or slow the switch if this persists at the end of the run.",
         ["lab.led.reverseBiasTip"] =
             "{id} looks reverse-biased or dark — check anode (A) vs cathode (K) orientation.",
+        ["lab.bjt.burnedWarning"] =
+            "Transistor {ids} burned out from too much base current (~25 mA) and is now open. Replace it and use enough series base resistance.",
+        ["lab.bjt.peakBaseOverloadWarning"] =
+            "Transistor {ids} peaked above ~25 mA base current during the run (spike). It was not permanently burned — add base resistance if this persists.",
+        ["lab.diode.burnedWarning"] =
+            "Diode {ids} burned out from too much current (~100 mA) and is now open. Replace it and add series resistance.",
+        ["lab.diode.peakOverloadWarning"] =
+            "Diode {ids} peaked above ~100 mA during the run (spike). It was not permanently burned.",
+        ["lab.resistor.burnedWarning"] =
+            "Resistor {ids} overheated (above ~¼ W) and is now open. Replace it and use a higher resistance or lower voltage.",
+        ["lab.resistor.peakOverloadWarning"] =
+            "Resistor {ids} peaked above ~¼ W during the run (spike). It was not permanently burned.",
+        ["lab.capacitor.burnedWarning"] =
+            "Capacitor {ids} exceeded its voltage rating and failed open. Replace it or lower the voltage / raise vmax.",
+        ["lab.capacitor.peakOverloadWarning"] =
+            "Capacitor {ids} peaked above its voltage rating during the run (spike). It was not permanently burned.",
+        ["lab.ammeter.burnedWarning"] =
+            "Ammeter {ids} overloaded (~200 mA) and is now open. Replace it — ammeters go in series, never across a supply.",
+        ["lab.ammeter.peakOverloadWarning"] =
+            "Ammeter {ids} peaked above ~200 mA during the run (spike). It was not permanently burned.",
         ["lab.led.fadePlayback"] =
             "Fading: capacitor is discharging through the resistor and LED. Scrub the scope or watch playback.",
         ["lab.led.fadeDischargeHint"] =
@@ -209,6 +248,21 @@ public static class TranslationSeeder
         ["lab.inspector.ledBurned"] =
             "This LED burned out (open circuit). Current no longer flows through it. Replace the LED and use a proper series resistor (~220 Ω for 5 V).",
         ["lab.inspector.replaceLed"] = "Replace LED",
+        ["lab.inspector.bjtBurned"] =
+            "This transistor burned out from excessive base current (open circuit). Replace it and keep a series base resistor (often a few kΩ).",
+        ["lab.inspector.replaceBjt"] = "Replace transistor",
+        ["lab.inspector.diodeBurned"] =
+            "This diode burned out from excessive current (open circuit). Replace it and add series resistance.",
+        ["lab.inspector.replaceDiode"] = "Replace diode",
+        ["lab.inspector.resistorBurned"] =
+            "This resistor overheated above ~¼ W and failed open. Replace it and check power (I²R).",
+        ["lab.inspector.replaceResistor"] = "Replace resistor",
+        ["lab.inspector.capacitorBurned"] =
+            "This capacitor exceeded its voltage rating and failed open. Replace it or raise vmax / lower the voltage.",
+        ["lab.inspector.replaceCapacitor"] = "Replace capacitor",
+        ["lab.inspector.ammeterBurned"] =
+            "This ammeter overloaded and failed open. Replace it — never place an ammeter directly across a voltage source.",
+        ["lab.inspector.replaceAmmeter"] = "Replace ammeter",
 
         ["lab.probe.netFinal"] = "Net {id} (final): {v} V",
         ["lab.probe.netAt"] = "Net {id} @ {t} s: {v} V",
@@ -225,7 +279,30 @@ public static class TranslationSeeder
 
         ["learn.title"] = "Learn",
         ["learn.body"] =
-            "Guided electronics projects will live here. The Circuit Lab is the active surface; this route is reserved in the product shell.",
+            "Short guided projects that open a ready-made circuit in the Lab. Start with the BC547 LED switch or the relay + diode example.",
+        ["learn.project.bc547.title"] = "BC547 LED switch",
+        ["learn.project.bc547.summary"] =
+            "Use a BC547 (teaching NPN) to turn an LED on and off from a base switch. Same idea as a real TO-92 switch circuit, with a simplified transistor model.",
+        ["learn.project.bc547.step1"] = "Open the Lab example and Run DC — the LED should light.",
+        ["learn.project.bc547.step2"] =
+            "Select switch S1, uncheck Closed, Run again — the LED should go dark.",
+        ["learn.project.bc547.step3"] =
+            "Probe the ammeter (AM1) or LED to read collector current while the switch is closed.",
+        ["learn.project.bc547.step4"] =
+            "Lower RB a lot (try ~100 Ω or less) — too much base current (~25 mA) burns the transistor open; use Replace transistor to recover.",
+        ["learn.project.bc547.openLab"] = "Open in Lab",
+        ["learn.project.relay.title"] = "Relay with flyback diode",
+        ["learn.project.relay.summary"] =
+            "Drive a teaching SPST relay coil from a switch, protect the coil path with a flyback diode, and switch an LED load on the contacts.",
+        ["learn.project.relay.step1"] =
+            "Open the Lab example and Run DC — with S1 closed the coil pulls in and the LED lights.",
+        ["learn.project.relay.step2"] =
+            "Select S1, uncheck Closed, Run again — contacts open and the LED goes out.",
+        ["learn.project.relay.step3"] =
+            "Select Dfly — cathode faces coil+ (toward the switch); anode returns to ground (classic flyback orientation).",
+        ["learn.project.relay.step4"] =
+            "Raise K1 pull-in above 5 V (or open S1) so the coil cannot energize — the LED stays dark.",
+        ["learn.project.relay.openLab"] = "Open in Lab",
 
         ["account.title"] = "Account",
         ["account.body"] = "Sign-in and profile will live here. Coming soon."
@@ -247,7 +324,8 @@ public static class TranslationSeeder
             }
             else if (existing.Value != value)
             {
-                // Keep DB as source of truth after first seed; do not overwrite edits.
+                // English catalog in code is the source of truth — refresh stale rows.
+                existing.Value = value;
             }
         }
 

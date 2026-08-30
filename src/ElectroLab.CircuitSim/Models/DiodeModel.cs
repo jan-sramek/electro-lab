@@ -5,6 +5,7 @@ namespace ElectroLab.CircuitSim.Models;
 
 /// <summary>
 /// Teaching diode: when on, Vf + Ron series equivalent; when off, open circuit.
+/// BoolParams["burned"] = true → permanently open (teaching overload failure).
 /// </summary>
 public sealed class DiodeModel : IDeviceModel
 {
@@ -26,6 +27,9 @@ public sealed class DiodeModel : IDeviceModel
 
     public void ContributeDc(ElementInstance element, StampContext ctx, DcBiasHint? hint)
     {
+        if (DeviceBurned.IsBurned(element))
+            return;
+
         var on = hint?.LedOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
             return;
@@ -41,6 +45,9 @@ public sealed class DiodeModel : IDeviceModel
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
     {
+        if (DeviceBurned.IsBurned(element))
+            return 0;
+
         var on = hint?.LedOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
             return 0;

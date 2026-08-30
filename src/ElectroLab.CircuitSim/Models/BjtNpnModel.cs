@@ -7,6 +7,7 @@ namespace ElectroLab.CircuitSim.Models;
 /// Teaching NPN BJT modeled as a base-driven switch:
 /// when Vbe >= vf the base-emitter junction is Vf in series with rb, and the collector-emitter
 /// path closes with a fixed on-resistance (ron); when off, both junctions are open.
+/// BoolParams["burned"] = true → permanently open (teaching base-overcurrent failure).
 /// </summary>
 public sealed class BjtNpnModel : IDeviceModel
 {
@@ -30,6 +31,9 @@ public sealed class BjtNpnModel : IDeviceModel
 
     public void ContributeDc(ElementInstance element, StampContext ctx, DcBiasHint? hint)
     {
+        if (DeviceBurned.IsBurned(element))
+            return;
+
         var on = hint?.BjtOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
             return;
@@ -50,6 +54,9 @@ public sealed class BjtNpnModel : IDeviceModel
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
     {
+        if (DeviceBurned.IsBurned(element))
+            return 0;
+
         var on = hint?.BjtOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
             return 0;

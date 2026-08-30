@@ -55,6 +55,7 @@ public sealed class DcBiasHint
 {
     public Dictionary<string, bool> LedOn { get; } = new(StringComparer.Ordinal);
     public Dictionary<string, bool> BjtOn { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, bool> RelayOn { get; } = new(StringComparer.Ordinal);
 
     /// <summary>Op-amp rail mode: 0 = linear VCVS, +1 = at vMax, −1 = at vMin.</summary>
     public Dictionary<string, int> OpAmpRail { get; } = new(StringComparer.Ordinal);

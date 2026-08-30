@@ -6,7 +6,7 @@ namespace ElectroLab.CircuitSim.Models;
 
 /// <summary>
 /// Teaching series ammeter: a small sense resistor whose branch current is the measured current.
-/// Place in series with the path you want to measure.
+/// BoolParams["burned"] = true → permanently open (teaching fuse / overload).
 /// </summary>
 public sealed class AmmeterModel : IDeviceModel
 {
@@ -25,20 +25,32 @@ public sealed class AmmeterModel : IDeviceModel
     public void RegisterExtras(ElementInstance element, StampContext ctx) { }
 
     public void ContributeDc(ElementInstance element, StampContext ctx, DcBiasHint? hint)
-        => ctx.StampConductance(element.Pins["a"], element.Pins["b"], 1.0 / SenseR(element));
+    {
+        if (DeviceBurned.IsBurned(element))
+            return;
+        ctx.StampConductance(element.Pins["a"], element.Pins["b"], 1.0 / SenseR(element));
+    }
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
     {
+        if (DeviceBurned.IsBurned(element))
+            return 0;
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
         var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
         return (va - vb) / SenseR(element);
     }
 
     public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
-        => ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], new Complex(1.0 / SenseR(element), 0));
+    {
+        if (DeviceBurned.IsBurned(element))
+            return;
+        ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], new Complex(1.0 / SenseR(element), 0));
+    }
 
     public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
     {
+        if (DeviceBurned.IsBurned(element))
+            return 0;
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
         var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
         return (va - vb) / SenseR(element);

@@ -1,5 +1,5 @@
 import { Component, output } from '@angular/core';
-import { PALETTE_ORDER, SYMBOL_LIBRARY, SymbolDef } from '../../data/symbol-library';
+import { PALETTE_ORDER, SYMBOL_LIBRARY, SymbolDef, glyphKeyOf } from '../../data/symbol-library';
 import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { normalizeLedColorId } from '../../data/led-colors';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
@@ -15,6 +15,7 @@ import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 export class ComponentPaletteComponent {
   readonly lib = SYMBOL_LIBRARY;
   readonly keys = [...PALETTE_ORDER];
+  readonly glyphKeyOf = glyphKeyOf;
   readonly place = output<string>();
 
   onDragStart(ev: DragEvent, modelKey: string): void {

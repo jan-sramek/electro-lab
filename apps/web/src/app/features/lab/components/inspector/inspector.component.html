@@ -5,10 +5,10 @@
     @if (teachingNote(); as note) {
       <p class="model-note">{{ note | t }}</p>
     }
-    @if (ledBurned()) {
-      <p class="burn-note">{{ 'lab.inspector.ledBurned' | t }}</p>
-      <button type="button" class="replace" (click)="replaceLed.emit()">
-        {{ 'lab.inspector.replaceLed' | t }}
+    @if (burnedNoteKey(); as noteKey) {
+      <p class="burn-note">{{ noteKey | t }}</p>
+      <button type="button" class="replace" (click)="replaceBurned.emit()">
+        {{ replaceLabelKey()! | t }}
       </button>
     }
     @for (p of params(); track p.key) {

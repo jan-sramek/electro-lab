@@ -1,5 +1,5 @@
 import { AnalysisMode, SchematicDocument, assignNets } from './schematic.model';
-import { SYMBOL_LIBRARY } from './symbol-library';
+import { SYMBOL_LIBRARY, isBjtNpnPart, simModelOf } from './symbol-library';
 
 export type DiagnosticCode =
   | 'empty_circuit'
@@ -132,9 +132,10 @@ export function diagnoseSchematic(
   }
 
   if (mode === 'ac') {
-    const nonlinear = simParts.filter(
-      (c) => c.modelKey === 'led' || c.modelKey === 'diode' || c.modelKey === 'bjt_npn'
-    );
+    const nonlinear = simParts.filter((c) => {
+      const sim = simModelOf(c.modelKey);
+      return sim === 'led' || sim === 'diode' || sim === 'relay' || isBjtNpnPart(c.modelKey);
+    });
     if (nonlinear.length > 0) {
       out.push(diag('ac_nonlinear_open', 'warning', nonlinear.map((c) => c.id)));
     }

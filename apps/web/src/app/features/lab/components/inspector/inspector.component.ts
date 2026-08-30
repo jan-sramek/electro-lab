@@ -2,6 +2,12 @@ import { Component, computed, effect, input, output, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { SchematicComponent } from '../../data/schematic.model';
 import { SYMBOL_LIBRARY, ParamDef } from '../../data/symbol-library';
+import {
+  BurnKind,
+  burnInspectorNoteKey,
+  burnKindOf,
+  burnReplaceLabelKey
+} from '../../data/burnout';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
@@ -17,7 +23,7 @@ export class InspectorPanelComponent {
   readonly paramChange = output<{ key: string; value: number | boolean }>();
   readonly rotate = output<void>();
   readonly remove = output<void>();
-  readonly replaceLed = output<void>();
+  readonly replaceBurned = output<void>();
 
   /** In-progress number field text — committed on blur/Enter only (avoids sim on "8" while typing "800"). */
   private readonly numberDrafts = signal<Record<string, number | string>>({});
@@ -39,9 +45,20 @@ export class InspectorPanelComponent {
     return c ? (SYMBOL_LIBRARY[c.modelKey]?.teachingNote ?? null) : null;
   });
 
-  readonly ledBurned = computed(() => {
+  readonly burnedKind = computed((): BurnKind | null => {
     const c = this.selected();
-    return !!c && c.modelKey === 'led' && !!c.params['burned'];
+    if (!c?.params['burned']) return null;
+    return burnKindOf(c.modelKey);
+  });
+
+  readonly burnedNoteKey = computed(() => {
+    const kind = this.burnedKind();
+    return kind ? burnInspectorNoteKey(kind) : null;
+  });
+
+  readonly replaceLabelKey = computed(() => {
+    const kind = this.burnedKind();
+    return kind ? burnReplaceLabelKey(kind) : null;
   });
 
   readonly params = computed((): ParamDef[] => {
@@ -59,6 +76,10 @@ export class InspectorPanelComponent {
   onNumberDraft(componentId: string, key: string, raw: number | string | null): void {
     const dk = this.draftKey(componentId, key);
     this.numberDrafts.update((d) => ({ ...d, [dk]: raw ?? '' }));
+    // Commit finite values immediately (spinner / valid number) so sim + burnout track the UI.
+    if (typeof raw === 'number' && Number.isFinite(raw)) {
+      this.paramChange.emit({ key, value: raw });
+    }
   }
 
   onNumberCommit(componentId: string, key: string): void {
