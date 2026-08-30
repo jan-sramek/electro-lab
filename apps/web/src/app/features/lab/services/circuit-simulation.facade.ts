@@ -22,7 +22,7 @@ import { SchematicPersistence } from './schematic-persistence';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { LED_BURN_A } from '../data/led-limits';
 
-function branchCurrentFromResult(res: SimulateResponse, id: string): number | null {
+function peakBranchCurrent(res: SimulateResponse, id: string): number | null {
   const dc = res.dcOp?.branchCurrents?.[id];
   if (typeof dc === 'number') return dc;
   const series = res.tran?.branchCurrents.find((s) => s.id === id);
@@ -31,6 +31,24 @@ function branchCurrentFromResult(res: SimulateResponse, id: string): number | nu
     (best, v) => (Math.abs(v) > Math.abs(best) ? v : best),
     series.values[0]!
   );
+}
+
+/** DC value, or final transient sample — used for sticky LED burn (not brief spikes). */
+function sustainedBranchCurrent(res: SimulateResponse, id: string): number | null {
+  const dc = res.dcOp?.branchCurrents?.[id];
+  if (typeof dc === 'number') return dc;
+  const series = res.tran?.branchCurrents.find((s) => s.id === id);
+  if (!series?.values.length) return null;
+  return series.values[series.values.length - 1]!;
+}
+
+function nodeVoltageFromResult(res: SimulateResponse, net: string, scrubIndex: number): number | null {
+  const dc = res.dcOp?.nodeVoltages?.[net];
+  if (typeof dc === 'number') return dc;
+  const series = res.tran?.nodeVoltages.find((s) => s.id === net);
+  if (!series?.values.length) return null;
+  const idx = Math.min(Math.max(0, scrubIndex), series.values.length - 1);
+  return series.values[idx] ?? null;
 }
 
 @Injectable()
@@ -63,6 +81,8 @@ export class CircuitSimulationFacade {
   private readonly storedCapIcVolts = signal<number | null>(null);
   /** True when the last request injected capacitor IC (discharge / fade run). */
   private lastRunInjectedIc = false;
+  /** Client diagnostic warnings kept across the API response merge. */
+  private clientWarningKeys: string[] = [];
 
   readonly highlightedIds = computed(() => {
     const fromDiag = this.highlightComponentIds();
@@ -188,7 +208,6 @@ export class CircuitSimulationFacade {
         this.result.set(res);
         if (this.showBusyForRequest) this.busy.set(false);
         const warn = [...(res.warnings ?? [])];
-        this.warnings.set(warn);
         if (res.ok && res.tran?.time?.length) {
           this.rememberCapVoltages(res);
         }
@@ -204,6 +223,8 @@ export class CircuitSimulationFacade {
             }
           }
         }
+        this.appendLedPolarityTips(res, warn);
+        this.warnings.set([...this.clientWarningKeys, ...warn]);
         if (!res.ok) {
           const errs = res.errors ?? [];
           this.error.set(this.mapEngineErrors(errs));
@@ -226,6 +247,7 @@ export class CircuitSimulationFacade {
       this.editor.tStop();
       this.editor.dt();
       this.editor.acFreq();
+      this.editor.initFromDc();
       this.editor.doc();
       this.syncCapIcFromStorage();
       this.autoRun$.next();
@@ -393,6 +415,7 @@ export class CircuitSimulationFacade {
         ...new Set([...this.highlightComponentIds(), ...burned.map((c) => c.id)])
       ]);
     }
+    this.clientWarningKeys = warnKeys;
     this.warnings.set(warnKeys);
 
     if (errors.length > 0) {
@@ -422,7 +445,8 @@ export class CircuitSimulationFacade {
             analysis: {
               type: 'tran',
               tStop: this.editor.tStop(),
-              dt: this.editor.dt()
+              dt: this.editor.dt(),
+              initFromDc: this.editor.initFromDc()
             },
             circuit
           }
@@ -445,26 +469,68 @@ export class CircuitSimulationFacade {
   }
 
   /**
-   * If an LED drew too much current, mark it burned (fail open) and re-sim via
-   * the store revision bump. Sticky until the student replaces the LED.
+   * Burn LEDs only when overload is sustained (DC or final tran sample).
+   * Brief peak spikes warn without permanently killing the part.
    */
   private applyLedOverloadFailures(res: SimulateResponse): void {
-    const burnedIds = this.editor
-      .doc()
-      .components.filter((c) => {
-        if (c.modelKey !== 'led' || c.params['burned']) return false;
-        const i = branchCurrentFromResult(res, c.id);
-        return typeof i === 'number' && Math.abs(i) >= LED_BURN_A;
-      })
-      .map((c) => c.id);
-    if (!burnedIds.length) return;
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of this.editor.doc().components) {
+      if (c.modelKey !== 'led' || c.params['burned']) continue;
+      const peak = peakBranchCurrent(res, c.id);
+      if (typeof peak === 'number' && Math.abs(peak) >= LED_BURN_A) {
+        peakBurnIds.push(c.id);
+      }
+      const sustained = sustainedBranchCurrent(res, c.id);
+      if (typeof sustained === 'number' && Math.abs(sustained) >= LED_BURN_A) {
+        sustainedBurnIds.push(c.id);
+      }
+    }
 
-    const note = this.i18n.t('lab.led.burnedWarning', { ids: burnedIds.join(', ') });
-    this.warnings.set([...this.warnings(), note]);
+    const notes = [...this.warnings()];
+    if (peakBurnIds.length && !sustainedBurnIds.length) {
+      notes.push(
+        this.i18n.t('lab.led.peakOverloadWarning', { ids: peakBurnIds.join(', ') })
+      );
+      this.highlightComponentIds.set([
+        ...new Set([...this.highlightComponentIds(), ...peakBurnIds])
+      ]);
+      this.warnings.set(notes);
+      return;
+    }
+
+    if (!sustainedBurnIds.length) return;
+
+    notes.push(this.i18n.t('lab.led.burnedWarning', { ids: sustainedBurnIds.join(', ') }));
+    this.warnings.set(notes);
     this.highlightComponentIds.set([
-      ...new Set([...this.highlightComponentIds(), ...burnedIds])
+      ...new Set([...this.highlightComponentIds(), ...sustainedBurnIds])
     ]);
-    this.editor.markLedsBurned(burnedIds);
+    this.editor.markLedsBurned(sustainedBurnIds);
+  }
+
+  /** Soft tip when an LED sits reverse-biased / dark with significant |V|. */
+  private appendLedPolarityTips(res: SimulateResponse, warn: string[]): void {
+    const scrub = this.scrubIndex();
+    for (const c of this.editor.doc().components) {
+      if (c.modelKey !== 'led' || c.params['burned']) continue;
+      const i = sustainedBranchCurrent(res, c.id);
+      if (i == null || Math.abs(i) > 1e-5) continue;
+      const aNet = c.pins['a']?.net;
+      const cNet = c.pins['c']?.net;
+      if (!aNet || !cNet) continue;
+      const va = nodeVoltageFromResult(res, aNet, scrub);
+      const vc = nodeVoltageFromResult(res, cNet, scrub);
+      if (va == null || vc == null) continue;
+      const vac = va - vc;
+      const vf = typeof c.params['vf'] === 'number' ? (c.params['vf'] as number) : 2;
+      if (vac < -0.3 || (Math.abs(vac) > vf * 0.5 && vac < 0)) {
+        warn.push(this.i18n.t('lab.led.reverseBiasTip', { id: c.id }));
+        this.highlightComponentIds.set([
+          ...new Set([...this.highlightComponentIds(), c.id])
+        ]);
+      }
+    }
   }
 
   private mapEngineErrors(errors: string[]): string {

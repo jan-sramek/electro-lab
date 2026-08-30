@@ -137,6 +137,11 @@
   border-radius: 6px;
 }
 
+.timebase.init-from-dc input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+
 .file-btn {
   display: inline-flex;
   align-items: center;

@@ -7,7 +7,10 @@ export type DiagnosticCode =
   | 'ground_disconnected'
   | 'floating_component'
   | 'dc_capacitor_island'
-  | 'shorted_voltage_source';
+  | 'shorted_voltage_source'
+  | 'ac_nonlinear_open'
+  | 'ac_source_tran_no_freq'
+  | 'switch_inductor_spike';
 
 export interface CircuitDiagnostic {
   code: DiagnosticCode;
@@ -125,6 +128,37 @@ export function diagnoseSchematic(
 
     if (islandNets.length > 0) {
       out.push(diag('dc_capacitor_island', 'warning', islandCaps, islandNets));
+    }
+  }
+
+  if (mode === 'ac') {
+    const nonlinear = simParts.filter(
+      (c) => c.modelKey === 'led' || c.modelKey === 'diode' || c.modelKey === 'bjt_npn'
+    );
+    if (nonlinear.length > 0) {
+      out.push(diag('ac_nonlinear_open', 'warning', nonlinear.map((c) => c.id)));
+    }
+  }
+
+  if (mode === 'tran') {
+    const silentAc = simParts.filter(
+      (c) =>
+        c.modelKey === 'ac_source' &&
+        !(typeof c.params['freq'] === 'number' && (c.params['freq'] as number) > 0)
+    );
+    if (silentAc.length > 0) {
+      out.push(diag('ac_source_tran_no_freq', 'warning', silentAc.map((c) => c.id)));
+    }
+
+    const switches = simParts.filter((c) => c.modelKey === 'switch');
+    const inductors = simParts.filter((c) => c.modelKey === 'inductor');
+    if (switches.length > 0 && inductors.length > 0) {
+      out.push(
+        diag('switch_inductor_spike', 'warning', [
+          ...switches.map((c) => c.id),
+          ...inductors.map((c) => c.id)
+        ])
+      );
     }
   }
 

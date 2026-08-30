@@ -17,6 +17,7 @@ export class LabToolbarComponent {
   readonly tStop = input(0.005);
   readonly dt = input(5e-5);
   readonly acFreq = input(1000);
+  readonly initFromDc = input(false);
   readonly canUndo = input(false);
   readonly canRedo = input(false);
   readonly canDelete = input(false);
@@ -29,6 +30,7 @@ export class LabToolbarComponent {
   readonly tStopChange = output<number | string>();
   readonly dtChange = output<number | string>();
   readonly acFreqChange = output<number | string>();
+  readonly initFromDcChange = output<boolean>();
   readonly undo = output<void>();
   readonly redo = output<void>();
   readonly remove = output<void>();

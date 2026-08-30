@@ -223,6 +223,68 @@ public class NewDevicesTests
     }
 
     [Fact]
+    public void OpAmp_OpenLoop_ClampsToTeachingRail()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 1))),
+                El("U1", "op_amp", Pins(("inp", "n1"), ("inn", "gnd"), ("out", "out")),
+                    P(("gain", 1e5), ("vMax", 15), ("vMin", -15))),
+                El("RL", "resistor", Pins(("a", "out"), ("b", "gnd")), P(("r", 1000)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.Equal(15.0, result.DcOp!.NodeVoltages["out"], 2);
+        Assert.Contains(result.Warnings, w => w.Contains("U1") && w.Contains("clamped"));
+    }
+
+    [Fact]
+    public void AcSource_SineInTransient_DrivesLoad()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("AC1", "ac_source", Pins(("p", "n1"), ("n", "gnd")),
+                    P(("mag", 1.0), ("phase", 0), ("freq", 50))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "gnd")), P(("r", 1000)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new AnalysisOptions { TStop = 0.02, Dt = 0.0005 });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var series = result.Tran!.NodeVoltages.First(s => s.Id == "n1");
+        var peak = series.Values.Max(Math.Abs);
+        Assert.True(peak > 0.9, $"peak |V|={peak} should approach mag=1 with sine drive");
+        Assert.True(series.Values.Min() < -0.9, "sine should go negative");
+    }
+
+    [Fact]
+    public void AcSource_WithoutFreq_StaysZeroInTransient()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("AC1", "ac_source", Pins(("p", "n1"), ("n", "gnd")), P(("mag", 1.0), ("phase", 0))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "gnd")), P(("r", 1000)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new AnalysisOptions { TStop = 0.01, Dt = 0.001 });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var series = result.Tran!.NodeVoltages.First(s => s.Id == "n1");
+        Assert.All(series.Values, v => Assert.True(Math.Abs(v) < 1e-9));
+    }
+
+    [Fact]
     public void AcAnalysis_NonlinearDevice_ProducesWarning()
     {
         var circuit = new Circuit

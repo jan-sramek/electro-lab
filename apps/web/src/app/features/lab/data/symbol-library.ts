@@ -63,10 +63,11 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'p', ox: 40, oy: 0 },
       { name: 'n', ox: -40, oy: 0 }
     ],
-    defaultParams: { mag: 1, phase: 0 },
+    defaultParams: { mag: 1, phase: 0, freq: 50 },
     paramDefs: [
       { key: 'mag', label: 'lab.param.acMag', type: 'number', min: 0, step: 0.1, unit: 'V' },
-      { key: 'phase', label: 'lab.param.acPhase', type: 'number', min: -180, step: 15, unit: '°' }
+      { key: 'phase', label: 'lab.param.acPhase', type: 'number', min: -180, step: 15, unit: '°' },
+      { key: 'freq', label: 'lab.param.acFreq', type: 'number', min: 0, step: 1, unit: 'Hz' }
     ],
     width: 48,
     height: 36
@@ -80,9 +81,11 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'inn', ox: -40, oy: 16 },
       { name: 'out', ox: 44, oy: 0 }
     ],
-    defaultParams: { gain: 1e5 },
+    defaultParams: { gain: 1e5, vMax: 15, vMin: -15 },
     paramDefs: [
-      { key: 'gain', label: 'lab.param.gain', type: 'number', min: 1, step: 1000, unit: '' }
+      { key: 'gain', label: 'lab.param.gain', type: 'number', min: 1, step: 1000, unit: '' },
+      { key: 'vMax', label: 'lab.param.vMax', type: 'number', step: 1, unit: 'V' },
+      { key: 'vMin', label: 'lab.param.vMin', type: 'number', step: 1, unit: 'V' }
     ],
     width: 56,
     height: 48
@@ -284,6 +287,13 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         min: 1e-12,
         step: 1e-7,
         unit: 'F'
+      },
+      {
+        key: 'ic',
+        label: 'lab.param.capIc',
+        type: 'number',
+        step: 0.1,
+        unit: 'V'
       }
     ],
     width: 44,
@@ -305,6 +315,13 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         min: 1e-9,
         step: 0.001,
         unit: 'H'
+      },
+      {
+        key: 'ic',
+        label: 'lab.param.inductorIc',
+        type: 'number',
+        step: 0.01,
+        unit: 'A'
       }
     ],
     width: 56,

@@ -19,6 +19,12 @@ export const EN_FALLBACK: Record<string, string> = {
     'A voltage source has both terminals on the same net (highlighted). Separate the pins.',
   'diag.singular_fallback':
     'Circuit cannot be solved. Check Ground is wired and there are no floating parts.',
+  'diag.ac_nonlinear_open':
+    'LED, diode, and BJT are treated as open in AC analysis (highlighted). Use Transient for switching behavior.',
+  'diag.ac_source_tran_no_freq':
+    'AC source needs Frequency (Hz) > 0 for a sine wave in Transient. Without it the source is 0 V.',
+  'diag.switch_inductor_spike':
+    'Switching an inductor can make large voltage spikes (ideal teaching model). Use care with openAt/closeAt timing.',
 
   'lab.title': 'Circuit Lab',
   'lab.intro': 'Build a schematic, wire pins, and run DC, transient, or AC analysis.',
@@ -39,7 +45,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.hint.pulse':
     'Pulse into RC: Transient — the pulse source steps high then low. Scrub through the edges to see charge and discharge on the capacitor.',
   'lab.hint.opamp':
-    'Op-amp inverting amp (teaching ideal VCVS, no supply rails). Run DC — gain ≈ −Rf/Rin. Probe the output net; try changing Rf or Rin.',
+    'Op-amp inverting amp (teaching model with ±15 V rails by default). Run DC — gain ≈ −Rf/Rin. Probe the output; try changing Rf, Rin, or rail limits in the inspector.',
   'lab.hint.ac':
     'AC RC low-pass: set analysis to AC and pick a frequency. Below the cutoff the load sees more of the source; far above it, the capacitor shunts AC to ground. Nonlinear parts are open in AC.',
   'lab.hint.bjt':
@@ -54,6 +60,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.ac': 'AC',
   'lab.toolbar.tStop': 'tStop (s)',
   'lab.toolbar.dt': 'dt (s)',
+  'lab.toolbar.initFromDc': 'Init from DC',
   'lab.toolbar.freq': 'f (Hz)',
   'lab.toolbar.undo': 'Undo',
   'lab.toolbar.redo': 'Redo',
@@ -94,7 +101,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.symbol.bjt_npn': 'NPN BJT',
   'lab.symbol.op_amp': 'Op-amp',
   'lab.modelNote.op_amp':
-    'Teaching model: ideal voltage-controlled voltage source (no supply rails or saturation).',
+    'Teaching model: finite-gain VCVS with clamp to vMax/vMin (default ±15 V). AC stays linear (unclamped).',
   'lab.modelNote.bjt_npn':
     'Teaching model: base diode + collector–emitter on-resistance (not a SPICE BJT).',
   'lab.symbol.current_source': 'Current source',
@@ -111,7 +118,10 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.param.esr': 'Series R (ESR)',
   'lab.param.acMag': 'AC magnitude',
   'lab.param.acPhase': 'AC phase',
+  'lab.param.acFreq': 'Frequency (tran sine)',
   'lab.param.gain': 'Open-loop gain',
+  'lab.param.vMax': 'Positive rail',
+  'lab.param.vMin': 'Negative rail',
   'lab.param.baseResistance': 'Base resistance',
   'lab.param.senseResistance': 'Sense resistance',
   'lab.param.resistance': 'Resistance',
@@ -123,7 +133,9 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.param.closeAt': 'Auto-close at (−1 = off)',
   'lab.param.current': 'Current',
   'lab.param.capacitance': 'Capacitance',
+  'lab.param.capIc': 'Initial V (tran)',
   'lab.param.inductance': 'Inductance',
+  'lab.param.inductorIc': 'Initial I (tran)',
   'lab.param.wiper': 'Wiper (0–1)',
   'lab.param.vInitial': 'Initial V',
   'lab.param.vPulse': 'Pulse V',
@@ -177,6 +189,10 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.led.color.white': 'White',
   'lab.led.burnedWarning':
     'LED {ids} burned out from too much current and is now an open circuit. Replace it and add enough series resistance.',
+  'lab.led.peakOverloadWarning':
+    'LED {ids} peaked above ~35 mA during the run (spike). It was not permanently burned — lower resistance or slow the switch if this persists at the end of the run.',
+  'lab.led.reverseBiasTip':
+    '{id} looks reverse-biased or dark — check anode (A) vs cathode (K) orientation.',
   'lab.led.fadePlayback':
     'Fading: capacitor is discharging through the resistor and LED. Scrub the scope or watch playback.',
   'lab.led.fadeDischargeHint':

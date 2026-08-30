@@ -227,6 +227,37 @@ public class DcOperatingPointTests
     }
 
     [Fact]
+    public void Transient_InductorIc_StartsNearSeededCurrent()
+    {
+        // Parallel RL: large τ so the first BE sample stays close to params.ic.
+        Circuit Make(double? ic)
+        {
+            var pars = new Dictionary<string, double> { ["l"] = 1.0 };
+            if (ic is double v) pars["ic"] = v;
+            return new Circuit
+            {
+                Ground = "gnd",
+                Elements =
+                [
+                    El("L1", "inductor", Pins(("a", "n1"), ("b", "gnd")), pars),
+                    El("R1", "resistor", Pins(("a", "n1"), ("b", "gnd")), P(("r", 10000)))
+                ]
+            };
+        }
+
+        var opts = new ElectroLab.CircuitSim.Analysis.AnalysisOptions { TStop = 0.0001, Dt = 1e-5 };
+        var withIc = _sim.Simulate(Make(0.5), "tran", opts);
+        Assert.True(withIc.Ok, string.Join("; ", withIc.Errors));
+        var iSeeded = withIc.Tran!.BranchCurrents.First(s => s.Id == "L1").Values[0];
+        Assert.True(Math.Abs(iSeeded - 0.5) < 0.08, $"iL[0]={iSeeded} should start near ic=0.5");
+
+        var zeroIc = _sim.Simulate(Make(null), "tran", opts);
+        Assert.True(zeroIc.Ok, string.Join("; ", zeroIc.Errors));
+        var i0 = zeroIc.Tran!.BranchCurrents.First(s => s.Id == "L1").Values[0];
+        Assert.True(Math.Abs(i0) < 0.05, $"without ic, iL[0]={i0} should be near 0");
+    }
+
+    [Fact]
     public void Potentiometer_DividerAt30Percent()
     {
         var circuit = new Circuit

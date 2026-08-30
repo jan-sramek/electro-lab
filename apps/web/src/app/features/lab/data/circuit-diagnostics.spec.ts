@@ -52,6 +52,27 @@ describe('circuit-diagnostics', () => {
     expect(SINGULAR_FALLBACK_KEY).toBe('diag.singular_fallback');
     expect(EN_FALLBACK[diagnosticMessageKey('no_ground')]).toContain('Ground');
     expect(EN_FALLBACK[SINGULAR_FALLBACK_KEY].length).toBeGreaterThan(10);
+    expect(EN_FALLBACK[diagnosticMessageKey('ac_nonlinear_open')]).toContain('AC');
+    expect(EN_FALLBACK[diagnosticMessageKey('ac_source_tran_no_freq')]).toContain('Frequency');
+    expect(EN_FALLBACK[diagnosticMessageKey('switch_inductor_spike')]).toContain('inductor');
+  });
+
+  it('warns when nonlinear devices are present in AC mode', () => {
+    const diags = diagnoseSchematic(createLedPreset(), 'ac');
+    expect(diags.some((d) => d.code === 'ac_nonlinear_open')).toBeTrue();
+  });
+
+  it('warns when ac_source lacks freq in transient', () => {
+    const ac = createComponent('ac_source', 0, 0, 'AC1');
+    ac.params['freq'] = 0;
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [ac, gnd],
+      wires: [{ id: 'W1', a: { componentId: 'AC1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }]
+    });
+    const diags = diagnoseSchematic(doc, 'tran');
+    expect(diags.some((d) => d.code === 'ac_source_tran_no_freq')).toBeTrue();
   });
 });
 

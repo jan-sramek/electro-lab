@@ -12,6 +12,9 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:line x1="-8" y1="-16" x2="-8" y2="16" class="sym thick" />
         <svg:line x1="8" y1="-28" x2="8" y2="28" class="sym" />
         <svg:line x1="18" y1="-16" x2="18" y2="16" class="sym thick" />
+        <!-- pins: p at +x (right), n at −x (left) -->
+        <svg:text x="28" y="5" class="polarity-mark">+</svg:text>
+        <svg:text x="-36" y="5" class="polarity-mark">−</svg:text>
       }
       @case ('ac_source') {
         <svg:circle cx="0" cy="0" r="20" class="sym" />
@@ -111,6 +114,8 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         />
         <svg:line x1="-14" y1="14" x2="14" y2="14" class="sym thick" />
         <svg:line x1="0" y1="14" x2="0" y2="40" class="sym" />
+        <svg:text x="16" y="-22" class="polarity-mark pin-hint">A</svg:text>
+        <svg:text x="16" y="34" class="polarity-mark pin-hint">K</svg:text>
         @if (ledBurn() > 0.35) {
           <svg:g class="led-crack" pointer-events="none">
             <svg:line x1="-6" y1="-2" x2="4" y2="10" />
@@ -123,11 +128,14 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:polygon points="-8,0 -8,-14 12,0 -8,14" class="diode" />
         <svg:line x1="12" y1="-14" x2="12" y2="14" class="sym thick" />
         <svg:line x1="12" y1="0" x2="36" y2="0" class="sym" />
+        <svg:text x="-28" y="-10" class="polarity-mark pin-hint">A</svg:text>
+        <svg:text x="22" y="-10" class="polarity-mark pin-hint">K</svg:text>
       }
       @case ('current_source') {
         <svg:circle cx="0" cy="0" r="22" class="sym" />
         <svg:line x1="0" y1="12" x2="0" y2="-12" class="sym thick" />
         <svg:polyline class="sym" fill="none" points="-6,-4 0,-12 6,-4" />
+        <svg:text x="0" y="-28" text-anchor="middle" class="polarity-mark">+</svg:text>
       }
       @case ('capacitor') {
         <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
@@ -277,11 +285,16 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
       stroke: #12263a;
       pointer-events: all;
     }
-    .oa-mark {
+    .oa-mark,
+    .polarity-mark {
       font-size: 12px;
       font-family: ui-monospace, monospace;
       fill: #12263a;
       pointer-events: none;
+    }
+    .polarity-mark.pin-hint {
+      font-size: 9px;
+      fill: #475569;
     }
     .meter-letter {
       font-size: 14px;

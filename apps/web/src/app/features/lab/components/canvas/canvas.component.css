@@ -193,6 +193,17 @@
   stroke: #1d4ed8;
 }
 
+.pin-label {
+  fill: #1e3a5f;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 3px;
+}
+
 .node-tag {
   fill: #1d4ed8;
   font-size: 11px;

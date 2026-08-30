@@ -7,6 +7,7 @@ namespace ElectroLab.CircuitSim.Models;
 
 /// <summary>
 /// Teaching inductor: short in DC; Backward Euler companion (G = dt/L) in transient.
+/// Optional params.ic = initial current a→b (A); overridden by initFromDc.
 /// </summary>
 public sealed class InductorModel : IDeviceModel
 {

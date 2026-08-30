@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import {
   EditorTool,
@@ -80,6 +80,16 @@ export class SchematicCanvasComponent {
   private pan: { x0: number; y0: number; vx: number; vy: number } | null = null;
   private drag: DragState | null = null;
   private marquee: MarqueeState | null = null;
+
+  constructor() {
+    // Leaving wire mode (e.g. Select toolbar) must drop the rubber-band / start pin.
+    effect(() => {
+      if (this.tool() !== 'wire') {
+        this.wireFrom.set(null);
+        this.wireCursor.set(null);
+      }
+    });
+  }
 
   readonly nettled = computed(() => assignNets(this.doc()));
 
@@ -641,6 +651,24 @@ export class SchematicCanvasComponent {
 
   pinNames(c: SchematicComponent): string[] {
     return Object.keys(c.pins);
+  }
+
+  /** Short polarity / terminal labels when a part is selected. */
+  pinDisplayName(modelKey: string, pin: string): string {
+    if (pin === 'p') return '+';
+    if (pin === 'n') return '−';
+    if ((modelKey === 'led' || modelKey === 'diode') && pin === 'a') return 'A';
+    if ((modelKey === 'led' || modelKey === 'diode') && pin === 'c') return 'K';
+    return pin;
+  }
+
+  /** Offset pin label slightly outward from the component body. */
+  pinLabelPos(c: SchematicComponent, pinName: string): { x: number; y: number } {
+    const pos = this.pinPos(c, pinName);
+    const dx = pos.x - c.x;
+    const dy = pos.y - c.y;
+    const len = Math.hypot(dx, dy) || 1;
+    return { x: pos.x + (dx / len) * 12, y: pos.y + (dy / len) * 12 };
   }
 
   private endpoint(doc: SchematicDocument, ref: PinRef) {

@@ -12,6 +12,8 @@ export interface SlotSimState {
   dt: number;
   acFreq: number;
   examplePreset: string | null;
+  /** Seed C/L from a DC solve at t=0 (overrides params.ic). */
+  initFromDc?: boolean;
 }
 
 export interface CircuitSlot {
@@ -289,7 +291,8 @@ export class SchematicPersistence {
       tStop,
       dt,
       acFreq,
-      examplePreset: typeof sim.examplePreset === 'string' ? sim.examplePreset : null
+      examplePreset: typeof sim.examplePreset === 'string' ? sim.examplePreset : null,
+      initFromDc: !!sim.initFromDc
     };
   }
 }

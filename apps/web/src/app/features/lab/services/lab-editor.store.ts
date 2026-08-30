@@ -54,6 +54,8 @@ export class LabEditorStore {
   readonly dt = signal(5e-5);
   /** Single-frequency AC analysis (Hz). */
   readonly acFreq = signal(1000);
+  /** Transient: seed C/L from DC at t=0 (overrides params.ic). */
+  readonly initFromDc = signal(false);
   readonly canUndo = signal(false);
   readonly canRedo = signal(false);
   readonly activeSlotId = signal<string | null>(null);
@@ -103,10 +105,8 @@ export class LabEditorStore {
     this.persist();
     const lib = this.persistence.loadLibrary();
     const name = this.persistence.nextDefaultName(lib.slots);
-    const id = this.persistence.saveAs(name, emptyDocument());
     this.history.clear();
     this.doc.set(emptyDocument());
-    this.activeSlotId.set(id);
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
@@ -114,6 +114,10 @@ export class LabEditorStore {
     this.tStop.set(0.005);
     this.dt.set(5e-5);
     this.acFreq.set(1000);
+    this.initFromDc.set(false);
+    const sim = this.currentSimState();
+    const id = this.persistence.saveAs(name, emptyDocument(), sim);
+    this.activeSlotId.set(id);
     this.syncHistoryFlags();
     this.refreshSlots(id);
     this.bump();
@@ -192,6 +196,12 @@ export class LabEditorStore {
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.acFreq.set(v);
+    this.persist();
+    this.bump();
+  }
+
+  setInitFromDc(value: boolean): void {
+    this.initFromDc.set(!!value);
     this.persist();
     this.bump();
   }
@@ -302,10 +312,7 @@ export class LabEditorStore {
         if (c.modelKey === 'led' && ev.key === 'color' && typeof ev.value === 'number') {
           params = { ...params, vf: ledColorById(ev.value).vf };
         }
-        // Manual Closed toggle cancels timed auto-open/close so the switch feels interactive.
-        if (c.modelKey === 'switch' && ev.key === 'closed') {
-          params = { ...params, openAt: -1, closeAt: -1 };
-        }
+        // Keep openAt/closeAt when toggling Closed — timeline still wins in the engine when set.
         return { ...c, params };
       })
     }));
@@ -559,7 +566,8 @@ export class LabEditorStore {
       tStop: tStop ?? this.tStop(),
       dt: dt ?? this.dt(),
       acFreq: acFreq ?? this.acFreq(),
-      examplePreset: presetId
+      examplePreset: presetId,
+      initFromDc: false
     };
     const id = this.persistence.saveAs(tabName, doc, sim);
     this.history.clear();
@@ -576,12 +584,18 @@ export class LabEditorStore {
   private applySlotSim(sim: SlotSimState | undefined): void {
     if (!sim) {
       this.activeExamplePreset.set(null);
+      this.analysisMode.set('dcOp');
+      this.tStop.set(0.005);
+      this.dt.set(5e-5);
+      this.acFreq.set(1000);
+      this.initFromDc.set(false);
       return;
     }
     this.analysisMode.set(sim.analysisMode);
     this.tStop.set(sim.tStop);
     this.dt.set(sim.dt);
     this.acFreq.set(sim.acFreq);
+    this.initFromDc.set(!!sim.initFromDc);
     const p = sim.examplePreset;
     if (
       p === 'led' ||
@@ -605,7 +619,8 @@ export class LabEditorStore {
       tStop: this.tStop(),
       dt: this.dt(),
       acFreq: this.acFreq(),
-      examplePreset: this.activeExamplePreset()
+      examplePreset: this.activeExamplePreset(),
+      initFromDc: this.initFromDc()
     };
   }
 

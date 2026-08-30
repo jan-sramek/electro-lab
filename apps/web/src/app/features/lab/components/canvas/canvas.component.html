@@ -110,6 +110,17 @@
         r="7"
         (click)="onPinClick($event, c.id, pinName)"
       />
+      @if (isSelected(c.id)) {
+        @let labelPos = pinLabelPos(c, pinName);
+        <text
+          class="pin-label"
+          [attr.x]="labelPos.x"
+          [attr.y]="labelPos.y"
+          text-anchor="middle"
+        >
+          {{ pinDisplayName(c.modelKey, pinName) }}
+        </text>
+      }
     }
   }
 

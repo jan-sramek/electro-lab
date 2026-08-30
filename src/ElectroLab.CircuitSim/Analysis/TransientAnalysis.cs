@@ -43,7 +43,11 @@ public sealed class TransientAnalysis : IAnalysis
                 state.CapVoltage[el.Id] = ic;
             }
             if (el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase))
-                state.IndCurrent[el.Id] = 0;
+            {
+                // Optional params.ic = initial current a→b (A); default 0. Overridden by InitFromDc.
+                el.Params.TryGetValue("ic", out var ic);
+                state.IndCurrent[el.Id] = ic;
+            }
             if (IsPiecewiseDiode(el.Model))
                 state.Bias.LedOn[el.Id] = true;
             if (IsPiecewiseBjt(el.Model))
@@ -80,7 +84,7 @@ public sealed class TransientAnalysis : IAnalysis
             if (!ctx.TrySolve(out var solution, out var lastError))
                 return SimulationResult.Fail(Type, lastError ?? $"Solve failed at t={t}.");
 
-            // Settle piecewise diodes/BJTs a few times within the step
+            // Settle piecewise diodes/BJTs/op-amps a few times within the step
             for (var iter = 0; iter < 4; iter++)
             {
                 var changed = false;
@@ -114,6 +118,11 @@ public sealed class TransientAnalysis : IAnalysis
                             state.Bias.BjtOn[el.Id] = nextOn;
                             changed = true;
                         }
+                    }
+                    else if (IsOpAmp(el.Model))
+                    {
+                        if (OpAmpModel.UpdateRailBias(el, ctx, solution, state.Bias))
+                            changed = true;
                     }
                 }
 
@@ -149,6 +158,13 @@ public sealed class TransientAnalysis : IAnalysis
                     state.IndCurrent[el.Id] = i;
                 }
             }
+        }
+
+        foreach (var (id, rail) in state.Bias.OpAmpRail)
+        {
+            if (rail == 0) continue;
+            var side = rail > 0 ? "vMax" : "vMin";
+            warnings.Add($"{id}: op-amp output clamped to teaching rail ({side}).");
         }
 
         return new SimulationResult
@@ -214,51 +230,56 @@ public sealed class TransientAnalysis : IAnalysis
                         changed = true;
                     }
                 }
-                else if (IsPiecewiseBjt(el.Model))
-                {
-                    var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
-                    var ve = ctx.NodeVoltage(solution, el.Pins["e"]);
-                    var vf = el.Params["vf"];
-                    var rb = el.Params["rb"];
-                    var previouslyOn = state.Bias.BjtOn[el.Id];
-                    var baseCurrent = previouslyOn ? (vb - ve - vf) / rb : 0;
-                    var nextOn = previouslyOn ? baseCurrent > 1e-12 : vb - ve >= vf;
-                    if (nextOn != previouslyOn)
+                    else if (IsPiecewiseBjt(el.Model))
                     {
-                        state.Bias.BjtOn[el.Id] = nextOn;
-                        changed = true;
+                        var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
+                        var ve = ctx.NodeVoltage(solution, el.Pins["e"]);
+                        var vf = el.Params["vf"];
+                        var rb = el.Params["rb"];
+                        var previouslyOn = state.Bias.BjtOn[el.Id];
+                        var baseCurrent = previouslyOn ? (vb - ve - vf) / rb : 0;
+                        var nextOn = previouslyOn ? baseCurrent > 1e-12 : vb - ve >= vf;
+                        if (nextOn != previouslyOn)
+                        {
+                            state.Bias.BjtOn[el.Id] = nextOn;
+                            changed = true;
+                        }
                     }
+                    else if (IsOpAmp(el.Model))
+                    {
+                        if (OpAmpModel.UpdateRailBias(el, ctx, solution, state.Bias))
+                            changed = true;
+                    }
+                }
+
+                if (!changed) break;
+
+                ctx = new StampContext(nodes, circuit.Ground);
+                foreach (var (el, model) in models)
+                    model.RegisterExtras(el, ctx);
+                ctx.BeginStamp();
+                foreach (var (el, model) in models)
+                    model.ContributeDc(el, ctx, state.Bias);
+                if (!ctx.TrySolve(out solution, out lastError))
+                {
+                    error = lastError ?? "initFromDc: DC seed settle failed.";
+                    return false;
                 }
             }
 
-            if (!changed) break;
-
-            ctx = new StampContext(nodes, circuit.Ground);
             foreach (var (el, model) in models)
-                model.RegisterExtras(el, ctx);
-            ctx.BeginStamp();
-            foreach (var (el, model) in models)
-                model.ContributeDc(el, ctx, state.Bias);
-            if (!ctx.TrySolve(out solution, out lastError))
             {
-                error = lastError ?? "initFromDc: DC seed settle failed.";
-                return false;
+                if (el.Model.Equals("capacitor", StringComparison.OrdinalIgnoreCase))
+                {
+                    var va = ctx.NodeVoltage(solution, el.Pins["a"]);
+                    var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
+                    state.CapVoltage[el.Id] = va - vb;
+                }
+                else if (el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase))
+                {
+                    state.IndCurrent[el.Id] = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
+                }
             }
-        }
-
-        foreach (var (el, model) in models)
-        {
-            if (el.Model.Equals("capacitor", StringComparison.OrdinalIgnoreCase))
-            {
-                var va = ctx.NodeVoltage(solution, el.Pins["a"]);
-                var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
-                state.CapVoltage[el.Id] = va - vb;
-            }
-            else if (el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase))
-            {
-                state.IndCurrent[el.Id] = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
-            }
-        }
 
         return true;
     }
@@ -287,6 +308,9 @@ public sealed class TransientAnalysis : IAnalysis
 
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsOpAmp(string model) =>
+        model.Equals("op_amp", StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>Companion-model state carried between transient steps.</summary>

@@ -83,6 +83,14 @@
           min="0.000001"
         />
       </label>
+      <label class="timebase init-from-dc">
+        <input
+          type="checkbox"
+          [ngModel]="initFromDc()"
+          (ngModelChange)="initFromDcChange.emit(!!$event)"
+        />
+        {{ 'lab.toolbar.initFromDc' | t }}
+      </label>
     }
     @if (analysisMode() === 'ac') {
       <label class="timebase">

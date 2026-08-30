@@ -96,13 +96,25 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                         changed = true;
                     }
                 }
+                else if (IsOpAmp(el.Model))
+                {
+                    if (OpAmpModel.UpdateRailBias(el, ctx, solution!, hint))
+                        changed = true;
+                }
             }
 
             if (!changed)
                 break;
 
             if (iter == 5)
-                warnings.Add("Diode/LED/BJT bias iteration did not fully settle; using last state.");
+                warnings.Add("Diode/LED/BJT/op-amp bias iteration did not fully settle; using last state.");
+        }
+
+        foreach (var (id, rail) in hint.OpAmpRail)
+        {
+            if (rail == 0) continue;
+            var side = rail > 0 ? "vMax" : "vMin";
+            warnings.Add($"{id}: op-amp output clamped to teaching rail ({side}).");
         }
 
         var voltages = new Dictionary<string, double>(StringComparer.Ordinal)
@@ -157,4 +169,7 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
 
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsOpAmp(string model) =>
+        model.Equals("op_amp", StringComparison.OrdinalIgnoreCase);
 }
