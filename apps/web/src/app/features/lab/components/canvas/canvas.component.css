@@ -47,18 +47,42 @@
   cursor: pointer;
 }
 
+.wire-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.schematic.tool-wire .wire-hit {
+  stroke-width: 18;
+}
+
+.schematic.tool-wire.wiring .wire-hit:hover {
+  stroke: rgba(11, 110, 79, 0.18);
+}
+
 .wire.has-flow {
   stroke: #0f766e;
   stroke-width: 3;
 }
 
-.wire:hover {
+.wire-hit:hover + .wire {
   stroke: #0b6e4f;
 }
 
 .wire.selected {
   stroke: #0b6e4f;
   stroke-width: 3.5;
+}
+
+.rubber-band {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  opacity: 0.85;
 }
 
 .wire-flow {
@@ -145,11 +169,28 @@
   stroke: #1d4ed8;
   stroke-width: 2;
   cursor: crosshair;
+  pointer-events: none;
 }
 
-.pin:hover,
+.pin-hit {
+  fill: transparent;
+  stroke: none;
+  cursor: crosshair;
+  pointer-events: all;
+}
+
+.schematic.tool-wire .pin {
+  stroke-width: 2.5;
+}
+
+.pin-hit:hover + .pin,
 .pin.active {
   fill: #93c5fd;
+}
+
+.schematic.tool-wire .pin.active {
+  fill: #60a5fa;
+  stroke: #1d4ed8;
 }
 
 .node-tag {

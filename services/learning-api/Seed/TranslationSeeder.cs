@@ -30,7 +30,9 @@ public static class TranslationSeeder
         ["lab.title"] = "Circuit Lab",
         ["lab.intro"] = "Build a schematic, wire pins, and run DC, transient, or AC analysis.",
         ["lab.hint"] =
-            "Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. In Wire mode, click an existing wire for a T-junction. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.",
+            "Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.",
+        ["lab.hint.wire"] =
+            "Wire mode: click a pin to start (blue preview follows the cursor), then click another pin — or click an existing wire to make a T-junction. Click empty canvas to cancel.",
 
         ["lab.toolbar.select"] = "Select",
         ["lab.toolbar.wire"] = "Wire",

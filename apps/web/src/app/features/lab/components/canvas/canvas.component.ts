@@ -68,6 +68,8 @@ export class SchematicCanvasComponent {
   readonly dropPlace = output<{ modelKey: string; x: number; y: number }>();
 
   readonly wireFrom = signal<PinRef | null>(null);
+  /** Cursor in SVG space while drawing a wire (rubber-band). */
+  readonly wireCursor = signal<{ x: number; y: number } | null>(null);
   readonly dragOver = signal(false);
   /** Normalized marquee rect while dragging on empty canvas. */
   readonly marqueeRect = signal<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -137,6 +139,16 @@ export class SchematicCanvasComponent {
       }
     }
     return [...count.values()].filter((p) => p.n >= 3);
+  });
+
+  /** Orthogonal preview from the active wire start pin to the cursor. */
+  readonly rubberBandPath = computed(() => {
+    const from = this.wireFrom();
+    const cursor = this.wireCursor();
+    if (!from || !cursor) return null;
+    const a = this.endpoint(this.nettled(), from);
+    if (!a) return null;
+    return polylineToPath(orthogonalPolyline(a.x, a.y, cursor.x, cursor.y));
   });
 
   readonly netTags = computed(() => {
@@ -231,7 +243,15 @@ export class SchematicCanvasComponent {
 
     if (this.tool() === 'wire') {
       this.wireFrom.set(null);
+      this.wireCursor.set(null);
     }
+  }
+
+  onSchematicPointerMove(ev: PointerEvent): void {
+    if (this.tool() !== 'wire' || !this.wireFrom()) return;
+    const svg = ev.currentTarget as SVGSVGElement;
+    const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
+    this.wireCursor.set({ x: pt.x, y: pt.y });
   }
 
   onBackgroundPointerMove(ev: PointerEvent): void {
@@ -409,10 +429,12 @@ export class SchematicCanvasComponent {
     }
     if (pinKey(from) === pinKey(ref)) {
       this.wireFrom.set(null);
+      this.wireCursor.set(null);
       return;
     }
     if (this.wireExists(from, ref)) {
       this.wireFrom.set(null);
+      this.wireCursor.set(null);
       return;
     }
     const wire: SchematicWire = {
@@ -425,6 +447,7 @@ export class SchematicCanvasComponent {
       wires: [...this.doc().wires, wire]
     });
     this.wireFrom.set(null);
+    this.wireCursor.set(null);
   }
 
   onWireClick(ev: MouseEvent, wireId: string): void {
@@ -436,16 +459,32 @@ export class SchematicCanvasComponent {
       if (!path) return;
       const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
       const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
-      const hit = closestPointOnOrthogonalWire(pt.x, pt.y, path.pts);
+      const hit = closestPointOnOrthogonalWire(pt.x, pt.y, path.pts, 16);
       if (!hit) return;
       const junction = createComponent('junction', hit.x, hit.y);
+      const jRef: PinRef = { componentId: junction.id, pin: 'j' };
       let next = {
         ...this.doc(),
         components: [...this.doc().components, junction]
       };
       next = splitWireAtJunction(next, wireId, junction.id);
+
+      const from = this.wireFrom();
+      if (from && pinKey(from) !== pinKey(jRef) && !this.wireExists(from, jRef)) {
+        // Finish an in-progress wire onto this wire (auto T-junction).
+        next = {
+          ...next,
+          wires: [...next.wires, { id: `W${Date.now()}`, a: from, b: jRef }]
+        };
+        this.docChange.emit(next);
+        this.wireFrom.set(null);
+        this.wireCursor.set(null);
+        return;
+      }
+
+      // Start a branch from the tap point.
       this.docChange.emit(next);
-      this.wireFrom.set({ componentId: junction.id, pin: 'j' });
+      this.wireFrom.set(jRef);
       return;
     }
 

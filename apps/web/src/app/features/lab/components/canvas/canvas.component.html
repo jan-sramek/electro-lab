@@ -7,8 +7,10 @@
   [class.tool-wire]="tool() === 'wire'"
   [class.tool-probe]="tool() === 'probe'"
   [class.tool-select]="tool() === 'select'"
+  [class.wiring]="!!wireFrom()"
   [class.drop-target]="dragOver()"
   (wheel)="onWheel($event)"
+  (pointermove)="onSchematicPointerMove($event)"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave($event)"
   (drop)="onDrop($event)"
@@ -25,12 +27,14 @@
   />
 
   @for (w of wirePaths(); track w.id) {
+    <!-- Fat invisible stroke so thin wires are easy to tap (esp. for T-junctions). -->
+    <path class="wire-hit" [attr.d]="w.d" (click)="onWireClick($event, w.id)" />
     <path
       class="wire"
       [class.selected]="isWireSelected(w.id)"
       [class.has-flow]="!!w.flow"
       [attr.d]="w.d"
-      (click)="onWireClick($event, w.id)"
+      pointer-events="none"
     />
   }
 
@@ -92,11 +96,18 @@
     @for (pinName of pinNames(c); track pinName) {
       @let pos = pinPos(c, pinName);
       <circle
+        class="pin-hit"
+        [attr.cx]="pos.x"
+        [attr.cy]="pos.y"
+        r="14"
+        (click)="onPinClick($event, c.id, pinName)"
+      />
+      <circle
         class="pin"
         [class.active]="isWireFrom(c.id, pinName)"
         [attr.cx]="pos.x"
         [attr.cy]="pos.y"
-        r="6"
+        r="7"
         (click)="onPinClick($event, c.id, pinName)"
       />
     }
@@ -120,6 +131,10 @@
         pointer-events="none"
       />
     }
+  }
+
+  @if (rubberBandPath(); as preview) {
+    <path class="rubber-band" [attr.d]="preview" pointer-events="none" />
   }
 
   @for (tag of netTags(); track tag.net) {

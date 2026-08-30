@@ -101,4 +101,30 @@ describe('junction nets', () => {
     expect(next.wires.length).toBe(2);
     expect(next.wires.every((w) => w.a.componentId === 'J1' || w.b.componentId === 'J1')).toBeTrue();
   });
+
+  it('pin finished onto a wire shares one net after junction split', () => {
+    const r1 = createComponent('resistor', 0, 0, 'R1');
+    const r2 = createComponent('resistor', 100, 0, 'R2');
+    const r3 = createComponent('resistor', 50, 60, 'R3');
+    const j = createComponent('junction', 50, 0, 'J1');
+    let doc = {
+      groundNet: 'gnd',
+      components: [r1, r2, r3, j],
+      wires: [{ id: 'W1', a: { componentId: 'R1', pin: 'b' }, b: { componentId: 'R2', pin: 'a' } }]
+    };
+    doc = splitWireAtJunction(doc, 'W1', 'J1');
+    doc = {
+      ...doc,
+      wires: [
+        ...doc.wires,
+        { id: 'W2', a: { componentId: 'R3', pin: 'a' }, b: { componentId: 'J1', pin: 'j' } }
+      ]
+    };
+    const nettled = assignNets(doc);
+    const nR1 = nettled.components.find((c) => c.id === 'R1')!.pins['b'].net;
+    const nR3 = nettled.components.find((c) => c.id === 'R3')!.pins['a'].net;
+    const nJ = nettled.components.find((c) => c.id === 'J1')!.pins['j'].net;
+    expect(nR1).toBe(nJ);
+    expect(nR3).toBe(nJ);
+  });
 });
