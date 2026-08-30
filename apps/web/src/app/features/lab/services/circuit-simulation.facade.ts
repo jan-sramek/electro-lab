@@ -1,9 +1,15 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
 import { Subject, catchError, debounceTime, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
 import { SimulateRequest, SimulateResponse } from '../api/circuit-api.types';
-import { compileNetlist, parseHighlightedIds } from '../data/schematic.model';
+import { parseHighlightedIds } from '../data/schematic.model';
+import {
+  allSwitchesOpen,
+  compileNetlistWithCapIc,
+  finalCapVoltagesFromTran,
+  schematicCapFingerprint
+} from '../data/cap-ic';
 import {
   SINGULAR_FALLBACK_KEY,
   diagnoseSchematic,
@@ -31,6 +37,7 @@ export class CircuitSimulationFacade {
   private readonly api = inject(CircuitApiClient);
   private readonly editor = inject(LabEditorStore);
   private readonly i18n = inject(I18nService);
+  private readonly zone = inject(NgZone);
   private readonly simulate$ = new Subject<{ body: SimulateRequest; showBusy: boolean }>();
   /** Debounced auto-sim after schematic edits (no Run-button flicker). */
   private readonly autoRun$ = new Subject<void>();
@@ -45,6 +52,13 @@ export class CircuitSimulationFacade {
   readonly highlightNetIds = signal<string[]>([]);
   /** Sample index into tran.time for canvas/probe scrubbing. */
   readonly scrubIndex = signal(0);
+  private scrubPlayTimer: ReturnType<typeof setInterval> | null = null;
+
+  /** Last final capacitor voltages after a successful tran (for open-switch discharge). */
+  private storedCapIc = new Map<string, number>();
+  private storedCapFingerprint = '';
+  /** True when the last request injected capacitor IC (discharge / fade run). */
+  private lastRunInjectedIc = false;
 
   readonly highlightedIds = computed(() => {
     const fromDiag = this.highlightComponentIds();
@@ -157,8 +171,20 @@ export class CircuitSimulationFacade {
         if (this.showBusyForRequest) this.busy.set(false);
         const warn = [...(res.warnings ?? [])];
         this.warnings.set(warn);
+        if (res.ok && res.tran?.time?.length) {
+          this.rememberCapVoltages(res);
+        }
         if (res.tran?.time?.length) {
-          this.scrubIndex.set(res.tran.time.length - 1);
+          if (this.scrubPlayTimer != null && !this.showBusyForRequest) {
+            /* keep playing */
+          } else {
+            this.stopScrubPlayback();
+            const start = this.pickTranScrubIndex(res);
+            this.scrubIndex.set(start);
+            if (this.lastRunInjectedIc) {
+              this.maybeStartDischargePlayback(res);
+            }
+          }
         }
         if (!res.ok) {
           const errs = res.errors ?? [];
@@ -187,7 +213,90 @@ export class CircuitSimulationFacade {
   }
 
   setScrubIndex(idx: number): void {
+    this.stopScrubPlayback();
     this.scrubIndex.set(idx);
+  }
+
+  /** Discharge runs start at t=0; otherwise prefer peak LED or final sample. */
+  private pickTranScrubIndex(res: SimulateResponse): number {
+    const tran = res.tran;
+    if (!tran?.time?.length) return 0;
+    if (this.lastRunInjectedIc) return 0;
+
+    const last = tran.time.length - 1;
+    const ledIds = this.editor
+      .doc()
+      .components.filter((c) => c.modelKey === 'led')
+      .map((c) => c.id);
+    if (!ledIds.length) return last;
+
+    let bestIdx = last;
+    let bestMag = 0;
+    for (const id of ledIds) {
+      const series = tran.branchCurrents.find((s) => s.id === id);
+      if (!series?.values.length) continue;
+      for (let i = 0; i < series.values.length; i++) {
+        const mag = Math.abs(series.values[i]!);
+        if (mag > bestMag) {
+          bestMag = mag;
+          bestIdx = i;
+        }
+      }
+    }
+    return bestMag > 1e-4 ? bestIdx : last;
+  }
+
+  /** Simple 0→end scrub so the student sees the LED fade after opening the switch. */
+  private maybeStartDischargePlayback(res: SimulateResponse): void {
+    const tran = res.tran;
+    if (!tran?.time?.length) return;
+    const end = tran.time.length - 1;
+    if (end <= 0) return;
+
+    const note = this.i18n.t('lab.led.fadePlayback');
+    if (!this.warnings().includes(note)) {
+      this.warnings.set([...this.warnings(), note]);
+    }
+
+    const frames = 60;
+    const step = Math.max(1, Math.ceil(end / frames));
+    let i = 0;
+    this.zone.runOutsideAngular(() => {
+      this.scrubPlayTimer = setInterval(() => {
+        this.zone.run(() => {
+          i += step;
+          if (i >= end) {
+            this.scrubIndex.set(end);
+            this.stopScrubPlayback();
+            return;
+          }
+          this.scrubIndex.set(i);
+        });
+      }, 50);
+    });
+  }
+
+  private stopScrubPlayback(): void {
+    if (this.scrubPlayTimer != null) {
+      clearInterval(this.scrubPlayTimer);
+      this.scrubPlayTimer = null;
+    }
+  }
+
+  private rememberCapVoltages(res: SimulateResponse): void {
+    const doc = this.editor.doc();
+    const fp = schematicCapFingerprint(doc);
+    // Always refresh store after a successful tran on the current topology.
+    this.storedCapFingerprint = fp;
+    this.storedCapIc = finalCapVoltagesFromTran(doc, res);
+  }
+
+  private clearCapIcIfStale(): void {
+    const fp = schematicCapFingerprint(this.editor.doc());
+    if (fp !== this.storedCapFingerprint) {
+      this.storedCapIc = new Map();
+      this.storedCapFingerprint = '';
+    }
   }
 
   /** Explicit toolbar Run — shows busy state on the button. */
@@ -223,7 +332,17 @@ export class CircuitSimulationFacade {
       return;
     }
 
-    const circuit = compileNetlist(doc);
+    this.clearCapIcIfStale();
+    const injectIc = mode === 'tran' && allSwitchesOpen(doc) && this.storedCapIc.size > 0;
+    this.lastRunInjectedIc = injectIc;
+    if (injectIc) {
+      const note = this.i18n.t('lab.led.fadeDischargeHint');
+      if (!this.warnings().includes(note)) {
+        this.warnings.set([...this.warnings(), note]);
+      }
+    }
+
+    const circuit = compileNetlistWithCapIc(doc, this.storedCapIc, injectIc);
     if (circuit.elements.length === 0) {
       this.result.set(null);
       this.error.set(null);

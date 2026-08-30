@@ -69,6 +69,59 @@
   cursor: default;
 }
 
+/* Select / Wire / Probe — segmented tool modes (after generic button rules) */
+.tool-modes {
+  display: inline-flex;
+  align-items: stretch;
+  padding: 3px;
+  gap: 2px;
+  background: #eef2f6;
+  border: 1px solid #d8dee6;
+  border-radius: 10px;
+}
+
+.toolbar .tool-modes .mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1;
+  box-shadow: none;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.toolbar .tool-modes .mode:hover:not(.active) {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.toolbar .tool-modes .mode.active {
+  background: #fff;
+  color: #0b6e4f;
+  border: none;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 0 0 1px rgba(11, 110, 79, 0.18);
+}
+
+.mode-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  display: block;
+}
+
 .timebase {
   display: inline-flex;
   align-items: center;

@@ -48,11 +48,11 @@
 | `ac_source` | `p`, `n` | `mag`, `phase` (°) | 0 V (short) | 0 V | Phasor `mag∠phase` |
 | `resistor` | `a`, `b` | `r` | Linear G | Same | Same |
 | `led` / `diode` | `a`, `c` | `vf`, `ron` | Piecewise | Same | Open (+warning) |
-| `switch` | `a`, `b` | `closed` | Ron/Roff | Same | Same |
+| `switch` | `a`, `b` | `closed`; optional `openAt` (s, ≥0) | Ron/Roff from `closed` | Same; if `openAt` set, opens for `t ≥ openAt` | Same as DC |
 | `bjt_npn` | `c`, `b`, `e` | `vf`, `rb`, `ron` | Piecewise switch | Same | Open (+warning) |
 | `op_amp` | `inp`, `inn`, `out` | `gain` (default 1e5) | Finite-gain VCVS to gnd | Same | Same |
 | `current_source` | `p`, `n` | `i` | Ideal I | Same | Open (no AC) |
-| `capacitor` | `a`, `b` | `c` | Open (+warning) | BE companion | `jωC` |
+| `capacitor` | `a`, `b` | `c`; optional `ic` (V, initial V(a)−V(b) for tran) | Open (+warning) | BE companion from `ic` (default 0) | `jωC` |
 | `inductor` | `a`, `b` | `l` | Near-short | BE companion | `1/(jωL)` |
 | `potentiometer` | `a`, `w`, `b` | `r`, `pos` (0–1) | Two series R | Same | Same |
 | `pulse_source` | `p`, `n` | `v1`, `v2`, `td`, `pw` | Uses `v1` | Pulse | AC short |

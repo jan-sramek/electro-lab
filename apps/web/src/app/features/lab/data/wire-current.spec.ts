@@ -1,4 +1,5 @@
 import { createLedPreset } from './presets/led-series.preset';
+import { createLedFadePreset } from './presets/led-fade.preset';
 import { createPotDividerPreset } from './presets/pot-divider.preset';
 import { createBjtSwitchPreset } from './presets/bjt-switch.preset';
 import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
@@ -150,6 +151,31 @@ describe('wire current direction', () => {
     for (const id of ['W1', 'W2', 'W5', 'W6', 'W8', 'W9', 'W11', 'W12', 'W13', 'W14']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('LED fade discharge: loop on C↔LED only — no ghost on switch/battery/gnd', () => {
+    const doc = createLedFadePreset();
+    // Open-switch discharge: only C and LED/R carry current; V1 and S1 are idle.
+    const Iled = 0.008;
+    const Icap = -0.008; // discharging (a←b through device)
+    const currentOf = (id: string): number | null => {
+      if (id === 'GND1' || id === 'JT') return null;
+      if (id === 'V1' || id === 'S1') return 0;
+      if (id === 'D1' || id === 'R1') return Iled;
+      if (id === 'C1') return Icap;
+      return null;
+    };
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, currentOf);
+    for (const id of ['W1', 'W2', 'W4', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} should be idle`)
+        .toBeLessThan(1e-9);
+    }
+    for (const id of ['W3', 'W5', 'W6', 'W7']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} should carry discharge`)
         .toBeGreaterThan(1e-6);
     }
   });

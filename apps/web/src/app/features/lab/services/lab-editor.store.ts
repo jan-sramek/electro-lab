@@ -11,6 +11,7 @@ import {
   nextId
 } from '../data/schematic.model';
 import { createLedPreset } from '../data/presets/led-series.preset';
+import { createLedFadePreset } from '../data/presets/led-fade.preset';
 import { createRcStepPreset } from '../data/presets/rc-step.preset';
 import { createPotDividerPreset } from '../data/presets/pot-divider.preset';
 import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
@@ -24,7 +25,15 @@ import {
   SchematicPersistence
 } from './schematic-persistence';
 
-export type ExamplePresetId = 'led' | 'rc' | 'pot' | 'pulse' | 'opamp' | 'ac' | 'bjt';
+export type ExamplePresetId =
+  | 'led'
+  | 'ledFade'
+  | 'rc'
+  | 'pot'
+  | 'pulse'
+  | 'opamp'
+  | 'ac'
+  | 'bjt';
 
 @Injectable()
 export class LabEditorStore {
@@ -283,6 +292,10 @@ export class LabEditorStore {
         if (c.modelKey === 'led' && ev.key === 'color' && typeof ev.value === 'number') {
           params = { ...params, vf: ledColorById(ev.value).vf };
         }
+        // Manual Closed toggle cancels timed auto-open so the switch feels interactive.
+        if (c.modelKey === 'switch' && ev.key === 'closed') {
+          params = { ...params, openAt: -1 };
+        }
         return { ...c, params };
       })
     }));
@@ -451,6 +464,12 @@ export class LabEditorStore {
 
   loadLedPreset(): void {
     this.openExampleInNewTab('led', 'LED series', createLedPreset, 'dcOp');
+  }
+
+  loadLedFadePreset(): void {
+    this.openExampleInNewTab('ledFade', 'LED fade', createLedFadePreset, 'tran', 3.0, 0.002);
+    this.probeTarget.set({ kind: 'component', id: 'D1' });
+    this.selectedIds.set(['S1']);
   }
 
   loadRcPreset(): void {

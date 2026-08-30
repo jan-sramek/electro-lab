@@ -64,7 +64,7 @@
       <g
         appSymbolGlyph
         [modelKey]="c.modelKey"
-        [closed]="!!c.params['closed']"
+        [closed]="switchClosed(c)"
         [ledBrightness]="ledBrightness(c.id)"
         [ledBurn]="ledBurn(c.id)"
         [ledColor]="ledColorOf(c)"

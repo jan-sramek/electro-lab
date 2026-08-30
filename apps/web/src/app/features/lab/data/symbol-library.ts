@@ -227,8 +227,18 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'a', ox: -50, oy: 0 },
       { name: 'b', ox: 50, oy: 0 }
     ],
-    defaultParams: { closed: true },
-    paramDefs: [{ key: 'closed', label: 'lab.param.closed', type: 'boolean' }],
+    defaultParams: { closed: true, openAt: -1 },
+    paramDefs: [
+      { key: 'closed', label: 'lab.param.closed', type: 'boolean' },
+      {
+        key: 'openAt',
+        label: 'lab.param.openAt',
+        type: 'number',
+        min: -1,
+        step: 0.1,
+        unit: 's'
+      }
+    ],
     width: 56,
     height: 28
   },

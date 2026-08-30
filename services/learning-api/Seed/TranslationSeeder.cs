@@ -33,10 +33,13 @@ public static class TranslationSeeder
             "Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.",
         ["lab.hint.wire"] =
             "Wire mode: click a pin to start (blue preview follows the cursor), then click another pin — or click an existing wire to make a T-junction. Click empty canvas to cancel.",
+        ["lab.hint.ledFade"] =
+            "LED fade: 1) Keep the switch Closed and Run — the capacitor charges and the LED lights. 2) Uncheck Closed. 3) Run again — the capacitor discharges through the resistor and the LED fades. After the switch opens, current only flows on the LED side (that is expected).",
 
         ["lab.toolbar.select"] = "Select",
         ["lab.toolbar.wire"] = "Wire",
         ["lab.toolbar.probe"] = "Probe",
+        ["lab.toolbar.tools"] = "Canvas tools",
         ["lab.toolbar.dc"] = "DC",
         ["lab.toolbar.transient"] = "Transient",
         ["lab.toolbar.ac"] = "AC",
@@ -49,6 +52,7 @@ public static class TranslationSeeder
         ["lab.toolbar.delete"] = "Delete",
         ["lab.toolbar.presets"] = "Open example…",
         ["lab.toolbar.ledPreset"] = "LED series (DC)",
+        ["lab.toolbar.ledFadePreset"] = "LED fade (capacitor)",
         ["lab.toolbar.rcPreset"] = "RC charge (transient)",
         ["lab.toolbar.potPreset"] = "Potentiometer divider (DC)",
         ["lab.toolbar.pulsePreset"] = "Pulse into RC (transient)",
@@ -102,6 +106,7 @@ public static class TranslationSeeder
         ["lab.param.ledColor"] = "Color",
         ["lab.param.onResistance"] = "On resistance",
         ["lab.param.closed"] = "Closed",
+        ["lab.param.openAt"] = "Auto-open at (−1 = off)",
         ["lab.param.current"] = "Current",
         ["lab.param.capacitance"] = "Capacitance",
         ["lab.param.inductance"] = "Inductance",
@@ -152,6 +157,12 @@ public static class TranslationSeeder
         ["lab.led.color.white"] = "White",
         ["lab.led.burnedWarning"] =
             "LED {ids} burned out from too much current and is now an open circuit. Replace it and add enough series resistance.",
+        ["lab.led.fadePlayback"] =
+            "Fading: capacitor is discharging through the resistor and LED. Scrub the scope or watch playback.",
+        ["lab.led.fadeDischargeHint"] =
+            "Using stored capacitor voltage from the last Run (switch is open).",
+        ["lab.led.fadeEngineStale"] =
+            "LED did not fade. Restart CircuitEngine (capacitor ic support), then: Run with switch closed, open the switch, Run again.",
         ["lab.inspector.ledBurned"] =
             "This LED burned out (open circuit). Current no longer flows through it. Replace the LED and use a proper series resistor (~220 Ω for 5 V).",
         ["lab.inspector.replaceLed"] = "Replace LED",

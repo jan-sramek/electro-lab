@@ -7,6 +7,7 @@ namespace ElectroLab.CircuitSim.Models;
 
 /// <summary>
 /// Teaching capacitor: open in DC; Backward Euler companion in transient.
+/// Optional <c>params.ic</c> sets initial voltage V(a)−V(b) at t=0 of a transient.
 /// </summary>
 public sealed class CapacitorModel : IDeviceModel
 {

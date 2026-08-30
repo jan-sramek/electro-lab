@@ -158,14 +158,24 @@ export function estimateAllWireCurrents(
       const oa = pinInjectedOutflow(components, w.a, currentOf);
       const ob = pinInjectedOutflow(components, w.b, currentOf);
 
-      if (countA === 1 && oa !== null && Math.abs(oa) > 1e-15) {
-        along.set(w.id, oa);
-        changed = true;
-        continue;
+      // Seed even when I≈0 so open switches / idle batteries don't get
+      // painted later by the series-current hint (false flow on dead branches).
+      // Do NOT pin passive net nodes (ground/junction) at 0 — their stubs must
+      // stay free so KCL can place return-path current on earth wires.
+      if (countA === 1 && oa !== null) {
+        const ca = componentOf(components, w.a.componentId);
+        if (!(Math.abs(oa) < 1e-15 && ca && isPassiveNetNode(ca.modelKey))) {
+          along.set(w.id, Math.abs(oa) < 1e-15 ? 0 : oa);
+          changed = true;
+          continue;
+        }
       }
-      if (countB === 1 && ob !== null && Math.abs(ob) > 1e-15) {
-        along.set(w.id, -ob);
-        changed = true;
+      if (countB === 1 && ob !== null) {
+        const cb = componentOf(components, w.b.componentId);
+        if (!(Math.abs(ob) < 1e-15 && cb && isPassiveNetNode(cb.modelKey))) {
+          along.set(w.id, Math.abs(ob) < 1e-15 ? 0 : -ob);
+          changed = true;
+        }
       }
     }
     return changed;
@@ -208,6 +218,7 @@ export function estimateAllWireCurrents(
   }
 
   // Fallback for leftover wires (missing branch currents, etc.).
+  // Never invent current on a wire already fixed at 0 by a known idle pin.
   const hint = seriesCurrentHint(components, currentOf);
   for (const w of wires) {
     if (along.has(w.id)) continue;

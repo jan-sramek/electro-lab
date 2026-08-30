@@ -1,5 +1,6 @@
 import { compileNetlist, orthogonalPolyline, pinWorldPos } from './schematic.model';
 import { createLedPreset } from './presets/led-series.preset';
+import { createLedFadePreset } from './presets/led-fade.preset';
 import { createRcStepPreset } from './presets/rc-step.preset';
 import { createPotDividerPreset } from './presets/pot-divider.preset';
 import { createPulseRcPreset } from './presets/pulse-rc.preset';
@@ -57,6 +58,17 @@ describe('Lab preset contracts', () => {
     expect(circuit.elements.every((e) => Object.keys(e.pins).length >= 2)).toBeTrue();
   });
 
+  it('compiles LED fade preset with capacitor and LED', () => {
+    const circuit = compileNetlist(createLedFadePreset());
+    expect(circuit.elements.some((e) => e.model === 'led')).toBeTrue();
+    expect(circuit.elements.some((e) => e.model === 'capacitor')).toBeTrue();
+    expect(circuit.elements.some((e) => e.model === 'switch')).toBeTrue();
+    expect(circuit.elements.some((e) => e.model === 'battery')).toBeTrue();
+    const sw = circuit.elements.find((e) => e.id === 'S1');
+    expect(sw?.params['closed']).toBe(true);
+    expect(sw?.params['openAt']).toBe(-1);
+  });
+
   it('compiles RC preset for transient', () => {
     const circuit = compileNetlist(createRcStepPreset());
     expect(circuit.elements.some((e) => e.model === 'capacitor')).toBeTrue();
@@ -84,6 +96,7 @@ describe('Lab preset contracts', () => {
   it('avoids long overlapping horizontal wire rails (supply vs return)', () => {
     const hits = overlappingHorizontalRails([
       createLedPreset(),
+      createLedFadePreset(),
       createRcStepPreset(),
       createPotDividerPreset(),
       createPulseRcPreset(),

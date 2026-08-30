@@ -561,7 +561,8 @@ export class SchematicCanvasComponent {
     if (c?.params['burned']) return 0;
     const i = this.currentOf(id);
     if (typeof i !== 'number' || i <= 1e-6) return 0;
-    return Math.min(1, i / LED_FULL_BRIGHT_A);
+    // Sqrt curve keeps mid-fade glow visible (linear looked “instantly off”).
+    return Math.sqrt(Math.min(1, i / LED_FULL_BRIGHT_A));
   }
 
   /**
@@ -578,6 +579,21 @@ export class SchematicCanvasComponent {
 
   isLedFailedOpen(id: string): boolean {
     return !!this.doc().components.find((x) => x.id === id)?.params['burned'];
+  }
+
+  /** Switch glyph follows scrub time when openAt ≥ 0 (mid-transient open). */
+  switchClosed(c: SchematicComponent): boolean {
+    if (c.modelKey !== 'switch') return !!c.params['closed'];
+    const openAt = c.params['openAt'];
+    if (typeof openAt === 'number' && openAt >= 0) {
+      const res = this.result();
+      if (res?.tran?.time?.length) {
+        const idx = Math.max(0, Math.min(this.scrubIndex(), res.tran.time.length - 1));
+        const t = res.tran.time[idx] ?? 0;
+        return t < openAt;
+      }
+    }
+    return !!c.params['closed'];
   }
 
   ledColorOf(c: { modelKey: string; params: Record<string, number | boolean> }): number {

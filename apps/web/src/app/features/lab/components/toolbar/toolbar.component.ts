@@ -49,6 +49,7 @@ export class LabToolbarComponent {
   onPresetModelChange(value: string): void {
     if (
       value === 'led' ||
+      value === 'ledFade' ||
       value === 'rc' ||
       value === 'pot' ||
       value === 'pulse' ||

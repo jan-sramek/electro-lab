@@ -37,7 +37,11 @@ public sealed class TransientAnalysis : IAnalysis
         foreach (var (el, _) in models)
         {
             if (el.Model.Equals("capacitor", StringComparison.OrdinalIgnoreCase))
-                state.CapVoltage[el.Id] = 0;
+            {
+                // Optional params.ic = initial V(a)-V(b); default 0.
+                el.Params.TryGetValue("ic", out var ic);
+                state.CapVoltage[el.Id] = ic;
+            }
             if (el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase))
                 state.IndCurrent[el.Id] = 0;
             if (IsPiecewiseDiode(el.Model))

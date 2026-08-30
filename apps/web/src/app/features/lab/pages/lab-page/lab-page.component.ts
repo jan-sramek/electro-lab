@@ -43,6 +43,9 @@ export class LabPageComponent implements OnInit {
       case 'led':
         this.editor.loadLedPreset();
         break;
+      case 'ledFade':
+        this.editor.loadLedFadePreset();
+        break;
       case 'rc':
         this.editor.loadRcPreset();
         break;

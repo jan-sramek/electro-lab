@@ -1,13 +1,43 @@
 <div class="toolbar">
-  <div class="tool-group">
-    <button type="button" [class.active]="tool() === 'select'" (click)="toolChange.emit('select')">
-      {{ 'lab.toolbar.select' | t }}
+  <div class="tool-modes" role="group" [attr.aria-label]="'lab.toolbar.tools' | t">
+    <button
+      type="button"
+      class="mode"
+      [class.active]="tool() === 'select'"
+      (click)="toolChange.emit('select')"
+    >
+      <svg class="mode-icon" viewBox="0 0 16 16" aria-hidden="true">
+        <path
+          d="M3 2.5 3 13.2 6.1 10.4 8.4 14.5 10 13.6 7.7 9.5 11.5 9.5Z"
+          fill="currentColor"
+        />
+      </svg>
+      <span>{{ 'lab.toolbar.select' | t }}</span>
     </button>
-    <button type="button" [class.active]="tool() === 'wire'" (click)="toolChange.emit('wire')">
-      {{ 'lab.toolbar.wire' | t }}
+    <button
+      type="button"
+      class="mode"
+      [class.active]="tool() === 'wire'"
+      (click)="toolChange.emit('wire')"
+    >
+      <svg class="mode-icon" viewBox="0 0 16 16" aria-hidden="true">
+        <circle cx="3.5" cy="8" r="1.6" fill="currentColor" />
+        <circle cx="12.5" cy="8" r="1.6" fill="currentColor" />
+        <path d="M5.2 8h5.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+      <span>{{ 'lab.toolbar.wire' | t }}</span>
     </button>
-    <button type="button" [class.active]="tool() === 'probe'" (click)="toolChange.emit('probe')">
-      {{ 'lab.toolbar.probe' | t }}
+    <button
+      type="button"
+      class="mode"
+      [class.active]="tool() === 'probe'"
+      (click)="toolChange.emit('probe')"
+    >
+      <svg class="mode-icon" viewBox="0 0 16 16" aria-hidden="true">
+        <circle cx="7" cy="7" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M9.4 9.4 13 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      <span>{{ 'lab.toolbar.probe' | t }}</span>
     </button>
   </div>
   <div class="tool-group">
@@ -85,6 +115,7 @@
       <select [ngModel]="selectedPreset() ?? ''" (ngModelChange)="onPresetModelChange($event)">
         <option value="" disabled>{{ 'lab.toolbar.presets' | t }}</option>
         <option value="led">{{ 'lab.toolbar.ledPreset' | t }}</option>
+        <option value="ledFade">{{ 'lab.toolbar.ledFadePreset' | t }}</option>
         <option value="rc">{{ 'lab.toolbar.rcPreset' | t }}</option>
         <option value="pot">{{ 'lab.toolbar.potPreset' | t }}</option>
         <option value="pulse">{{ 'lab.toolbar.pulsePreset' | t }}</option>
