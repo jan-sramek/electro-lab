@@ -47,12 +47,14 @@
           (close)="editor.closeCircuitTab($event)"
           (rename)="editor.renameCircuitTab($event.id, $event.name)"
         />
-        <app-status-banner
-          [error]="sim.error()"
-          [warnings]="sim.warnings()"
-          [probe]="sim.probeSummary()"
-          [info]="sim.capIcStatus()"
-        />
+        <div class="status-rail">
+          <app-status-banner
+            [error]="sim.error()"
+            [warnings]="sim.warnings()"
+            [probe]="sim.probeSummary()"
+            [info]="sim.capIcStatus()"
+          />
+        </div>
         <app-schematic-canvas
           [doc]="editor.doc()"
           [tool]="editor.tool()"

@@ -22,7 +22,8 @@ import { ledColorById } from '../data/led-colors';
 import {
   CircuitSlot,
   SchematicHistory,
-  SchematicPersistence
+  SchematicPersistence,
+  SlotSimState
 } from './schematic-persistence';
 
 export type ExamplePresetId =
@@ -76,6 +77,7 @@ export class LabEditorStore {
     const ensured = this.persistence.ensureLibrary(this.doc());
     this.doc.set(assignNets(ensured.doc));
     this.activeSlotId.set(ensured.activeId);
+    this.applySlotSim(this.persistence.slotSim(ensured.activeId));
     this.refreshSlots(ensured.activeId);
     this.bump();
   }
@@ -91,7 +93,7 @@ export class LabEditorStore {
     this.activeSlotId.set(id);
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
-    this.activeExamplePreset.set(null);
+    this.applySlotSim(this.persistence.slotSim(id));
     this.syncHistoryFlags();
     this.refreshSlots(id);
     this.bump();
@@ -108,6 +110,10 @@ export class LabEditorStore {
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
+    this.analysisMode.set('dcOp');
+    this.tStop.set(0.005);
+    this.dt.set(5e-5);
+    this.acFreq.set(1000);
     this.syncHistoryFlags();
     this.refreshSlots(id);
     this.bump();
@@ -128,7 +134,7 @@ export class LabEditorStore {
     this.activeSlotId.set(activeId);
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
-    this.activeExamplePreset.set(null);
+    this.applySlotSim(this.persistence.slotSim(activeId));
     this.syncHistoryFlags();
     this.refreshSlots(activeId);
     this.bump();
@@ -162,6 +168,7 @@ export class LabEditorStore {
 
   setAnalysisMode(mode: AnalysisMode): void {
     this.analysisMode.set(mode);
+    this.persist();
     this.bump();
   }
 
@@ -169,6 +176,7 @@ export class LabEditorStore {
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.tStop.set(v);
+    this.persist();
     this.bump();
   }
 
@@ -176,6 +184,7 @@ export class LabEditorStore {
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.dt.set(v);
+    this.persist();
     this.bump();
   }
 
@@ -183,6 +192,7 @@ export class LabEditorStore {
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.acFreq.set(v);
+    this.persist();
     this.bump();
   }
 
@@ -544,20 +554,59 @@ export class LabEditorStore {
   ): void {
     this.persist();
     const doc = assignNets(factory());
-    const id = this.persistence.saveAs(tabName, doc);
+    const sim: SlotSimState = {
+      analysisMode: mode,
+      tStop: tStop ?? this.tStop(),
+      dt: dt ?? this.dt(),
+      acFreq: acFreq ?? this.acFreq(),
+      examplePreset: presetId
+    };
+    const id = this.persistence.saveAs(tabName, doc, sim);
     this.history.clear();
     this.doc.set(doc);
     this.activeSlotId.set(id);
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
-    this.activeExamplePreset.set(presetId);
-    this.analysisMode.set(mode);
-    if (tStop !== undefined) this.tStop.set(tStop);
-    if (dt !== undefined) this.dt.set(dt);
-    if (acFreq !== undefined) this.acFreq.set(acFreq);
+    this.applySlotSim(sim);
     this.syncHistoryFlags();
     this.refreshSlots(id);
     this.bump();
+  }
+
+  private applySlotSim(sim: SlotSimState | undefined): void {
+    if (!sim) {
+      this.activeExamplePreset.set(null);
+      return;
+    }
+    this.analysisMode.set(sim.analysisMode);
+    this.tStop.set(sim.tStop);
+    this.dt.set(sim.dt);
+    this.acFreq.set(sim.acFreq);
+    const p = sim.examplePreset;
+    if (
+      p === 'led' ||
+      p === 'ledFade' ||
+      p === 'rc' ||
+      p === 'pot' ||
+      p === 'pulse' ||
+      p === 'opamp' ||
+      p === 'ac' ||
+      p === 'bjt'
+    ) {
+      this.activeExamplePreset.set(p);
+    } else {
+      this.activeExamplePreset.set(null);
+    }
+  }
+
+  private currentSimState(): SlotSimState {
+    return {
+      analysisMode: this.analysisMode(),
+      tStop: this.tStop(),
+      dt: this.dt(),
+      acFreq: this.acFreq(),
+      examplePreset: this.activeExamplePreset()
+    };
   }
 
   private commit(mutator: (doc: SchematicDocument) => SchematicDocument): void {
@@ -571,7 +620,7 @@ export class LabEditorStore {
   }
 
   private persist(): void {
-    this.persistence.save(this.doc(), this.activeSlotId());
+    this.persistence.save(this.doc(), this.activeSlotId(), this.currentSimState());
   }
 
   private syncHistoryFlags(): void {

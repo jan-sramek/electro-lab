@@ -169,6 +169,7 @@ public static class TranslationSeeder
         ["lab.status.warning"] = "Warning",
         ["lab.status.probe"] = "Probe",
         ["lab.status.info"] = "Info",
+        ["lab.status.idle"] = "Status messages and probe readings appear here.",
         ["lab.capIc.ready"] =
             "Capacitor charge stored (≈ {v} V). Open the switch and Run again to watch the LED fade.",
         ["lab.capIc.injecting"] =

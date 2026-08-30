@@ -1,14 +1,25 @@
 import { Injectable } from '@angular/core';
-import { SchematicDocument, cloneDoc } from '../data/schematic.model';
+import { AnalysisMode, SchematicDocument, cloneDoc } from '../data/schematic.model';
 
 const LEGACY_KEY = 'electro-lab.schematic.v1';
 const SLOTS_KEY = 'electro-lab.circuits.v1';
+const CAP_IC_KEY = 'electro-lab.cap-ic.v1';
+
+/** Per-tab analysis settings — survive F5 so examples like LED fade keep Transient + tStop. */
+export interface SlotSimState {
+  analysisMode: AnalysisMode;
+  tStop: number;
+  dt: number;
+  acFreq: number;
+  examplePreset: string | null;
+}
 
 export interface CircuitSlot {
   id: string;
   name: string;
   doc: SchematicDocument;
   updatedAt: number;
+  sim?: SlotSimState;
 }
 
 export interface CircuitLibrary {
@@ -17,15 +28,28 @@ export interface CircuitLibrary {
   slots: CircuitSlot[];
 }
 
+export interface StoredCapIc {
+  slotId: string;
+  fingerprint: string;
+  voltages: Record<string, number>;
+}
+
 @Injectable()
 export class SchematicPersistence {
-  save(doc: SchematicDocument, activeId?: string | null): void {
+  save(doc: SchematicDocument, activeId?: string | null, sim?: SlotSimState): void {
     try {
       const lib = this.loadLibrary();
       const id = activeId ?? lib.activeId;
       if (id) {
         const slots = lib.slots.map((s) =>
-          s.id === id ? { ...s, doc: cloneDoc(doc), updatedAt: Date.now() } : s
+          s.id === id
+            ? {
+                ...s,
+                doc: cloneDoc(doc),
+                updatedAt: Date.now(),
+                sim: sim ?? s.sim
+              }
+            : s
         );
         this.writeLibrary({ ...lib, activeId: id, slots });
       } else {
@@ -35,6 +59,36 @@ export class SchematicPersistence {
     } catch {
       /* ignore quota */
     }
+  }
+
+  /** Sim settings for a slot (after F5 / tab switch). */
+  slotSim(id: string | null | undefined): SlotSimState | undefined {
+    if (!id) return undefined;
+    return this.loadLibrary().slots.find((s) => s.id === id)?.sim;
+  }
+
+  saveCapIc(data: StoredCapIc): void {
+    try {
+      localStorage.setItem(CAP_IC_KEY, JSON.stringify(data));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  loadCapIc(): StoredCapIc | null {
+    try {
+      const raw = localStorage.getItem(CAP_IC_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as StoredCapIc;
+      if (!parsed?.slotId || !parsed.fingerprint || !parsed.voltages) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  clearCapIc(): void {
+    localStorage.removeItem(CAP_IC_KEY);
   }
 
   /** Load active circuit, migrating legacy single-key storage if needed. */
@@ -58,7 +112,8 @@ export class SchematicPersistence {
             activeId: parsed.activeId ?? null,
             slots: parsed.slots.map((s) => ({
               ...s,
-              doc: this.normalizeDoc(s.doc)
+              doc: this.normalizeDoc(s.doc),
+              sim: this.normalizeSim(s.sim)
             }))
           };
         }
@@ -98,14 +153,15 @@ export class SchematicPersistence {
     return this.loadLibrary().activeId;
   }
 
-  saveAs(name: string, doc: SchematicDocument): string {
+  saveAs(name: string, doc: SchematicDocument, sim?: SlotSimState): string {
     const lib = this.loadLibrary();
     const id = `slot_${Date.now()}`;
     const slot: CircuitSlot = {
       id,
       name: name.trim() || this.nextDefaultName(lib.slots),
       doc: cloneDoc(doc),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      sim
     };
     this.writeLibrary({
       schemaVersion: 1,
@@ -217,6 +273,23 @@ export class SchematicPersistence {
         pins: c.pins ?? {}
       })),
       wires: Array.isArray(parsed.wires) ? parsed.wires : []
+    };
+  }
+
+  private normalizeSim(sim: SlotSimState | undefined): SlotSimState | undefined {
+    if (!sim) return undefined;
+    const mode = sim.analysisMode;
+    if (mode !== 'dcOp' && mode !== 'tran' && mode !== 'ac') return undefined;
+    const tStop = Number(sim.tStop);
+    const dt = Number(sim.dt);
+    const acFreq = Number(sim.acFreq);
+    if (!(tStop > 0) || !(dt > 0) || !(acFreq > 0)) return undefined;
+    return {
+      analysisMode: mode,
+      tStop,
+      dt,
+      acFreq,
+      examplePreset: typeof sim.examplePreset === 'string' ? sim.examplePreset : null
     };
   }
 }

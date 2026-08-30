@@ -18,6 +18,7 @@ import {
   isSingularMatrixMessage
 } from '../data/circuit-diagnostics';
 import { LabEditorStore } from './lab-editor.store';
+import { SchematicPersistence } from './schematic-persistence';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { LED_BURN_A } from '../data/led-limits';
 
@@ -36,6 +37,7 @@ function branchCurrentFromResult(res: SimulateResponse, id: string): number | nu
 export class CircuitSimulationFacade {
   private readonly api = inject(CircuitApiClient);
   private readonly editor = inject(LabEditorStore);
+  private readonly editorPersistence = inject(SchematicPersistence);
   private readonly i18n = inject(I18nService);
   private readonly zone = inject(NgZone);
   private readonly simulate$ = new Subject<{ body: SimulateRequest; showBusy: boolean }>();
@@ -219,11 +221,13 @@ export class CircuitSimulationFacade {
 
     effect(() => {
       this.editor.revision();
+      this.editor.activeSlotId();
       this.editor.analysisMode();
       this.editor.tStop();
       this.editor.dt();
       this.editor.acFreq();
       this.editor.doc();
+      this.syncCapIcFromStorage();
       this.autoRun$.next();
     });
   }
@@ -306,11 +310,47 @@ export class CircuitSimulationFacade {
     this.storedCapFingerprint = fp;
     this.storedCapIc = finalCapVoltagesFromTran(doc, res);
     this.publishCapIcVolts();
+    this.persistCapIc();
   }
 
   private clearCapIcIfStale(): void {
+    this.syncCapIcFromStorage();
     const fp = schematicCapFingerprint(this.editor.doc());
     if (fp !== this.storedCapFingerprint) {
+      this.storedCapIc = new Map();
+      this.storedCapFingerprint = '';
+      this.storedCapIcVolts.set(null);
+      this.editorPersistence.clearCapIc();
+    }
+  }
+
+  private persistCapIc(): void {
+    const slotId = this.editor.activeSlotId();
+    if (!slotId || this.storedCapIc.size === 0 || !this.storedCapFingerprint) {
+      this.editorPersistence.clearCapIc();
+      return;
+    }
+    const voltages: Record<string, number> = {};
+    for (const [id, v] of this.storedCapIc) voltages[id] = v;
+    this.editorPersistence.saveCapIc({
+      slotId,
+      fingerprint: this.storedCapFingerprint,
+      voltages
+    });
+  }
+
+  /** Keep in-memory Vc in sync with localStorage (survives F5). */
+  private syncCapIcFromStorage(): void {
+    const slotId = this.editor.activeSlotId();
+    const fp = schematicCapFingerprint(this.editor.doc());
+    const saved = this.editorPersistence.loadCapIc();
+    if (saved && slotId && saved.slotId === slotId && saved.fingerprint === fp) {
+      this.storedCapFingerprint = saved.fingerprint;
+      this.storedCapIc = new Map(Object.entries(saved.voltages));
+      this.publishCapIcVolts();
+      return;
+    }
+    if (this.storedCapFingerprint && this.storedCapFingerprint !== fp) {
       this.storedCapIc = new Map();
       this.storedCapFingerprint = '';
       this.storedCapIcVolts.set(null);

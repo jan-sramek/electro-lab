@@ -584,21 +584,23 @@ export class SchematicCanvasComponent {
   /** Switch glyph follows scrub time when openAt/closeAt timeline is active. */
   switchClosed(c: SchematicComponent): boolean {
     if (c.modelKey !== 'switch') return !!c.params['closed'];
-    const openAt = c.params['openAt'];
-    const closeAt = c.params['closeAt'];
-    const hasOpen = typeof openAt === 'number' && openAt >= 0;
-    const hasClose = typeof closeAt === 'number' && closeAt >= 0;
+    const openAtRaw = c.params['openAt'];
+    const closeAtRaw = c.params['closeAt'];
+    const openAt = typeof openAtRaw === 'number' ? openAtRaw : null;
+    const closeAt = typeof closeAtRaw === 'number' ? closeAtRaw : null;
+    const hasOpen = openAt !== null && openAt >= 0;
+    const hasClose = closeAt !== null && closeAt >= 0;
     const res = this.result();
     if ((hasOpen || hasClose) && res?.tran?.time?.length) {
       const idx = Math.max(0, Math.min(this.scrubIndex(), res.tran.time.length - 1));
       const t = res.tran.time[idx] ?? 0;
-      if (hasOpen && hasClose) {
-        return closeAt! <= openAt!
-          ? t >= closeAt! && t < openAt!
-          : !(t >= openAt! && t < closeAt!);
+      if (hasOpen && hasClose && openAt !== null && closeAt !== null) {
+        return closeAt <= openAt
+          ? t >= closeAt && t < openAt
+          : !(t >= openAt && t < closeAt);
       }
-      if (hasOpen) return t < openAt!;
-      return t >= closeAt!;
+      if (hasOpen && openAt !== null) return t < openAt;
+      if (closeAt !== null) return t >= closeAt;
     }
     return !!c.params['closed'];
   }
