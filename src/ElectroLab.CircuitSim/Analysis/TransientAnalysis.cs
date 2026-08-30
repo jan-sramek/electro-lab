@@ -23,7 +23,6 @@ public sealed class TransientAnalysis : IAnalysis
         if (errors.Count > 0)
             return SimulationResult.Fail(Type, errors.ToArray());
 
-        var nodes = CollectNodes(circuit);
         var models = new List<(ElementInstance el, IDeviceModel model)>();
         foreach (var el in circuit.Elements)
         {
@@ -31,6 +30,8 @@ public sealed class TransientAnalysis : IAnalysis
                 return SimulationResult.Fail(Type, $"Unknown model '{el.Model}' on '{el.Id}'.");
             models.Add((el, model));
         }
+
+        var nodes = CollectNodes(circuit, models);
 
         var state = new TransientState();
         foreach (var (el, _) in models)
@@ -41,6 +42,8 @@ public sealed class TransientAnalysis : IAnalysis
                 state.IndCurrent[el.Id] = 0;
             if (IsPiecewiseDiode(el.Model))
                 state.Bias.LedOn[el.Id] = true;
+            if (IsPiecewiseBjt(el.Model))
+                state.Bias.BjtOn[el.Id] = true;
         }
 
         var times = new List<double>();
@@ -67,23 +70,40 @@ public sealed class TransientAnalysis : IAnalysis
             if (!ctx.TrySolve(out var solution, out var lastError))
                 return SimulationResult.Fail(Type, lastError ?? $"Solve failed at t={t}.");
 
-            // Settle piecewise diodes a few times within the step
+            // Settle piecewise diodes/BJTs a few times within the step
             for (var iter = 0; iter < 4; iter++)
             {
                 var changed = false;
                 foreach (var (el, model) in models)
                 {
-                    if (!IsPiecewiseDiode(el.Model)) continue;
-                    var va = ctx.NodeVoltage(solution, el.Pins["a"]);
-                    var vc = ctx.NodeVoltage(solution, el.Pins["c"]);
-                    var vf = el.Params["vf"];
-                    var current = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
-                    var previouslyOn = state.Bias.LedOn[el.Id];
-                    var nextOn = previouslyOn ? current > 1e-12 : va - vc >= vf;
-                    if (nextOn != previouslyOn)
+                    if (IsPiecewiseDiode(el.Model))
                     {
-                        state.Bias.LedOn[el.Id] = nextOn;
-                        changed = true;
+                        var va = ctx.NodeVoltage(solution, el.Pins["a"]);
+                        var vc = ctx.NodeVoltage(solution, el.Pins["c"]);
+                        var vf = el.Params["vf"];
+                        var current = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
+                        var previouslyOn = state.Bias.LedOn[el.Id];
+                        var nextOn = previouslyOn ? current > 1e-12 : va - vc >= vf;
+                        if (nextOn != previouslyOn)
+                        {
+                            state.Bias.LedOn[el.Id] = nextOn;
+                            changed = true;
+                        }
+                    }
+                    else if (IsPiecewiseBjt(el.Model))
+                    {
+                        var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
+                        var ve = ctx.NodeVoltage(solution, el.Pins["e"]);
+                        var vf = el.Params["vf"];
+                        var rb = el.Params["rb"];
+                        var previouslyOn = state.Bias.BjtOn[el.Id];
+                        var baseCurrent = previouslyOn ? (vb - ve - vf) / rb : 0;
+                        var nextOn = previouslyOn ? baseCurrent > 1e-12 : vb - ve >= vf;
+                        if (nextOn != previouslyOn)
+                        {
+                            state.Bias.BjtOn[el.Id] = nextOn;
+                            changed = true;
+                        }
                     }
                 }
 
@@ -139,12 +159,18 @@ public sealed class TransientAnalysis : IAnalysis
         };
     }
 
-    private static HashSet<string> CollectNodes(Circuit circuit)
+    private static HashSet<string> CollectNodes(Circuit circuit, List<(ElementInstance el, IDeviceModel model)> models)
     {
         var nodes = new HashSet<string>(StringComparer.Ordinal) { circuit.Ground };
         foreach (var el in circuit.Elements)
         {
             foreach (var n in el.Pins.Values)
+                nodes.Add(n);
+        }
+
+        foreach (var (el, model) in models)
+        {
+            foreach (var n in model.ExtraNodes(el))
                 nodes.Add(n);
         }
 
@@ -154,6 +180,9 @@ public sealed class TransientAnalysis : IAnalysis
     private static bool IsPiecewiseDiode(string model) =>
         model.Equals("led", StringComparison.OrdinalIgnoreCase) ||
         model.Equals("diode", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPiecewiseBjt(string model) =>
+        model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>Companion-model state carried between transient steps.</summary>

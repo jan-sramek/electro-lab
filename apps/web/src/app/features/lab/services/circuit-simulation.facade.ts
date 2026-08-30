@@ -87,6 +87,30 @@ export class CircuitSimulationFacade {
         : this.i18n.t('lab.probe.branchEmpty', { id: p.id });
     }
 
+    if (res.analysisType === 'ac' && res.ac?.points?.length) {
+      const point = res.ac.points[0]!;
+      if (p.kind === 'net') {
+        const ph = point.nodeVoltages[p.id];
+        return ph
+          ? this.i18n.t('lab.probe.netAc', {
+              id: p.id,
+              mag: ph.mag.toFixed(4),
+              phase: ph.phaseDeg.toFixed(1),
+              f: point.frequency.toFixed(0)
+            })
+          : this.i18n.t('lab.probe.netEmpty', { id: p.id });
+      }
+      const ph = point.branchCurrents[p.id];
+      return ph
+        ? this.i18n.t('lab.probe.branchAc', {
+            id: p.id,
+            mag: (ph.mag * 1000).toFixed(3),
+            phase: ph.phaseDeg.toFixed(1),
+            f: point.frequency.toFixed(0)
+          })
+        : this.i18n.t('lab.probe.branchEmpty', { id: p.id });
+    }
+
     const dc = res.dcOp;
     if (!dc) return null;
     if (p.kind === 'net') {
@@ -156,6 +180,7 @@ export class CircuitSimulationFacade {
       this.editor.analysisMode();
       this.editor.tStop();
       this.editor.dt();
+      this.editor.acFreq();
       this.editor.doc();
       this.autoRun$.next();
     });
@@ -218,11 +243,20 @@ export class CircuitSimulationFacade {
             },
             circuit
           }
-        : {
-            schemaVersion: 1,
-            analysis: { type: 'dcOp' },
-            circuit
-          };
+        : mode === 'ac'
+          ? {
+              schemaVersion: 1,
+              analysis: {
+                type: 'ac',
+                freq: this.editor.acFreq()
+              },
+              circuit
+            }
+          : {
+              schemaVersion: 1,
+              analysis: { type: 'dcOp' },
+              circuit
+            };
 
     this.simulate$.next({ body, showBusy });
   }

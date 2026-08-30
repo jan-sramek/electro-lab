@@ -34,7 +34,7 @@ export interface SchematicDocument {
 }
 
 export type EditorTool = 'select' | 'wire' | 'probe' | 'place';
-export type AnalysisMode = 'dcOp' | 'tran';
+export type AnalysisMode = 'dcOp' | 'tran' | 'ac';
 
 let idSeq = 1;
 export function nextId(prefix: string): string {

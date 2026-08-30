@@ -52,6 +52,15 @@ export class LabPageComponent implements OnInit {
       case 'pulse':
         this.editor.loadPulsePreset();
         break;
+      case 'opamp':
+        this.editor.loadOpAmpPreset();
+        break;
+      case 'ac':
+        this.editor.loadAcPreset();
+        break;
+      case 'bjt':
+        this.editor.loadBjtPreset();
+        break;
     }
   }
 

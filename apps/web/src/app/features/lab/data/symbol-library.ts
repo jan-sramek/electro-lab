@@ -35,11 +35,114 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'p', ox: 40, oy: 0 },
       { name: 'n', ox: -40, oy: 0 }
     ],
-    defaultParams: { v: 5 },
+    defaultParams: { v: 5, esr: 0 },
     paramDefs: [
-      { key: 'v', label: 'lab.param.voltage', type: 'number', min: 0, step: 0.1, unit: 'V' }
+      { key: 'v', label: 'lab.param.voltage', type: 'number', min: 0, step: 0.1, unit: 'V' },
+      {
+        key: 'esr',
+        label: 'lab.param.esr',
+        type: 'number',
+        min: 0,
+        step: 0.1,
+        unit: 'Ω'
+      }
     ],
     width: 48,
+    height: 36
+  },
+  ac_source: {
+    modelKey: 'ac_source',
+    label: 'lab.symbol.ac_source',
+    pins: [
+      { name: 'p', ox: 40, oy: 0 },
+      { name: 'n', ox: -40, oy: 0 }
+    ],
+    defaultParams: { mag: 1, phase: 0 },
+    paramDefs: [
+      { key: 'mag', label: 'lab.param.acMag', type: 'number', min: 0, step: 0.1, unit: 'V' },
+      { key: 'phase', label: 'lab.param.acPhase', type: 'number', min: -180, step: 15, unit: '°' }
+    ],
+    width: 48,
+    height: 36
+  },
+  op_amp: {
+    modelKey: 'op_amp',
+    label: 'lab.symbol.op_amp',
+    pins: [
+      { name: 'inp', ox: -40, oy: -16 },
+      { name: 'inn', ox: -40, oy: 16 },
+      { name: 'out', ox: 44, oy: 0 }
+    ],
+    defaultParams: { gain: 1e5 },
+    paramDefs: [
+      { key: 'gain', label: 'lab.param.gain', type: 'number', min: 1, step: 1000, unit: '' }
+    ],
+    width: 56,
+    height: 48
+  },
+  bjt_npn: {
+    modelKey: 'bjt_npn',
+    label: 'lab.symbol.bjt_npn',
+    pins: [
+      { name: 'c', ox: 0, oy: -40 },
+      { name: 'b', ox: -40, oy: 0 },
+      { name: 'e', ox: 0, oy: 40 }
+    ],
+    defaultParams: { vf: 0.7, rb: 1000, ron: 10 },
+    paramDefs: [
+      { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.05, unit: 'V' },
+      {
+        key: 'rb',
+        label: 'lab.param.baseResistance',
+        type: 'number',
+        min: 1,
+        step: 100,
+        unit: 'Ω'
+      },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.1,
+        step: 1,
+        unit: 'Ω'
+      }
+    ],
+    width: 40,
+    height: 56
+  },
+  ammeter: {
+    modelKey: 'ammeter',
+    label: 'lab.symbol.ammeter',
+    pins: [
+      { name: 'a', ox: -40, oy: 0 },
+      { name: 'b', ox: 40, oy: 0 }
+    ],
+    defaultParams: { r: 0.01 },
+    paramDefs: [
+      {
+        key: 'r',
+        label: 'lab.param.senseResistance',
+        type: 'number',
+        min: 0.001,
+        step: 0.01,
+        unit: 'Ω'
+      }
+    ],
+    width: 44,
+    height: 36
+  },
+  voltmeter: {
+    modelKey: 'voltmeter',
+    label: 'lab.symbol.voltmeter',
+    schematicOnly: true,
+    pins: [
+      { name: 'p', ox: -40, oy: 0 },
+      { name: 'n', ox: 40, oy: 0 }
+    ],
+    defaultParams: {},
+    paramDefs: [],
+    width: 44,
     height: 36
   },
   resistor: {
@@ -246,15 +349,20 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
 
 export const PALETTE_ORDER = [
   'battery',
+  'ac_source',
   'pulse_source',
   'resistor',
   'potentiometer',
   'led',
   'diode',
   'switch',
+  'bjt_npn',
+  'op_amp',
   'current_source',
   'capacitor',
   'inductor',
+  'ammeter',
+  'voltmeter',
   'ground'
 ] as const;
 

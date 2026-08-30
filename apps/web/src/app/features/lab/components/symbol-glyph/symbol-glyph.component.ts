@@ -12,6 +12,42 @@ import { Component, input } from '@angular/core';
         <svg:line x1="8" y1="-28" x2="8" y2="28" class="sym" />
         <svg:line x1="18" y1="-16" x2="18" y2="16" class="sym thick" />
       }
+      @case ('ac_source') {
+        <svg:circle cx="0" cy="0" r="20" class="sym" />
+        <svg:path
+          class="sym"
+          fill="none"
+          d="M -12 0 C -8 -14, -4 -14, 0 0 C 4 14, 8 14, 12 0"
+        />
+      }
+      @case ('op_amp') {
+        <svg:polygon points="-36,-28 -36,28 40,0" class="sym" fill="none" />
+        <svg:line x1="-36" y1="-16" x2="-28" y2="-16" class="sym" />
+        <svg:line x1="-36" y1="16" x2="-28" y2="16" class="sym" />
+        <svg:text x="-22" y="-12" class="oa-mark">+</svg:text>
+        <svg:text x="-22" y="20" class="oa-mark">−</svg:text>
+      }
+      @case ('bjt_npn') {
+        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" />
+        <svg:line x1="-8" y1="-18" x2="-8" y2="18" class="sym thick" />
+        <svg:line x1="-8" y1="-10" x2="0" y2="-28" class="sym" />
+        <svg:line x1="-8" y1="10" x2="0" y2="28" class="sym" />
+        <svg:line x1="0" y1="-28" x2="0" y2="-40" class="sym" />
+        <svg:line x1="0" y1="28" x2="0" y2="40" class="sym" />
+        <svg:polyline class="sym" fill="none" points="-2,22 0,28 6,22" />
+      }
+      @case ('ammeter') {
+        <svg:circle cx="0" cy="0" r="18" class="sym" />
+        <svg:text x="0" y="5" text-anchor="middle" class="meter-letter">A</svg:text>
+        <svg:line x1="-36" y1="0" x2="-18" y2="0" class="sym" />
+        <svg:line x1="18" y1="0" x2="36" y2="0" class="sym" />
+      }
+      @case ('voltmeter') {
+        <svg:circle cx="0" cy="0" r="18" class="sym" />
+        <svg:text x="0" y="5" text-anchor="middle" class="meter-letter">V</svg:text>
+        <svg:line x1="-36" y1="0" x2="-18" y2="0" class="sym" />
+        <svg:line x1="18" y1="0" x2="36" y2="0" class="sym" />
+      }
       @case ('resistor') {
         <svg:polyline
           class="sym"
@@ -239,6 +275,19 @@ import { Component, input } from '@angular/core';
       fill: #12263a;
       stroke: #12263a;
       pointer-events: all;
+    }
+    .oa-mark {
+      font-size: 12px;
+      font-family: ui-monospace, monospace;
+      fill: #12263a;
+      pointer-events: none;
+    }
+    .meter-letter {
+      font-size: 14px;
+      font-family: ui-monospace, monospace;
+      font-weight: 700;
+      fill: #12263a;
+      pointer-events: none;
     }
     .junction-node {
       fill: #12263a;

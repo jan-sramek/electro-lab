@@ -84,7 +84,13 @@ export function diagnoseSchematic(
 
   const nettled = assignNets(doc);
   const shortedVs = nettled.components.filter((c) => {
-    if (c.modelKey !== 'battery' && c.modelKey !== 'pulse_source') return false;
+    if (
+      c.modelKey !== 'battery' &&
+      c.modelKey !== 'pulse_source' &&
+      c.modelKey !== 'ac_source'
+    ) {
+      return false;
+    }
     const p = c.pins['p']?.net;
     const n = c.pins['n']?.net;
     return !!p && !!n && p === n;

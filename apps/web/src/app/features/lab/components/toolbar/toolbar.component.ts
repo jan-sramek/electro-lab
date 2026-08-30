@@ -16,6 +16,7 @@ export class LabToolbarComponent {
   readonly analysisMode = input.required<AnalysisMode>();
   readonly tStop = input(0.005);
   readonly dt = input(5e-5);
+  readonly acFreq = input(1000);
   readonly canUndo = input(false);
   readonly canRedo = input(false);
   readonly canDelete = input(false);
@@ -27,6 +28,7 @@ export class LabToolbarComponent {
   readonly analysisModeChange = output<AnalysisMode>();
   readonly tStopChange = output<number | string>();
   readonly dtChange = output<number | string>();
+  readonly acFreqChange = output<number | string>();
   readonly undo = output<void>();
   readonly redo = output<void>();
   readonly remove = output<void>();
@@ -45,7 +47,15 @@ export class LabToolbarComponent {
   }
 
   onPresetModelChange(value: string): void {
-    if (value === 'led' || value === 'rc' || value === 'pot' || value === 'pulse') {
+    if (
+      value === 'led' ||
+      value === 'rc' ||
+      value === 'pot' ||
+      value === 'pulse' ||
+      value === 'opamp' ||
+      value === 'ac' ||
+      value === 'bjt'
+    ) {
       this.loadPreset.emit(value);
     }
   }

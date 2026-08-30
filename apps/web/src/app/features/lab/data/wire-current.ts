@@ -17,6 +17,7 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
     case 'capacitor':
     case 'inductor':
     case 'switch':
+    case 'ammeter':
       if (pin === 'a') return -branchI;
       if (pin === 'b') return branchI;
       return 0;
@@ -27,8 +28,14 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
       return 0;
     case 'battery':
     case 'pulse_source':
-      if (pin === 'p') return branchI;
+    case 'ac_source':
+    case 'op_amp':
+      if (pin === 'p' || pin === 'out') return branchI;
       if (pin === 'n') return -branchI;
+      return 0;
+    case 'bjt_npn':
+      if (pin === 'c') return -branchI;
+      if (pin === 'e') return branchI;
       return 0;
     case 'current_source':
       if (pin === 'n') return branchI;

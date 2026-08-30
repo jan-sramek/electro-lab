@@ -16,7 +16,7 @@ public sealed class CircuitSimulator
         var provided = analyses?.ToList();
         var list = provided is { Count: > 0 }
             ? provided
-            : [new DcOperatingPointAnalysis(), new TransientAnalysis()];
+            : [new DcOperatingPointAnalysis(), new TransientAnalysis(), new AcAnalysis()];
         _analyses = list.ToDictionary(a => a.Type, StringComparer.OrdinalIgnoreCase);
     }
 

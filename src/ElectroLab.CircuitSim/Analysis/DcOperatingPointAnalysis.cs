@@ -16,8 +16,6 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
         if (errors.Count > 0)
             return SimulationResult.Fail(Type, errors.ToArray());
 
-        var nodes = CollectNodes(circuit);
-        var ctx = new StampContext(nodes, circuit.Ground);
         var models = new List<(ElementInstance el, IDeviceModel model)>();
 
         foreach (var el in circuit.Elements)
@@ -25,14 +23,20 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
             if (!registry.TryGet(el.Model, out var model))
                 return SimulationResult.Fail(Type, $"Unknown model '{el.Model}' on '{el.Id}'.");
             models.Add((el, model));
-            model.RegisterExtras(el, ctx);
         }
+
+        var nodes = CollectNodes(circuit, models);
+        var ctx = new StampContext(nodes, circuit.Ground);
+        foreach (var (el, model) in models)
+            model.RegisterExtras(el, ctx);
 
         var hint = new DcBiasHint();
         foreach (var (el, _) in models)
         {
             if (IsPiecewiseDiode(el.Model))
                 hint.LedOn[el.Id] = true;
+            if (IsPiecewiseBjt(el.Model))
+                hint.BjtOn[el.Id] = true;
         }
 
         string? lastError = null;
@@ -61,20 +65,36 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
             var changed = false;
             foreach (var (el, model) in models)
             {
-                if (!IsPiecewiseDiode(el.Model))
-                    continue;
-
-                var va = ctx.NodeVoltage(solution, el.Pins["a"]);
-                var vc = ctx.NodeVoltage(solution, el.Pins["c"]);
-                var vf = el.Params["vf"];
-                var current = model.BranchCurrent(el, ctx, solution, hint) ?? 0;
-                var previouslyOn = hint.LedOn[el.Id];
-                var nextOn = previouslyOn ? current > 1e-12 : va - vc >= vf;
-
-                if (nextOn != previouslyOn)
+                if (IsPiecewiseDiode(el.Model))
                 {
-                    hint.LedOn[el.Id] = nextOn;
-                    changed = true;
+                    var va = ctx.NodeVoltage(solution, el.Pins["a"]);
+                    var vc = ctx.NodeVoltage(solution, el.Pins["c"]);
+                    var vf = el.Params["vf"];
+                    var current = model.BranchCurrent(el, ctx, solution, hint) ?? 0;
+                    var previouslyOn = hint.LedOn[el.Id];
+                    var nextOn = previouslyOn ? current > 1e-12 : va - vc >= vf;
+
+                    if (nextOn != previouslyOn)
+                    {
+                        hint.LedOn[el.Id] = nextOn;
+                        changed = true;
+                    }
+                }
+                else if (IsPiecewiseBjt(el.Model))
+                {
+                    var vb = ctx.NodeVoltage(solution, el.Pins["b"]);
+                    var ve = ctx.NodeVoltage(solution, el.Pins["e"]);
+                    var vf = el.Params["vf"];
+                    var rb = el.Params["rb"];
+                    var previouslyOn = hint.BjtOn[el.Id];
+                    var baseCurrent = previouslyOn ? (vb - ve - vf) / rb : 0;
+                    var nextOn = previouslyOn ? baseCurrent > 1e-12 : vb - ve >= vf;
+
+                    if (nextOn != previouslyOn)
+                    {
+                        hint.BjtOn[el.Id] = nextOn;
+                        changed = true;
+                    }
                 }
             }
 
@@ -82,7 +102,7 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                 break;
 
             if (iter == 5)
-                warnings.Add("Diode/LED bias iteration did not fully settle; using last state.");
+                warnings.Add("Diode/LED/BJT bias iteration did not fully settle; using last state.");
         }
 
         var voltages = new Dictionary<string, double>(StringComparer.Ordinal)
@@ -113,12 +133,18 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
         };
     }
 
-    private static HashSet<string> CollectNodes(Circuit circuit)
+    private static HashSet<string> CollectNodes(Circuit circuit, List<(ElementInstance el, IDeviceModel model)> models)
     {
         var nodes = new HashSet<string>(StringComparer.Ordinal) { circuit.Ground };
         foreach (var el in circuit.Elements)
         {
             foreach (var n in el.Pins.Values)
+                nodes.Add(n);
+        }
+
+        foreach (var (el, model) in models)
+        {
+            foreach (var n in model.ExtraNodes(el))
                 nodes.Add(n);
         }
 
@@ -128,4 +154,7 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
     private static bool IsPiecewiseDiode(string model) =>
         model.Equals("led", StringComparison.OrdinalIgnoreCase) ||
         model.Equals("diode", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPiecewiseBjt(string model) =>
+        model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
 }

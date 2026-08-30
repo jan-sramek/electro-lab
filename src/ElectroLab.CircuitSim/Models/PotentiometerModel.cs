@@ -1,3 +1,4 @@
+using System.Numerics;
 using ElectroLab.CircuitSim.Analysis;
 using ElectroLab.CircuitSim.Mna;
 using ElectroLab.CircuitSim.Netlist;
@@ -41,5 +42,29 @@ public sealed class PotentiometerModel : IDeviceModel
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
         var vw = ctx.NodeVoltage(solution, element.Pins["w"]);
         return (va - vw) / ra;
+    }
+
+    public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
+    {
+        var (ra, rb) = Legs(element);
+        ctx.StampAdmittance(element.Pins["a"], element.Pins["w"], new Complex(1.0 / ra, 0));
+        ctx.StampAdmittance(element.Pins["w"], element.Pins["b"], new Complex(1.0 / rb, 0));
+    }
+
+    public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
+    {
+        var (ra, _) = Legs(element);
+        var va = ctx.NodeVoltage(solution, element.Pins["a"]);
+        var vw = ctx.NodeVoltage(solution, element.Pins["w"]);
+        return (va - vw) / ra;
+    }
+
+    private static (double ra, double rb) Legs(ElementInstance element)
+    {
+        var r = element.Params["r"];
+        var pos = Math.Clamp(element.Params["pos"], 0.01, 0.99);
+        var ra = Math.Max(r * pos, 1e-6);
+        var rb = Math.Max(r * (1.0 - pos), 1e-6);
+        return (ra, rb);
     }
 }

@@ -13,7 +13,7 @@
         "id": "V1",
         "model": "battery",
         "pins": { "p": "n1", "n": "gnd" },
-        "params": { "v": 5 }
+        "params": { "v": 5, "esr": 0 }
       },
       {
         "id": "R1",
@@ -26,12 +26,6 @@
         "model": "led",
         "pins": { "a": "n2", "c": "gnd" },
         "params": { "vf": 2.0, "ron": 20 }
-      },
-      {
-        "id": "S1",
-        "model": "switch",
-        "pins": { "a": "n1", "b": "n2" },
-        "params": { "closed": true }
       }
     ]
   }
@@ -44,22 +38,27 @@
 |------|--------|--------|
 | `dcOp` | — | DC operating point |
 | `tran` | `tStop`, `dt` | Fixed-step Backward Euler; defaults `tStop=0.005`, `dt=5e-5` |
+| `ac` | `freq`, or `fStart`/`fStop`/`pointsPerDecade` | Phasor / small-signal; default `freq=1000` Hz. Nonlinear devices (LED, diode, BJT) treated as open with a warning |
 
 ### Models (teaching pack)
 
-| model | pins | params | DC | Transient |
-|-------|------|--------|----|-----------|
-| `battery` | `p`, `n` | `v` | Ideal V | Same |
-| `resistor` | `a`, `b` | `r` | Linear G | Same |
-| `led` / `diode` | `a`, `c` | `vf`, `ron` | Piecewise | Same |
-| `switch` | `a`, `b` | `closed` | Ron/Roff | Same |
-| `current_source` | `p`, `n` | `i` | Ideal I | Same |
-| `capacitor` | `a`, `b` | `c` | Open (+warning) | BE companion |
-| `inductor` | `a`, `b` | `l` | Near-short | BE companion |
-| `potentiometer` | `a`, `w`, `b` | `r`, `pos` (0–1) | Two series R | Same |
-| `pulse_source` | `p`, `n` | `v1`, `v2`, `td`, `pw` | Uses `v1` | Pulse `v2` for `pw` after `td` |
+| model | pins | params | DC | Transient | AC |
+|-------|------|--------|----|-----------|-----|
+| `battery` | `p`, `n` | `v`, optional `esr` ≥ 0 | Ideal V (+ Thévenin ESR) | Same | AC short (+ ESR) |
+| `ac_source` | `p`, `n` | `mag`, `phase` (°) | 0 V (short) | 0 V | Phasor `mag∠phase` |
+| `resistor` | `a`, `b` | `r` | Linear G | Same | Same |
+| `led` / `diode` | `a`, `c` | `vf`, `ron` | Piecewise | Same | Open (+warning) |
+| `switch` | `a`, `b` | `closed` | Ron/Roff | Same | Same |
+| `bjt_npn` | `c`, `b`, `e` | `vf`, `rb`, `ron` | Piecewise switch | Same | Open (+warning) |
+| `op_amp` | `inp`, `inn`, `out` | `gain` (default 1e5) | Finite-gain VCVS to gnd | Same | Same |
+| `current_source` | `p`, `n` | `i` | Ideal I | Same | Open (no AC) |
+| `capacitor` | `a`, `b` | `c` | Open (+warning) | BE companion | `jωC` |
+| `inductor` | `a`, `b` | `l` | Near-short | BE companion | `1/(jωL)` |
+| `potentiometer` | `a`, `w`, `b` | `r`, `pos` (0–1) | Two series R | Same | Same |
+| `pulse_source` | `p`, `n` | `v1`, `v2`, `td`, `pw` | Uses `v1` | Pulse | AC short |
+| `ammeter` | `a`, `b` | `r` (sense, default 0.01) | Series sense R | Same | Same |
 
-Schematic-only (not sent to CircuitEngine): Lab `ground` symbol forces connected nets to `circuit.ground`.
+Schematic-only (not sent to CircuitEngine): Lab `ground` forces connected nets to `circuit.ground`; Lab `voltmeter` shows V(p)−V(n) from results without loading the circuit.
 
 ## Simulate response (dcOp)
 
@@ -92,6 +91,25 @@ Schematic-only (not sent to CircuitEngine): Lab `ground` symbol forces connected
 }
 ```
 
+## Simulate response (ac)
+
+```json
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "analysisType": "ac",
+  "ac": {
+    "points": [
+      {
+        "frequency": 1000,
+        "nodeVoltages": { "n2": { "mag": 0.707, "phaseDeg": -45 } },
+        "branchCurrents": { "R1": { "mag": 0.0007, "phaseDeg": 45 } }
+      }
+    ]
+  }
+}
+```
+
 ## Deferred
 
-AC analysis, SPICE semiconductors (op-amp/BJT/MOS), and WebSocket streaming remain deferred.
+Full SPICE semiconductors (Ebers–Moll / Level-1 MOSFET), small-signal linearization of nonlinear devices for AC, transformers, and WebSocket streaming remain deferred.

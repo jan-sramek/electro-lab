@@ -72,7 +72,19 @@
         <text x="0" y="66" text-anchor="middle" class="burn-label">
           {{ (isLedFailedOpen(c.id) ? 'lab.led.failedOpen' : 'lab.led.overloaded') | t }}
         </text>
-      } @else if (c.modelKey !== 'junction' && currentOf(c.id) !== null) {
+      } @else if (c.modelKey === 'voltmeter' && voltmeterReading(c) !== null) {
+        <text x="0" y="66" text-anchor="middle" class="meas">
+          {{ voltmeterReading(c)! | number: '1.2-3' }} V
+        </text>
+      } @else if (c.modelKey === 'ammeter' && currentOf(c.id) !== null) {
+        <text x="0" y="66" text-anchor="middle" class="meas">
+          {{ currentOf(c.id)! * 1000 | number: '1.1-2' }} mA
+        </text>
+      } @else if (
+        c.modelKey !== 'junction' &&
+        c.modelKey !== 'voltmeter' &&
+        currentOf(c.id) !== null
+      ) {
         <text x="0" y="66" text-anchor="middle" class="meas">
           {{ currentOf(c.id)! * 1000 | number: '1.1-2' }} mA
         </text>

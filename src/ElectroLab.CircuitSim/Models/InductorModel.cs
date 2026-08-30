@@ -1,3 +1,4 @@
+using System.Numerics;
 using ElectroLab.CircuitSim.Analysis;
 using ElectroLab.CircuitSim.Mna;
 using ElectroLab.CircuitSim.Netlist;
@@ -68,4 +69,17 @@ public sealed class InductorModel : IDeviceModel
         var iPrev = state.IndCurrent.GetValueOrDefault(element.Id);
         return iPrev + g * (va - vb);
     }
+
+    public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
+        => ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], InductorAdmittance(element, omega));
+
+    public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
+    {
+        var va = ctx.NodeVoltage(solution, element.Pins["a"]);
+        var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
+        return (va - vb) * InductorAdmittance(element, omega);
+    }
+
+    private static Complex InductorAdmittance(ElementInstance element, double omega)
+        => omega > 0 ? 1.0 / new Complex(0, omega * element.Params["l"]) : new Complex(1e6, 0);
 }

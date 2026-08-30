@@ -477,6 +477,10 @@ export class SchematicCanvasComponent {
       const v = s?.values[idx];
       return typeof v === 'number' ? v : null;
     }
+    if (res?.ac?.points?.length) {
+      const ph = res.ac.points[0]!.nodeVoltages?.[net];
+      return ph ? ph.mag : null;
+    }
     return null;
   }
 
@@ -492,7 +496,22 @@ export class SchematicCanvasComponent {
       const i = s?.values[idx];
       return typeof i === 'number' ? i : null;
     }
+    if (res?.ac?.points?.length) {
+      const ph = res.ac.points[0]!.branchCurrents?.[id];
+      return ph ? ph.mag : null;
+    }
     return null;
+  }
+
+  /** Differential reading for schematic-only voltmeter (p − n). */
+  voltmeterReading(c: { pins: Record<string, { net: string }> }): number | null {
+    const p = c.pins['p']?.net;
+    const n = c.pins['n']?.net;
+    if (!p || !n) return null;
+    const vp = this.voltageOf(p);
+    const vn = this.voltageOf(n);
+    if (vp === null || vn === null) return null;
+    return vp - vn;
   }
 
   /**

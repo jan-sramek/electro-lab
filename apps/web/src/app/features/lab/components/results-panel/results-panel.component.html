@@ -43,6 +43,33 @@
         </li>
       }
     </ul>
+  } @else if (result()?.ac?.points?.length) {
+    @let point = result()!.ac!.points[0]!;
+    <p class="muted">
+      {{ 'lab.results.acAt' | t: { f: point.frequency } }}
+      @if (result()!.ac!.points.length > 1) {
+        ({{ 'lab.results.acSweepPoints' | t: { count: result()!.ac!.points.length } }})
+      }
+    </p>
+    <h3>{{ 'lab.results.nodePhasors' | t }}</h3>
+    <ul>
+      @for (item of point.nodeVoltages | keyvalue; track item.key) {
+        <li>
+          <code>{{ item.key }}</code>
+          {{ item.value.mag | number: '1.4-4' }} V ∠ {{ item.value.phaseDeg | number: '1.1-1' }}°
+        </li>
+      }
+    </ul>
+    <h3>{{ 'lab.results.branchPhasors' | t }}</h3>
+    <ul>
+      @for (item of point.branchCurrents | keyvalue; track item.key) {
+        <li>
+          <code>{{ item.key }}</code>
+          {{ item.value.mag * 1000 | number: '1.3-3' }} mA ∠
+          {{ item.value.phaseDeg | number: '1.1-1' }}°
+        </li>
+      }
+    </ul>
   } @else {
     <p class="muted">{{ 'lab.results.empty' | t }}</p>
   }

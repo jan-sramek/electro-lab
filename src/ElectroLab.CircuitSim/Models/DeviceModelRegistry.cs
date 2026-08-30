@@ -23,7 +23,11 @@ public sealed class DeviceModelRegistry
         new CapacitorModel(),
         new InductorModel(),
         new PotentiometerModel(),
-        new PulseSourceModel()
+        new PulseSourceModel(),
+        new OpAmpModel(),
+        new BjtNpnModel(),
+        new AcSourceModel(),
+        new AmmeterModel()
     ];
 
     public bool TryGet(string modelKey, out IDeviceModel model)

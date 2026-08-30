@@ -25,6 +25,13 @@
     >
       {{ 'lab.toolbar.transient' | t }}
     </button>
+    <button
+      type="button"
+      [class.active]="analysisMode() === 'ac'"
+      (click)="analysisModeChange.emit('ac')"
+    >
+      {{ 'lab.toolbar.ac' | t }}
+    </button>
     @if (analysisMode() === 'tran') {
       <label class="timebase">
         {{ 'lab.toolbar.tStop' | t }}
@@ -44,6 +51,18 @@
           (ngModelChange)="dtChange.emit($event)"
           step="0.00001"
           min="0.000001"
+        />
+      </label>
+    }
+    @if (analysisMode() === 'ac') {
+      <label class="timebase">
+        {{ 'lab.toolbar.freq' | t }}
+        <input
+          type="number"
+          [ngModel]="acFreq()"
+          (ngModelChange)="acFreqChange.emit($event)"
+          step="10"
+          min="0.1"
         />
       </label>
     }
@@ -69,6 +88,9 @@
         <option value="rc">{{ 'lab.toolbar.rcPreset' | t }}</option>
         <option value="pot">{{ 'lab.toolbar.potPreset' | t }}</option>
         <option value="pulse">{{ 'lab.toolbar.pulsePreset' | t }}</option>
+        <option value="opamp">{{ 'lab.toolbar.opampPreset' | t }}</option>
+        <option value="ac">{{ 'lab.toolbar.acPreset' | t }}</option>
+        <option value="bjt">{{ 'lab.toolbar.bjtPreset' | t }}</option>
       </select>
     </label>
     <button type="button" (click)="exportJson.emit()">{{ 'lab.toolbar.export' | t }}</button>

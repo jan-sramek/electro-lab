@@ -1,19 +1,22 @@
+using System.Numerics;
+
 namespace ElectroLab.CircuitSim.Mna;
 
 /// <summary>
-/// Builds and solves a dense MNA system G * x = b for DC analysis.
-/// Unknowns: non-ground node voltages, then voltage-source branch currents.
+/// Builds and solves a dense complex MNA system G * x = b for AC (phasor) analysis.
+/// Mirrors <see cref="StampContext"/> with System.Numerics.Complex admittances/phasors.
+/// Unknowns: non-ground node voltage phasors, then voltage-source branch current phasors.
 /// </summary>
-public sealed class StampContext
+public sealed class ComplexStampContext
 {
     private readonly Dictionary<string, int> _nodeIndex;
     private readonly List<string> _voltageSourceIds = [];
     private readonly Dictionary<string, int> _vsIndex = new(StringComparer.Ordinal);
-    private double[,]? _g;
-    private double[]? _b;
+    private Complex[,]? _g;
+    private Complex[]? _b;
     private bool _locked;
 
-    public StampContext(IEnumerable<string> nodes, string ground)
+    public ComplexStampContext(IEnumerable<string> nodes, string ground)
     {
         Ground = ground;
         var ordered = nodes
@@ -51,8 +54,8 @@ public sealed class StampContext
     {
         _locked = true;
         var n = Size;
-        _g = new double[n, n];
-        _b = new double[n];
+        _g = new Complex[n, n];
+        _b = new Complex[n];
     }
 
     public int? NodeRow(string node)
@@ -64,23 +67,23 @@ public sealed class StampContext
         return idx;
     }
 
-    public void StampConductance(string nodeA, string nodeB, double g)
+    public void StampAdmittance(string nodeA, string nodeB, Complex y)
     {
         EnsureStamping();
         var a = NodeRow(nodeA);
         var b = NodeRow(nodeB);
         if (a is int ai)
-            _g![ai, ai] += g;
+            _g![ai, ai] += y;
         if (b is int bi)
-            _g![bi, bi] += g;
+            _g![bi, bi] += y;
         if (a is int a2 && b is int b2)
         {
-            _g![a2, b2] -= g;
-            _g![b2, a2] -= g;
+            _g![a2, b2] -= y;
+            _g![b2, a2] -= y;
         }
     }
 
-    public void StampCurrentSource(string nodeFrom, string nodeTo, double amps)
+    public void StampCurrentSource(string nodeFrom, string nodeTo, Complex amps)
     {
         EnsureStamping();
         var from = NodeRow(nodeFrom);
@@ -91,7 +94,7 @@ public sealed class StampContext
             _b![t] += amps;
     }
 
-    public void StampVoltageSource(string elementId, string nodeP, string nodeN, double voltage)
+    public void StampVoltageSource(string elementId, string nodeP, string nodeN, Complex voltage)
     {
         EnsureStamping();
         if (!_vsIndex.TryGetValue(elementId, out var k))
@@ -117,7 +120,7 @@ public sealed class StampContext
 
     /// <summary>VCVS: V(nodeP)-V(nodeN) = gain * (V(ctrlP)-V(ctrlN)). Uses registered VS branch elementId.</summary>
     public void StampVoltageControlledVoltageSource(
-        string elementId, string nodeP, string nodeN, string ctrlP, string ctrlN, double gain)
+        string elementId, string nodeP, string nodeN, string ctrlP, string ctrlN, Complex gain)
     {
         EnsureStamping();
         if (!_vsIndex.TryGetValue(elementId, out var k))
@@ -147,7 +150,7 @@ public sealed class StampContext
             _g![k, cni] += gain;
     }
 
-    public bool TrySolve(out double[] solution, out string? error)
+    public bool TrySolve(out Complex[] solution, out string? error)
     {
         if (_g is null || _b is null)
         {
@@ -164,19 +167,19 @@ public sealed class StampContext
             return true;
         }
 
-        var a = (double[,])_g.Clone();
-        var b = (double[])_b.Clone();
-        return GaussianElimination.Solve(a, b, out solution, out error);
+        var a = (Complex[,])_g.Clone();
+        var b = (Complex[])_b.Clone();
+        return ComplexGaussianElimination.Solve(a, b, out solution, out error);
     }
 
-    public double NodeVoltage(double[] solution, string node)
+    public Complex NodeVoltage(Complex[] solution, string node)
     {
         if (string.Equals(node, Ground, StringComparison.Ordinal))
-            return 0;
+            return Complex.Zero;
         return solution[_nodeIndex[node]];
     }
 
-    public double VoltageSourceCurrent(double[] solution, string elementId)
+    public Complex VoltageSourceCurrent(Complex[] solution, string elementId)
         => solution[_vsIndex[elementId]];
 
     private void EnsureStamping()

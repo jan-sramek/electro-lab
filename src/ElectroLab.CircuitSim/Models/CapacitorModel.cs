@@ -1,3 +1,4 @@
+using System.Numerics;
 using ElectroLab.CircuitSim.Analysis;
 using ElectroLab.CircuitSim.Mna;
 using ElectroLab.CircuitSim.Netlist;
@@ -62,5 +63,19 @@ public sealed class CapacitorModel : IDeviceModel
         var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
         var vPrev = state.CapVoltage.GetValueOrDefault(element.Id);
         return g * ((va - vb) - vPrev);
+    }
+
+    public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
+    {
+        var y = new Complex(0, omega * element.Params["c"]);
+        ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], y);
+    }
+
+    public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
+    {
+        var va = ctx.NodeVoltage(solution, element.Pins["a"]);
+        var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
+        var y = new Complex(0, omega * element.Params["c"]);
+        return (va - vb) * y;
     }
 }

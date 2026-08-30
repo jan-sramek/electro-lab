@@ -3,6 +3,9 @@ import { createLedPreset } from './presets/led-series.preset';
 import { createRcStepPreset } from './presets/rc-step.preset';
 import { createPotDividerPreset } from './presets/pot-divider.preset';
 import { createPulseRcPreset } from './presets/pulse-rc.preset';
+import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
+import { createAcRcPreset } from './presets/ac-rc.preset';
+import { createBjtSwitchPreset } from './presets/bjt-switch.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
 
 describe('Lab preset contracts', () => {
@@ -27,9 +30,19 @@ describe('Lab preset contracts', () => {
     expect(pulse.elements.some((e) => e.model === 'pulse_source')).toBeTrue();
   });
 
+  it('compiles op-amp, AC, and BJT presets', () => {
+    const oa = compileNetlist(createOpAmpBufferPreset());
+    expect(oa.elements.some((e) => e.model === 'op_amp')).toBeTrue();
+    const ac = compileNetlist(createAcRcPreset());
+    expect(ac.elements.some((e) => e.model === 'ac_source')).toBeTrue();
+    expect(ac.elements.every((e) => e.model !== 'voltmeter')).toBeTrue();
+    const bjt = compileNetlist(createBjtSwitchPreset());
+    expect(bjt.elements.some((e) => e.model === 'bjt_npn')).toBeTrue();
+    expect(bjt.elements.some((e) => e.model === 'ammeter')).toBeTrue();
+  });
+
   it('flags shorted voltage source', () => {
     const doc = createLedPreset();
-    // Force V1 pins onto same net by wiring p and n together via shared wire path — use assignNets after connecting p-n.
     const shorted = {
       ...doc,
       wires: [

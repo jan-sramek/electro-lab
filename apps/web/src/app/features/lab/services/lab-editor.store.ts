@@ -14,13 +14,16 @@ import { createLedPreset } from '../data/presets/led-series.preset';
 import { createRcStepPreset } from '../data/presets/rc-step.preset';
 import { createPotDividerPreset } from '../data/presets/pot-divider.preset';
 import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
+import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
+import { createAcRcPreset } from '../data/presets/ac-rc.preset';
+import { createBjtSwitchPreset } from '../data/presets/bjt-switch.preset';
 import {
   CircuitSlot,
   SchematicHistory,
   SchematicPersistence
 } from './schematic-persistence';
 
-export type ExamplePresetId = 'led' | 'rc' | 'pot' | 'pulse';
+export type ExamplePresetId = 'led' | 'rc' | 'pot' | 'pulse' | 'opamp' | 'ac' | 'bjt';
 
 @Injectable()
 export class LabEditorStore {
@@ -38,6 +41,8 @@ export class LabEditorStore {
   readonly analysisMode = signal<AnalysisMode>('dcOp');
   readonly tStop = signal(0.005);
   readonly dt = signal(5e-5);
+  /** Single-frequency AC analysis (Hz). */
+  readonly acFreq = signal(1000);
   readonly canUndo = signal(false);
   readonly canRedo = signal(false);
   readonly activeSlotId = signal<string | null>(null);
@@ -161,6 +166,13 @@ export class LabEditorStore {
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.dt.set(v);
+    this.bump();
+  }
+
+  setAcFreq(raw: number | string): void {
+    const v = Number(raw);
+    if (!Number.isFinite(v) || v <= 0) return;
+    this.acFreq.set(v);
     this.bump();
   }
 
@@ -447,6 +459,18 @@ export class LabEditorStore {
     this.openExampleInNewTab('pulse', 'Pulse RC', createPulseRcPreset, 'tran', 0.01, 5e-5);
   }
 
+  loadOpAmpPreset(): void {
+    this.openExampleInNewTab('opamp', 'Op-amp buffer', createOpAmpBufferPreset, 'dcOp');
+  }
+
+  loadAcPreset(): void {
+    this.openExampleInNewTab('ac', 'AC low-pass', createAcRcPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadBjtPreset(): void {
+    this.openExampleInNewTab('bjt', 'BJT switch', createBjtSwitchPreset, 'dcOp');
+  }
+
   newSchematic(): void {
     if (typeof window !== 'undefined' && !window.confirm('Clear the current schematic?')) {
       return;
@@ -490,7 +514,8 @@ export class LabEditorStore {
     factory: () => SchematicDocument,
     mode: AnalysisMode,
     tStop?: number,
-    dt?: number
+    dt?: number,
+    acFreq?: number
   ): void {
     this.persist();
     const doc = assignNets(factory());
@@ -504,6 +529,7 @@ export class LabEditorStore {
     this.analysisMode.set(mode);
     if (tStop !== undefined) this.tStop.set(tStop);
     if (dt !== undefined) this.dt.set(dt);
+    if (acFreq !== undefined) this.acFreq.set(acFreq);
     this.syncHistoryFlags();
     this.refreshSlots(id);
     this.bump();

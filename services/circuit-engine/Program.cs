@@ -54,6 +54,18 @@ app.MapPost("/api/circuit/simulate", (SimulateRequest request, CircuitSimulator 
             Dt = request.Analysis?.Dt is > 0 ? request.Analysis.Dt.Value : 5e-5
         };
     }
+    else if (analysisType.Equals("ac", StringComparison.OrdinalIgnoreCase))
+    {
+        options = new AnalysisOptions
+        {
+            Freq = request.Analysis?.Freq is > 0 ? request.Analysis.Freq.Value : 1000,
+            FStart = request.Analysis?.FStart is > 0 ? request.Analysis.FStart : null,
+            FStop = request.Analysis?.FStop is > 0 ? request.Analysis.FStop : null,
+            PointsPerDecade = request.Analysis?.PointsPerDecade is > 0
+                ? request.Analysis.PointsPerDecade.Value
+                : 10
+        };
+    }
 
     var result = simulator.Simulate(circuit, analysisType, options);
     var response = SimulateResponse.From(result, request.SchemaVersion <= 0 ? 1 : request.SchemaVersion);
@@ -122,6 +134,10 @@ internal sealed class AnalysisDto
     public string Type { get; set; } = "dcOp";
     public double? TStop { get; set; }
     public double? Dt { get; set; }
+    public double? Freq { get; set; }
+    public double? FStart { get; set; }
+    public double? FStop { get; set; }
+    public int? PointsPerDecade { get; set; }
 }
 
 internal sealed class CircuitDto
@@ -147,6 +163,7 @@ internal sealed class SimulateResponse
     public string[] Warnings { get; init; } = [];
     public DcOpDto? DcOp { get; init; }
     public TranDto? Tran { get; init; }
+    public AcDto? Ac { get; init; }
 
     public static SimulateResponse Fail(string analysisType, params string[] errors) => new()
     {
@@ -180,6 +197,21 @@ internal sealed class SimulateResponse
                 BranchCurrents = result.Tran.BranchCurrents
                     .Select(s => new TranSeriesDto { Id = s.Id, Values = s.Values.ToList() })
                     .ToList()
+            },
+        Ac = result.Ac is null
+            ? null
+            : new AcDto
+            {
+                Points = result.Ac.Points.Select(p => new AcPointDto
+                {
+                    Frequency = p.Frequency,
+                    NodeVoltages = p.NodeVoltages.ToDictionary(
+                        kv => kv.Key,
+                        kv => new PhasorDto { Mag = kv.Value.Mag, PhaseDeg = kv.Value.PhaseDeg }),
+                    BranchCurrents = p.BranchCurrents.ToDictionary(
+                        kv => kv.Key,
+                        kv => new PhasorDto { Mag = kv.Value.Mag, PhaseDeg = kv.Value.PhaseDeg })
+                }).ToList()
             }
     };
 }
@@ -201,6 +233,24 @@ internal sealed class TranSeriesDto
 {
     public string Id { get; init; } = "";
     public List<double> Values { get; init; } = [];
+}
+
+internal sealed class AcDto
+{
+    public List<AcPointDto> Points { get; init; } = [];
+}
+
+internal sealed class AcPointDto
+{
+    public double Frequency { get; init; }
+    public Dictionary<string, PhasorDto> NodeVoltages { get; init; } = new();
+    public Dictionary<string, PhasorDto> BranchCurrents { get; init; } = new();
+}
+
+internal sealed class PhasorDto
+{
+    public double Mag { get; init; }
+    public double PhaseDeg { get; init; }
 }
 
 public partial class Program;

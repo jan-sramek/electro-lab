@@ -1,3 +1,4 @@
+using System.Numerics;
 using ElectroLab.CircuitSim.Analysis;
 using ElectroLab.CircuitSim.Mna;
 using ElectroLab.CircuitSim.Netlist;
@@ -47,6 +48,16 @@ public sealed class PulseSourceModel : IDeviceModel
     }
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
+        => -ctx.VoltageSourceCurrent(solution, element.Id);
+
+    public void RegisterExtrasAc(ElementInstance element, ComplexStampContext ctx)
+        => ctx.RegisterVoltageSource(element.Id);
+
+    public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
+        // Pulse source has no AC component in this teaching model — modeled as an AC short.
+        => ctx.StampVoltageSource(element.Id, element.Pins["p"], element.Pins["n"], Complex.Zero);
+
+    public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
         => -ctx.VoltageSourceCurrent(solution, element.Id);
 
     private static double VoltageAt(ElementInstance element, double t)

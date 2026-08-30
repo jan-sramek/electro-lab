@@ -4,6 +4,10 @@ export interface SimulateRequest {
     type: string;
     tStop?: number;
     dt?: number;
+    freq?: number;
+    fStart?: number;
+    fStop?: number;
+    pointsPerDecade?: number;
   };
   circuit: {
     ground: string;
@@ -32,6 +36,21 @@ export interface TranResult {
   branchCurrents: TranSeries[];
 }
 
+export interface PhasorValue {
+  mag: number;
+  phaseDeg: number;
+}
+
+export interface AcPoint {
+  frequency: number;
+  nodeVoltages: Record<string, PhasorValue>;
+  branchCurrents: Record<string, PhasorValue>;
+}
+
+export interface AcResult {
+  points: AcPoint[];
+}
+
 export interface SimulateResponse {
   schemaVersion: number;
   ok: boolean;
@@ -40,4 +59,5 @@ export interface SimulateResponse {
   warnings: string[];
   dcOp?: DcOpResult;
   tran?: TranResult;
+  ac?: AcResult;
 }

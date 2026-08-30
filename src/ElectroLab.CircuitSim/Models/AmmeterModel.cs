@@ -4,58 +4,46 @@ using ElectroLab.CircuitSim.Netlist;
 
 namespace ElectroLab.CircuitSim.Models;
 
-public sealed class SwitchModel : IDeviceModel
+/// <summary>
+/// Teaching series ammeter: a small sense resistor whose branch current is the measured current.
+/// Place in series with the path you want to measure.
+/// </summary>
+public sealed class AmmeterModel : IDeviceModel
 {
-    private const double Ron = 0.01;
-    private const double Roff = 1e12;
-
-    public string ModelKey => "switch";
+    public string ModelKey => "ammeter";
 
     public IReadOnlyList<string> Validate(ElementInstance element)
     {
         var errors = new List<string>();
         if (!element.Pins.ContainsKey("a") || !element.Pins.ContainsKey("b"))
-            errors.Add($"{element.Id}: switch requires pins a, b.");
+            errors.Add($"{element.Id}: ammeter requires pins a, b.");
+        if (element.Params.TryGetValue("r", out var r) && r <= 0)
+            errors.Add($"{element.Id}: ammeter params.r must be > 0.");
         return errors;
     }
 
     public void RegisterExtras(ElementInstance element, StampContext ctx) { }
 
     public void ContributeDc(ElementInstance element, StampContext ctx, DcBiasHint? hint)
-    {
-        var closed = element.BoolParams is not null
-            && element.BoolParams.TryGetValue("closed", out var c)
-            && c;
-        var r = closed ? Ron : Roff;
-        ctx.StampConductance(element.Pins["a"], element.Pins["b"], 1.0 / r);
-    }
+        => ctx.StampConductance(element.Pins["a"], element.Pins["b"], 1.0 / SenseR(element));
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
     {
-        var closed = element.BoolParams is not null
-            && element.BoolParams.TryGetValue("closed", out var c)
-            && c;
-        var r = closed ? Ron : Roff;
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
         var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
-        return (va - vb) / r;
+        return (va - vb) / SenseR(element);
     }
 
     public void ContributeAc(ElementInstance element, ComplexStampContext ctx, double omega)
-        => ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], new Complex(1.0 / ResistanceFor(element), 0));
+        => ctx.StampAdmittance(element.Pins["a"], element.Pins["b"], new Complex(1.0 / SenseR(element), 0));
 
     public Complex? BranchCurrentAc(ElementInstance element, ComplexStampContext ctx, Complex[] solution, double omega)
     {
         var va = ctx.NodeVoltage(solution, element.Pins["a"]);
         var vb = ctx.NodeVoltage(solution, element.Pins["b"]);
-        return (va - vb) / ResistanceFor(element);
+        return (va - vb) / SenseR(element);
     }
 
-    private static double ResistanceFor(ElementInstance element)
-    {
-        var closed = element.BoolParams is not null
-            && element.BoolParams.TryGetValue("closed", out var c)
-            && c;
-        return closed ? Ron : Roff;
-    }
+    private static double SenseR(ElementInstance element)
+        => element.Params.TryGetValue("r", out var r) && r > 0 ? r : 0.01;
 }
