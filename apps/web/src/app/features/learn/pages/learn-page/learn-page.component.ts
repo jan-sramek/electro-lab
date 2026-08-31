@@ -137,6 +137,20 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
           {{ 'learn.project.arduino.openLab' | t }}
         </a>
       </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.i2cOled.title' | t }}</h2>
+        <p>{{ 'learn.project.i2cOled.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.i2cOled.step1' | t }}</li>
+          <li>{{ 'learn.project.i2cOled.step2' | t }}</li>
+          <li>{{ 'learn.project.i2cOled.step3' | t }}</li>
+          <li>{{ 'learn.project.i2cOled.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'i2cOled' }">
+          {{ 'learn.project.i2cOled.openLab' | t }}
+        </a>
+      </article>
     </section>
   `,
   styles: `

@@ -557,6 +557,65 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     width: 56,
     height: 36
   },
+  arduino_i2c: {
+    modelKey: 'arduino_i2c',
+    label: 'lab.symbol.arduino_i2c',
+    teachingNote: 'lab.modelNote.arduino_i2c',
+    displayScale: 0.9,
+    pins: [
+      { name: 'v5', ox: 48, oy: -28 },
+      { name: 'gnd', ox: 48, oy: -10 },
+      { name: 'scl', ox: 48, oy: 10 },
+      { name: 'sda', ox: 48, oy: 28 }
+    ],
+    defaultParams: { vHigh: 5 },
+    paramDefs: [
+      {
+        key: 'vHigh',
+        label: 'lab.param.vHigh',
+        type: 'number',
+        min: 1,
+        step: 0.1,
+        unit: 'V'
+      }
+    ],
+    width: 64,
+    height: 64
+  },
+  ssd1306: {
+    modelKey: 'ssd1306',
+    label: 'lab.symbol.ssd1306',
+    teachingNote: 'lab.modelNote.ssd1306',
+    displayScale: 0.95,
+    pins: [
+      { name: 'vcc', ox: -52, oy: -28 },
+      { name: 'gnd', ox: -52, oy: -10 },
+      { name: 'scl', ox: -52, oy: 10 },
+      { name: 'sda', ox: -52, oy: 28 }
+    ],
+    defaultParams: { addr: 60, rLoad: 500 },
+    paramDefs: [
+      {
+        key: 'addr',
+        label: 'lab.param.i2cAddr',
+        type: 'enum',
+        options: [
+          { value: 60, label: 'lab.param.i2cAddr3C' },
+          { value: 61, label: 'lab.param.i2cAddr3D' }
+        ]
+      },
+      {
+        key: 'rLoad',
+        label: 'lab.param.supplyLoad',
+        type: 'number',
+        min: 50,
+        step: 50,
+        unit: 'Ω'
+      }
+    ],
+    width: 72,
+    height: 64
+  },
   relay: {
     modelKey: 'relay',
     label: 'lab.symbol.relay',
@@ -773,6 +832,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
 export const PALETTE_ORDER = [
   'battery',
   'arduino_dio',
+  'arduino_i2c',
   'ac_source',
   'pulse_source',
   'resistor',
@@ -790,6 +850,7 @@ export const PALETTE_ORDER = [
   'dc_motor',
   'ne555',
   'op_amp',
+  'ssd1306',
   'current_source',
   'capacitor',
   'inductor',
@@ -807,7 +868,7 @@ export const PALETTE_GROUPS: ReadonlyArray<{
   {
     id: 'sources',
     labelKey: 'lab.palette.group.sources',
-    keys: ['battery', 'ac_source', 'pulse_source', 'current_source', 'arduino_dio']
+    keys: ['battery', 'ac_source', 'pulse_source', 'current_source', 'arduino_dio', 'arduino_i2c']
   },
   {
     id: 'passives',
@@ -837,7 +898,7 @@ export const PALETTE_GROUPS: ReadonlyArray<{
   {
     id: 'ics',
     labelKey: 'lab.palette.group.ics',
-    keys: ['ne555', 'op_amp']
+    keys: ['ne555', 'op_amp', 'ssd1306']
   },
   {
     id: 'meters',

@@ -69,6 +69,8 @@ export class LabPageComponent implements OnInit {
       this.onLoadPreset('motor');
     } else if (example === 'arduino' || example === 'dio') {
       this.onLoadPreset('arduino');
+    } else if (example === 'i2c' || example === 'i2cOled' || example === 'oled' || example === 'ssd1306') {
+      this.onLoadPreset('i2cOled');
     }
   }
 
@@ -124,6 +126,9 @@ export class LabPageComponent implements OnInit {
         break;
       case 'arduino':
         this.editor.loadArduinoPreset();
+        break;
+      case 'i2cOled':
+        this.editor.loadI2cOledPreset();
         break;
     }
   }

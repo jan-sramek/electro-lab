@@ -66,7 +66,8 @@ export class LabToolbarComponent {
       value === 'ldr' ||
       value === 'buzzer' ||
       value === 'motor' ||
-      value === 'arduino'
+      value === 'arduino' ||
+      value === 'i2cOled'
     ) {
       this.loadPreset.emit(value);
     }

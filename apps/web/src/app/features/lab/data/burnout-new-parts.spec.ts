@@ -7,6 +7,8 @@ describe('new-part burnout seams', () => {
     expect(canBurnOut('ldr')).toBeTrue();
     expect(canBurnOut('pushbutton')).toBeFalse();
     expect(canBurnOut('arduino_dio')).toBeFalse();
+    expect(canBurnOut('arduino_i2c')).toBeFalse();
+    expect(canBurnOut('ssd1306')).toBeFalse();
     expect(burnKindOf('buzzer')).toBe('buzzer');
     expect(burnKindOf('dc_motor')).toBe('dc_motor');
     expect(burnKindOf('ldr')).toBe('ldr');

@@ -685,6 +685,38 @@ public class NewDevicesTests
     }
 
     [Fact]
+    public void I2cOled_PullUpsHoldBusHigh_AndOledDrawsSupply()
+    {
+        // Arduino Wire + SSD1306 with 4.7 kΩ pull-ups: SDA/SCL idle at vHigh; OLED draws from v5.
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El(
+                    "MCU1",
+                    "arduino_i2c",
+                    Pins(("v5", "v5"), ("gnd", "gnd"), ("sda", "sda"), ("scl", "scl")),
+                    P(("vHigh", 5))
+                ),
+                El("RpuSDA", "resistor", Pins(("a", "v5"), ("b", "sda")), P(("r", 4700))),
+                El("RpuSCL", "resistor", Pins(("a", "v5"), ("b", "scl")), P(("r", 4700))),
+                El(
+                    "OLED1",
+                    "ssd1306",
+                    Pins(("vcc", "v5"), ("gnd", "gnd"), ("sda", "sda"), ("scl", "scl")),
+                    P(("addr", 60), ("rLoad", 500))
+                )
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.NodeVoltages["sda"] > 4.9, $"Vsda={result.DcOp.NodeVoltages["sda"]}");
+        Assert.True(result.DcOp.NodeVoltages["scl"] > 4.9, $"Vscl={result.DcOp.NodeVoltages["scl"]}");
+        Assert.True(result.DcOp.BranchCurrents["OLED1"] > 0.008, $"Ioled={result.DcOp.BranchCurrents["OLED1"]}");
+    }
+
+    [Fact]
     public void BurnedBuzzer_IsOpenCircuit()
     {
         var circuit = new Circuit

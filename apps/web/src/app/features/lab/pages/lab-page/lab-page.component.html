@@ -48,6 +48,9 @@
           (add)="editor.addCircuitTab()"
           (close)="editor.closeCircuitTab($event)"
           (rename)="editor.renameCircuitTab($event.id, $event.name)"
+          (togglePin)="editor.toggleCircuitTabPinned($event)"
+          (closeOthers)="editor.closeOtherCircuitTabs()"
+          (closeUnpinned)="editor.closeUnpinnedCircuitTabs()"
         />
         <div class="status-rail">
           <app-status-banner

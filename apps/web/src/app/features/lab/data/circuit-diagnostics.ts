@@ -143,6 +143,7 @@ export function diagnoseSchematic(
         sim === 'buzzer' ||
         sim === 'dc_motor' ||
         sim === 'arduino_dio' ||
+        sim === 'arduino_i2c' ||
         isBjtNpnPart(c.modelKey)
       );
     });

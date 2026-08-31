@@ -68,6 +68,8 @@ export const EN_FALLBACK: Record<string, string> = {
     'NMOS + motor: Run DC with S1 closed — motor current flows; Dfly is the flyback diode. Open S1 — motor stops.',
   'lab.hint.arduino':
     'Arduino LED: D2 is a teaching digital pin (Output / HIGH). Run DC — LED lights. Set Level to LOW or Mode to Input and Run again.',
+  'lab.hint.i2cOled':
+    'I2C OLED: Run DC — with VCC powered, OLED1 shows “Hello” and SDA/SCL sit near 5 V via the pull-ups. Probe a bus line; remove a pull-up to see idle level collapse.',
   'lab.toolbar.select': 'Select',
   'lab.toolbar.wire': 'Wire',
   'lab.toolbar.probe': 'Probe',
@@ -101,6 +103,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.buzzerPreset': 'Buzzer + button (DC)',
   'lab.toolbar.motorPreset': 'NMOS + DC motor (DC)',
   'lab.toolbar.arduinoPreset': 'Arduino LED pin (DC)',
+  'lab.toolbar.i2cOledPreset': 'I2C OLED SSD1306 (DC)',
   'lab.toolbar.export': 'Export',
   'lab.toolbar.import': 'Import',
   'lab.toolbar.new': 'New',
@@ -114,6 +117,14 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.tabs.aria': 'Circuit tabs',
   'lab.tabs.add': 'New circuit tab',
   'lab.tabs.close': 'Close circuit tab',
+  'lab.tabs.menu': 'Tab actions',
+  'lab.tabs.pin': 'Pin tab',
+  'lab.tabs.unpin': 'Unpin tab',
+  'lab.tabs.pinCurrent': 'Pin current tab',
+  'lab.tabs.unpinCurrent': 'Unpin current tab',
+  'lab.tabs.pinned': 'Pinned',
+  'lab.tabs.closeOthers': 'Close other tabs',
+  'lab.tabs.closeUnpinned': 'Close unpinned tabs',
 
   'lab.palette.title': 'Parts',
   'lab.palette.dragHint': 'Drag a symbol onto the canvas, or click then click to place. Hover a part for its teaching note.',
@@ -143,6 +154,8 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.symbol.buzzer': 'Buzzer',
   'lab.symbol.dc_motor': 'DC motor',
   'lab.symbol.arduino_dio': 'Arduino pin',
+  'lab.symbol.arduino_i2c': 'Arduino I2C',
+  'lab.symbol.ssd1306': 'SSD1306 OLED',
   'lab.symbol.op_amp': 'Op-amp',
   'lab.modelNote.op_amp':
     'Teaching model: finite-gain VCVS with clamp to vMax/vMin (default ±15 V). AC stays linear (unclamped).',
@@ -164,6 +177,10 @@ export const EN_FALLBACK: Record<string, string> = {
     'Teaching DC motor load: when |V| ≥ vStart it draws current through ron. Use a flyback diode. Sustained current above ~0.4 A burns it open.',
   'lab.modelNote.arduino_dio':
     'Teaching Arduino digital pin: Output drives vHigh or 0 V through ron; Input is open (add a pull-up/down). Not a full MCU.',
+  'lab.modelNote.arduino_i2c':
+    'Teaching Arduino Wire host: 5V rail vs GND; SDA/SCL are open-drain idle (high-Z). Add external pull-ups — same wiring lesson as real I2C. Not a bit-level protocol sim.',
+  'lab.modelNote.ssd1306':
+    'Teaching SSD1306 I2C OLED: VCC load + SDA/SCL high-Z. Pick address 0x3C/0x3D for the lesson; this model does not decode I2C traffic.',
   'lab.modelNote.resistor':
     '¼ W teaching resistor — sustained power above ~0.25 W burns it open.',
   'lab.modelNote.diode':
@@ -188,6 +205,10 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.param.pinLevelLow': 'LOW',
   'lab.param.pinLevelHigh': 'HIGH',
   'lab.param.vHigh': 'HIGH voltage',
+  'lab.param.i2cAddr': 'I2C address',
+  'lab.param.i2cAddr3C': '0x3C (60)',
+  'lab.param.i2cAddr3D': '0x3D (61)',
+  'lab.param.supplyLoad': 'Supply load',
   'lab.param.capVmax': 'Max voltage',
   'lab.param.thresholdV': 'Threshold Vgs',
   'lab.param.rCoil': 'Coil resistance',
@@ -460,6 +481,18 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.arduino.step3': 'Set Mode to Input — the pin goes high-Z; add a pull-down if you want a defined LED state.',
   'learn.project.arduino.step4': 'Change vHigh to 3.3 V to mimic a 3.3 V board.',
   'learn.project.arduino.openLab': 'Open in Lab',
+  'learn.project.i2cOled.title': 'I2C OLED (SSD1306)',
+  'learn.project.i2cOled.summary':
+    'Wire an Arduino I2C host to an SSD1306 OLED with pull-ups — the core of every I2C lesson before software.',
+  'learn.project.i2cOled.step1':
+    'Open the Lab example and Run DC — SDA and SCL should sit near 5 V (pull-ups to the Arduino 5V rail).',
+  'learn.project.i2cOled.step2':
+    'Probe OLED1 supply current — the screen should show “Hello” when VCC is powered. Address 0x3C is the usual SSD1306 default.',
+  'learn.project.i2cOled.step3':
+    'Delete one pull-up (RpuSDA or RpuSCL) and Run again — that line no longer has a defined idle-high level (open-drain bus).',
+  'learn.project.i2cOled.step4':
+    'Restore the pull-up. Note: this Lab teaches wiring and idle levels, not Wire.begin() / ACK bit streams.',
+  'learn.project.i2cOled.openLab': 'Open in Lab',
 
   'account.title': 'Account',
   'account.body': 'Sign-in and profile will live here. Coming soon.'

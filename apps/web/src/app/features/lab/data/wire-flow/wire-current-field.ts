@@ -38,6 +38,14 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
       if (pin === 'p' || pin === 'sig') return branchI;
       if (pin === 'n' || pin === 'gnd') return -branchI;
       return 0;
+    case 'arduino_i2c':
+      if (pin === 'v5') return branchI;
+      if (pin === 'gnd') return -branchI;
+      return 0;
+    case 'ssd1306':
+      if (pin === 'vcc') return -branchI;
+      if (pin === 'gnd') return branchI;
+      return 0;
     case 'op_amp':
       if (pin === 'out') return branchI;
       return 0;
@@ -77,6 +85,10 @@ export function isPinCurrentModeled(modelKey: string, pin: string): boolean {
       return pin === 'd' || pin === 's';
     case 'arduino_dio':
       return pin === 'sig' || pin === 'gnd';
+    case 'arduino_i2c':
+      return pin === 'v5' || pin === 'gnd';
+    case 'ssd1306':
+      return pin === 'vcc' || pin === 'gnd';
     case 'bjt_npn':
       return pin === 'c' || pin === 'e';
     case 'relay':

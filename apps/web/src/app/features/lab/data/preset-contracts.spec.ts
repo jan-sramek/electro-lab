@@ -16,6 +16,7 @@ import { createLdrNightLightPreset } from './presets/ldr-nightlight.preset';
 import { createBuzzerButtonPreset } from './presets/buzzer-button.preset';
 import { createMotorNmosPreset } from './presets/motor-nmos.preset';
 import { createArduinoLedPreset } from './presets/arduino-led.preset';
+import { createI2cOledPreset } from './presets/i2c-oled.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
 import { SchematicDocument } from './schematic.model';
 
@@ -157,6 +158,10 @@ describe('Lab preset contracts', () => {
     expect(motor.elements.some((e) => e.model === 'dc_motor')).toBeTrue();
     expect(motor.elements.some((e) => e.model === 'nmos')).toBeTrue();
     expect(compileNetlist(createArduinoLedPreset()).elements.some((e) => e.model === 'arduino_dio')).toBeTrue();
+    const i2c = compileNetlist(createI2cOledPreset());
+    expect(i2c.elements.some((e) => e.model === 'arduino_i2c')).toBeTrue();
+    expect(i2c.elements.some((e) => e.model === 'ssd1306')).toBeTrue();
+    expect(i2c.elements.filter((e) => e.model === 'resistor').length).toBe(2);
   });
 
   it('Arduino-path sample layouts avoid long rail collisions', () => {
@@ -165,7 +170,8 @@ describe('Lab preset contracts', () => {
       createLdrNightLightPreset(),
       createBuzzerButtonPreset(),
       createMotorNmosPreset(),
-      createArduinoLedPreset()
+      createArduinoLedPreset(),
+      createI2cOledPreset()
     ]);
     expect(hits).withContext(hits.join('; ')).toEqual([]);
   });

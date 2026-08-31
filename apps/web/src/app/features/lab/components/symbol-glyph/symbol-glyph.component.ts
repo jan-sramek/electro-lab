@@ -239,6 +239,40 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:line x1="-40" y1="0" x2="-28" y2="0" class="sym" />
         <svg:line x1="28" y1="0" x2="40" y2="0" class="sym" />
       }
+      @case ('arduino_i2c') {
+        <svg:rect x="-36" y="-30" width="72" height="60" rx="4" class="sym" fill="none" />
+        <svg:text x="0" y="-6" text-anchor="middle" class="meter-letter">I2C</svg:text>
+        <svg:text x="0" y="12" text-anchor="middle" class="pin-hint">Wire</svg:text>
+        <svg:line x1="36" y1="-28" x2="48" y2="-28" class="sym" />
+        <svg:line x1="36" y1="-10" x2="48" y2="-10" class="sym" />
+        <svg:line x1="36" y1="10" x2="48" y2="10" class="sym" />
+        <svg:line x1="36" y1="28" x2="48" y2="28" class="sym" />
+      }
+      @case ('ssd1306') {
+        <svg:rect x="-40" y="-28" width="80" height="56" rx="3" class="sym" fill="none" />
+        <svg:rect
+          x="-30"
+          y="-18"
+          width="60"
+          height="28"
+          rx="2"
+          class="oled-screen"
+          [attr.fill]="ledBrightness() > 0.08 ? '#042f2e' : '#0f172a'"
+          [attr.opacity]="1"
+        />
+        @if (ledBrightness() > 0.08) {
+          <svg:text x="0" y="-2" text-anchor="middle" class="oled-text" [attr.opacity]="0.55 + ledBrightness() * 0.45">
+            Hello
+          </svg:text>
+        } @else {
+          <svg:text x="0" y="-2" text-anchor="middle" class="oled-text-off">—</svg:text>
+        }
+        <svg:text x="0" y="22" text-anchor="middle" class="pin-hint">OLED</svg:text>
+        <svg:line x1="-52" y1="-28" x2="-40" y2="-28" class="sym" />
+        <svg:line x1="-52" y1="-10" x2="-40" y2="-10" class="sym" />
+        <svg:line x1="-52" y1="10" x2="-40" y2="10" class="sym" />
+        <svg:line x1="-52" y1="28" x2="-40" y2="28" class="sym" />
+      }
       @case ('relay') {
         <svg:rect x="-28" y="-18" width="20" height="36" class="sym" fill="none" />
         <svg:path
@@ -507,6 +541,25 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
       font-size: 12px;
       font-family: ui-monospace, monospace;
       fill: #12263a;
+      pointer-events: none;
+    }
+    .pin-hint {
+      font-size: 9px;
+      font-family: ui-monospace, monospace;
+      fill: #475569;
+      pointer-events: none;
+    }
+    .oled-text {
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      font-weight: 700;
+      fill: #6ee7b7;
+      pointer-events: none;
+    }
+    .oled-text-off {
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      fill: #334155;
       pointer-events: none;
     }
     .polarity-mark.pin-hint {

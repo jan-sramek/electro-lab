@@ -1,14 +1,29 @@
-<div class="tabs-bar" role="tablist" [attr.aria-label]="'lab.tabs.aria' | t">
+<div
+  class="tabs-bar"
+  role="tablist"
+  [attr.aria-label]="'lab.tabs.aria' | t"
+  (click)="dismissMenu()"
+>
   <div class="tabs-scroll">
     @for (s of slots(); track s.id) {
       <div
         class="tab"
         role="tab"
         [class.active]="isActive(s.id)"
+        [class.pinned]="!!s.pinned"
         [attr.aria-selected]="isActive(s.id)"
         (click)="onSelect(s.id)"
         (dblclick)="startRename($event, s)"
+        (contextmenu)="onTabContextMenu($event, s)"
       >
+        @if (s.pinned) {
+          <svg class="pin-mark" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2V22h1.6v-6H18v-2l-2-2z"
+            />
+          </svg>
+        }
         @if (editingId() === s.id) {
           <input
             class="rename"
@@ -24,25 +39,71 @@
         } @else {
           <span class="name">{{ s.name }}</span>
         }
-        <button
-          type="button"
-          class="close"
-          [attr.aria-label]="'lab.tabs.close' | t"
-          (click)="onClose($event, s.id)"
-          [disabled]="slots().length <= 1"
-        >
-          ×
-        </button>
+        @if (!s.pinned) {
+          <button
+            type="button"
+            class="close"
+            [attr.aria-label]="'lab.tabs.close' | t"
+            (click)="onClose($event, s.id)"
+            [disabled]="slots().length <= 1"
+          >
+            ×
+          </button>
+        }
       </div>
     }
     <button
       type="button"
       class="add"
-      (click)="add.emit()"
+      (click)="add.emit(); $event.stopPropagation()"
       [attr.aria-label]="'lab.tabs.add' | t"
       [attr.title]="'lab.tabs.add' | t"
     >
       +
     </button>
+  </div>
+
+  <div class="tabs-actions">
+    <button
+      type="button"
+      class="menu-btn"
+      [attr.aria-label]="'lab.tabs.menu' | t"
+      [attr.title]="'lab.tabs.menu' | t"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="toggleBarMenu($event)"
+    >
+      ⋯
+    </button>
+    @if (menuOpen()) {
+      <div class="menu" role="menu" (click)="$event.stopPropagation()">
+        @if (menuTab(); as t) {
+          <button type="button" role="menuitem" (click)="emitTogglePin(t.id)">
+            {{ (t.pinned ? 'lab.tabs.unpin' : 'lab.tabs.pin') | t }}
+          </button>
+          <hr />
+        } @else if (activeId()) {
+          <button type="button" role="menuitem" (click)="emitTogglePin(activeId()!)">
+            {{ (isActivePinned() ? 'lab.tabs.unpinCurrent' : 'lab.tabs.pinCurrent') | t }}
+          </button>
+          <hr />
+        }
+        <button
+          type="button"
+          role="menuitem"
+          (click)="emitCloseOthers()"
+          [disabled]="!canCloseOthers()"
+        >
+          {{ 'lab.tabs.closeOthers' | t }}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          (click)="emitCloseUnpinned()"
+          [disabled]="!canCloseUnpinned()"
+        >
+          {{ 'lab.tabs.closeUnpinned' | t }}
+        </button>
+      </div>
+    }
   </div>
 </div>

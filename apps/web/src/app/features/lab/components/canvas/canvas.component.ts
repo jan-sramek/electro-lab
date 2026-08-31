@@ -797,6 +797,14 @@ export class SchematicCanvasComponent {
     if ((modelKey === 'led' || modelKey === 'diode' || modelKey === 'buzzer') && pin === 'c') return 'K';
     if (modelKey === 'arduino_dio' && pin === 'sig') return 'IO';
     if (modelKey === 'arduino_dio' && pin === 'gnd') return 'GND';
+    if (modelKey === 'arduino_i2c' && pin === 'v5') return '5V';
+    if (modelKey === 'arduino_i2c' && pin === 'gnd') return 'GND';
+    if (modelKey === 'arduino_i2c' && pin === 'scl') return 'SCL';
+    if (modelKey === 'arduino_i2c' && pin === 'sda') return 'SDA';
+    if (modelKey === 'ssd1306' && pin === 'vcc') return 'VCC';
+    if (modelKey === 'ssd1306' && pin === 'gnd') return 'GND';
+    if (modelKey === 'ssd1306' && pin === 'scl') return 'SCL';
+    if (modelKey === 'ssd1306' && pin === 'sda') return 'SDA';
     if (modelKey === 'relay' && pin === 'cp') return '+';
     if (modelKey === 'relay' && pin === 'cn') return '−';
     if (modelKey === 'nmos' && pin === 'g') return 'G';

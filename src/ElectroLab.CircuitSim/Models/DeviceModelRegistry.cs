@@ -33,6 +33,8 @@ public sealed class DeviceModelRegistry
         new BuzzerModel(),
         new DcMotorModel(),
         new ArduinoDioModel(),
+        new ArduinoI2cModel(),
+        new Ssd1306Model(),
         new AcSourceModel(),
         new AmmeterModel()
     ];

@@ -37,6 +37,8 @@ export interface CircuitSlot {
   name: string;
   doc: SchematicDocument;
   updatedAt: number;
+  /** Pinned tabs stay when closing others / unpinned; close × is disabled. */
+  pinned?: boolean;
   sim?: SlotSimState;
 }
 
@@ -130,6 +132,7 @@ export class SchematicPersistence {
             activeId: parsed.activeId ?? null,
             slots: parsed.slots.map((s) => ({
               ...s,
+              pinned: !!s.pinned,
               doc: this.normalizeDoc(s.doc),
               sim: this.normalizeSim(s.sim)
             }))
@@ -239,11 +242,65 @@ export class SchematicPersistence {
     });
   }
 
-  deleteSlot(id: string): void {
+  setPinned(id: string, pinned: boolean): void {
     const lib = this.loadLibrary();
+    const slots = lib.slots.map((s) => (s.id === id ? { ...s, pinned } : s));
+    // Keep pinned tabs toward the left (stable within pin / unpin groups).
+    slots.sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+    this.writeLibrary({ ...lib, slots });
+  }
+
+  /**
+   * Delete one slot. Refuses pinned tabs and the last remaining tab.
+   * Returns false if nothing was deleted.
+   */
+  deleteSlot(id: string): boolean {
+    const lib = this.loadLibrary();
+    const target = lib.slots.find((s) => s.id === id);
+    if (!target || target.pinned || lib.slots.length <= 1) return false;
     const slots = lib.slots.filter((s) => s.id !== id);
     const activeId = lib.activeId === id ? (slots[0]?.id ?? null) : lib.activeId;
     this.writeLibrary({ schemaVersion: 1, activeId, slots });
+    return true;
+  }
+
+  /**
+   * Close every unpinned slot.
+   * Always leaves at least one tab (prefers first pinned, else the first slot unchanged).
+   */
+  deleteUnpinned(): string | null {
+    const lib = this.loadLibrary();
+    const pinned = lib.slots.filter((s) => s.pinned);
+    if (pinned.length === lib.slots.length) return lib.activeId;
+
+    let slots = pinned;
+    if (!slots.length) {
+      // Nothing pinned — keep a single survivor (active if possible).
+      const survivor =
+        (lib.activeId && lib.slots.find((s) => s.id === lib.activeId)) || lib.slots[0];
+      if (!survivor) return null;
+      slots = [survivor];
+    }
+
+    const activeStill = slots.some((s) => s.id === lib.activeId);
+    const activeId = activeStill ? lib.activeId : slots[0]!.id;
+    this.writeLibrary({ schemaVersion: 1, activeId, slots });
+    return activeId;
+  }
+
+  /** Close other unpinned tabs; keep `keepId` and all pinned. */
+  deleteOthers(keepId: string): string | null {
+    const lib = this.loadLibrary();
+    const keep = lib.slots.find((s) => s.id === keepId);
+    if (!keep) return lib.activeId;
+
+    const slots = lib.slots.filter((s) => s.pinned || s.id === keepId);
+    if (slots.length === lib.slots.length) return lib.activeId;
+
+    const activeStill = slots.some((s) => s.id === lib.activeId);
+    const activeId = activeStill ? lib.activeId : keepId;
+    this.writeLibrary({ schemaVersion: 1, activeId, slots });
+    return activeId;
   }
 
   clear(): void {

@@ -27,6 +27,7 @@ import { createLdrNightLightPreset } from '../data/presets/ldr-nightlight.preset
 import { createBuzzerButtonPreset } from '../data/presets/buzzer-button.preset';
 import { createMotorNmosPreset } from '../data/presets/motor-nmos.preset';
 import { createArduinoLedPreset } from '../data/presets/arduino-led.preset';
+import { createI2cOledPreset } from '../data/presets/i2c-oled.preset';
 import { ledColorById } from '../data/led-colors';
 import { canBurnOut } from '../data/burnout';
 import {
@@ -53,7 +54,8 @@ export type ExamplePresetId =
   | 'ldr'
   | 'buzzer'
   | 'motor'
-  | 'arduino';
+  | 'arduino'
+  | 'i2cOled';
 
 @Injectable()
 export class LabEditorStore {
@@ -144,11 +146,47 @@ export class LabEditorStore {
 
   closeCircuitTab(id: string): void {
     const lib = this.persistence.loadLibrary();
-    if (lib.slots.length <= 1) return;
+    const slot = lib.slots.find((s) => s.id === id);
+    if (!slot || slot.pinned || lib.slots.length <= 1) return;
     if (id === this.activeSlotId()) this.persist();
-    this.persistence.deleteSlot(id);
+    if (!this.persistence.deleteSlot(id)) return;
+    this.activateAfterTabClose();
+  }
+
+  toggleCircuitTabPinned(id: string): void {
+    const lib = this.persistence.loadLibrary();
+    const slot = lib.slots.find((s) => s.id === id);
+    if (!slot) return;
+    this.persistence.setPinned(id, !slot.pinned);
+    this.refreshSlots(this.activeSlotId());
+  }
+
+  /** Close other unpinned tabs; keep the active tab and all pinned. */
+  closeOtherCircuitTabs(): void {
+    const keepId = this.activeSlotId();
+    if (!keepId) return;
+    this.persist();
+    const nextId = this.persistence.deleteOthers(keepId);
+    if (!nextId) return;
+    if (nextId !== keepId) {
+      this.activateAfterTabClose(nextId);
+    } else {
+      this.refreshSlots(keepId);
+      this.bump();
+    }
+  }
+
+  /** Close all unpinned tabs (keeps pinned; always leaves ≥1 tab). */
+  closeUnpinnedCircuitTabs(): void {
+    this.persist();
+    const nextId = this.persistence.deleteUnpinned();
+    if (!nextId) return;
+    this.activateAfterTabClose(nextId);
+  }
+
+  private activateAfterTabClose(preferredId?: string | null): void {
     const next = this.persistence.loadLibrary();
-    const activeId = next.activeId ?? next.slots[0]?.id ?? null;
+    const activeId = preferredId ?? next.activeId ?? next.slots[0]?.id ?? null;
     if (!activeId) return;
     const doc = this.persistence.activate(activeId);
     if (!doc) return;
@@ -179,7 +217,8 @@ export class LabEditorStore {
 
   refreshSlots(activeId?: string | null): void {
     const lib = this.persistence.loadLibrary();
-    this.slots.set(lib.slots);
+    const slots = [...lib.slots].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+    this.slots.set(slots);
     this.activeSlotId.set(activeId !== undefined ? activeId : lib.activeId);
   }
 
@@ -629,6 +668,10 @@ export class LabEditorStore {
     this.openExampleInNewTab('arduino', 'Arduino LED', createArduinoLedPreset, 'dcOp');
   }
 
+  loadI2cOledPreset(): void {
+    this.openExampleInNewTab('i2cOled', 'I2C OLED', createI2cOledPreset, 'dcOp');
+  }
+
   newSchematic(): void {
     if (typeof window !== 'undefined' && !window.confirm('Clear the current schematic?')) {
       return;
@@ -730,7 +773,8 @@ export class LabEditorStore {
       p === 'ldr' ||
       p === 'buzzer' ||
       p === 'motor' ||
-      p === 'arduino'
+      p === 'arduino' ||
+      p === 'i2cOled'
     ) {
       this.activeExamplePreset.set(p);
     } else {
