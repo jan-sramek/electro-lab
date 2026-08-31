@@ -42,7 +42,7 @@
 
 .wire {
   stroke: #334155;
-  stroke-width: 2;
+  stroke-width: 1.2;
   fill: none;
   cursor: pointer;
 }
@@ -65,7 +65,7 @@
 
 .wire.has-flow {
   stroke: #64748b;
-  stroke-width: 2.1;
+  stroke-width: 1.3;
 }
 
 .wire-hit:hover + .wire {
@@ -74,13 +74,13 @@
 
 .wire.selected {
   stroke: #0b6e4f;
-  stroke-width: 2.8;
+  stroke-width: 1.85;
 }
 
 .rubber-band {
   fill: none;
   stroke: #2563eb;
-  stroke-width: 2;
+  stroke-width: 1.2;
   stroke-dasharray: 6 4;
   opacity: 0.85;
 }
@@ -88,9 +88,9 @@
 .wire-flow {
   fill: none;
   stroke: #2dd4bf;
-  stroke-width: 2.2;
+  stroke-width: 1.35;
   stroke-linecap: round;
-  stroke-dasharray: 7 9;
+  stroke-dasharray: 6 10;
   animation: wire-flow var(--flow-period, 550ms) linear infinite;
   pointer-events: none;
 }
@@ -98,9 +98,9 @@
 .wire-flow-core {
   fill: none;
   stroke: #ccfbf1;
-  stroke-width: 0.9;
+  stroke-width: 0.55;
   stroke-linecap: round;
-  stroke-dasharray: 7 9;
+  stroke-dasharray: 6 10;
   animation: wire-flow var(--flow-period, 550ms) linear infinite;
   pointer-events: none;
 }
