@@ -51,7 +51,11 @@
 | `switch` | `a`, `b` | `closed`; optional `openAt` / `closeAt` (s, ≥0; −1 = unused) | Ron/Roff from timeline at t=0, else `closed` | Same; `openAt` alone → open for `t ≥ openAt`; `closeAt` alone → closed for `t ≥ closeAt`; both with `closeAt ≤ openAt` → closed on `[closeAt, openAt)` | Same as DC |
 | `bjt_npn` | `c`, `b`, `e` | `vf`, `rb`, `ron`; bool `burned` | Piecewise switch; burned → open (Lab burns on sustained Ib ≳ 25 mA) | Same | Open (+warning) |
 | `nmos` | `d`, `g`, `s` | `vth`, `ron`; bool `burned` | Piecewise: on when Vgs ≥ vth; burned → open | Same | Open (+warning) |
-| `ne555` | `gnd`, `trig`, `out`, `reset`, `ctrl`, `thr`, `dis`, `vcc` | `ron`; bool `burned` | Behavioral SR latch (thr/trig/reset); OUT totem, DIS open-drain; burned → open | Same | Open (+warning) |
+| `ne555` | `gnd`…`vcc` | `ron`; bool `burned` | Behavioral SR latch | Same | Open (+warning) |
+| `ldr` | `a`, `b` | `light` 0–1, `rDark`, `rLight` | R interpolates dark→light | Same | Same |
+| `buzzer` | `a`, `c` | `vf`, `ron` | Piecewise like LED | Same | Open (+warning) |
+| `dc_motor` | `a`, `b` | `ron`, `vStart`; bool `burned` | On when \|V\|≥vStart | Same | Open (+warning) |
+| `arduino_dio` | `sig`, `gnd` | `mode` 0/1, `level` 0/1, `vHigh`, `ron` | Output V / input open | Same | Open (+warning) |
 | `relay` | `cp`, `cn`, `a`, `b` | `rCoil`, `vPull`, `ron`; bool `closed`; optional `openAt`/`closeAt` | Coil R always; contacts Ron when `|Vcoil|≥vPull` or override | Same | Coil R; contacts open (+warning) |
 | `op_amp` | `inp`, `inn`, `out` | `gain` (default 1e5); optional `vMax`/`vMin` (default ±15) | Finite-gain VCVS to gnd, clamped to rails | Same | Linear VCVS (unclamped) |
 | `current_source` | `p`, `n` | `i` | Ideal I | Same | Open (no AC) |

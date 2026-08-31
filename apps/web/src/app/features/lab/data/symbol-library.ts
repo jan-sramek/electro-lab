@@ -4,7 +4,7 @@ export interface ParamDef {
   key: string;
   /** i18n key, e.g. lab.param.voltage */
   label: string;
-  type: 'number' | 'boolean' | 'enum';
+  type: 'number' | 'boolean' | 'enum' | 'momentary';
   min?: number;
   step?: number;
   unit?: string;
@@ -384,6 +384,179 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     width: 56,
     height: 28
   },
+  pushbutton: {
+    modelKey: 'pushbutton',
+    simModel: 'switch',
+    glyphKey: 'pushbutton',
+    label: 'lab.symbol.pushbutton',
+    teachingNote: 'lab.modelNote.pushbutton',
+    pins: [
+      { name: 'a', ox: -50, oy: 0 },
+      { name: 'b', ox: 50, oy: 0 }
+    ],
+    defaultParams: { closed: false, openAt: -1, closeAt: -1 },
+    paramDefs: [
+      { key: 'closed', label: 'lab.param.pressed', type: 'momentary' },
+      {
+        key: 'openAt',
+        label: 'lab.param.openAt',
+        type: 'number',
+        min: -1,
+        step: 0.1,
+        unit: 's'
+      },
+      {
+        key: 'closeAt',
+        label: 'lab.param.closeAt',
+        type: 'number',
+        min: -1,
+        step: 0.1,
+        unit: 's'
+      }
+    ],
+    width: 56,
+    height: 28
+  },
+  ldr: {
+    modelKey: 'ldr',
+    label: 'lab.symbol.ldr',
+    teachingNote: 'lab.modelNote.ldr',
+    pins: [
+      { name: 'a', ox: -50, oy: 0 },
+      { name: 'b', ox: 50, oy: 0 }
+    ],
+    defaultParams: { light: 0.5, rDark: 100000, rLight: 1000, burned: false },
+    paramDefs: [
+      {
+        key: 'light',
+        label: 'lab.param.light',
+        type: 'number',
+        min: 0,
+        step: 0.05,
+        unit: ''
+      },
+      {
+        key: 'rDark',
+        label: 'lab.param.rDark',
+        type: 'number',
+        min: 100,
+        step: 1000,
+        unit: 'Ω'
+      },
+      {
+        key: 'rLight',
+        label: 'lab.param.rLight',
+        type: 'number',
+        min: 10,
+        step: 100,
+        unit: 'Ω'
+      }
+    ],
+    width: 56,
+    height: 28
+  },
+  buzzer: {
+    modelKey: 'buzzer',
+    label: 'lab.symbol.buzzer',
+    teachingNote: 'lab.modelNote.buzzer',
+    displayScale: 0.85,
+    pins: [
+      { name: 'a', ox: 0, oy: -40 },
+      { name: 'c', ox: 0, oy: 40 }
+    ],
+    defaultParams: { vf: 1, ron: 50, burned: false },
+    paramDefs: [
+      { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.1, unit: 'V' },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 1,
+        step: 10,
+        unit: 'Ω'
+      }
+    ],
+    width: 36,
+    height: 48
+  },
+  dc_motor: {
+    modelKey: 'dc_motor',
+    label: 'lab.symbol.dc_motor',
+    teachingNote: 'lab.modelNote.dc_motor',
+    pins: [
+      { name: 'a', ox: -50, oy: 0 },
+      { name: 'b', ox: 50, oy: 0 }
+    ],
+    defaultParams: { ron: 15, vStart: 1, burned: false },
+    paramDefs: [
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.5,
+        step: 1,
+        unit: 'Ω'
+      },
+      {
+        key: 'vStart',
+        label: 'lab.param.vStart',
+        type: 'number',
+        min: 0,
+        step: 0.1,
+        unit: 'V'
+      }
+    ],
+    width: 56,
+    height: 36
+  },
+  arduino_dio: {
+    modelKey: 'arduino_dio',
+    label: 'lab.symbol.arduino_dio',
+    teachingNote: 'lab.modelNote.arduino_dio',
+    pins: [
+      { name: 'sig', ox: 40, oy: 0 },
+      { name: 'gnd', ox: -40, oy: 0 }
+    ],
+    defaultParams: { mode: 1, level: 1, vHigh: 5, ron: 40 },
+    paramDefs: [
+      {
+        key: 'mode',
+        label: 'lab.param.pinMode',
+        type: 'enum',
+        options: [
+          { value: 0, label: 'lab.param.pinModeInput' },
+          { value: 1, label: 'lab.param.pinModeOutput' }
+        ]
+      },
+      {
+        key: 'level',
+        label: 'lab.param.pinLevel',
+        type: 'enum',
+        options: [
+          { value: 0, label: 'lab.param.pinLevelLow' },
+          { value: 1, label: 'lab.param.pinLevelHigh' }
+        ]
+      },
+      {
+        key: 'vHigh',
+        label: 'lab.param.vHigh',
+        type: 'number',
+        min: 1,
+        step: 0.1,
+        unit: 'V'
+      },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 1,
+        step: 5,
+        unit: 'Ω'
+      }
+    ],
+    width: 56,
+    height: 36
+  },
   relay: {
     modelKey: 'relay',
     label: 'lab.symbol.relay',
@@ -599,17 +772,22 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
 
 export const PALETTE_ORDER = [
   'battery',
+  'arduino_dio',
   'ac_source',
   'pulse_source',
   'resistor',
   'potentiometer',
+  'ldr',
   'led',
   'diode',
+  'buzzer',
   'switch',
+  'pushbutton',
   'relay',
   'bjt_npn',
   'bc547',
   'nmos',
+  'dc_motor',
   'ne555',
   'op_amp',
   'current_source',
@@ -619,6 +797,59 @@ export const PALETTE_ORDER = [
   'voltmeter',
   'ground'
 ] as const;
+
+/** Accordion groups for the Lab parts palette (keys ⊆ PALETTE_ORDER). */
+export const PALETTE_GROUPS: ReadonlyArray<{
+  id: string;
+  labelKey: string;
+  keys: readonly string[];
+}> = [
+  {
+    id: 'sources',
+    labelKey: 'lab.palette.group.sources',
+    keys: ['battery', 'ac_source', 'pulse_source', 'current_source', 'arduino_dio']
+  },
+  {
+    id: 'passives',
+    labelKey: 'lab.palette.group.passives',
+    keys: ['resistor', 'potentiometer', 'ldr', 'capacitor', 'inductor']
+  },
+  {
+    id: 'diodes',
+    labelKey: 'lab.palette.group.diodes',
+    keys: ['diode', 'led']
+  },
+  {
+    id: 'transistors',
+    labelKey: 'lab.palette.group.transistors',
+    keys: ['bjt_npn', 'bc547', 'nmos']
+  },
+  {
+    id: 'switches',
+    labelKey: 'lab.palette.group.switches',
+    keys: ['switch', 'pushbutton', 'relay']
+  },
+  {
+    id: 'actuators',
+    labelKey: 'lab.palette.group.actuators',
+    keys: ['buzzer', 'dc_motor']
+  },
+  {
+    id: 'ics',
+    labelKey: 'lab.palette.group.ics',
+    keys: ['ne555', 'op_amp']
+  },
+  {
+    id: 'meters',
+    labelKey: 'lab.palette.group.meters',
+    keys: ['ammeter', 'voltmeter']
+  },
+  {
+    id: 'ground',
+    labelKey: 'lab.palette.group.ground',
+    keys: ['ground']
+  }
+];
 
 export function symbolOf(modelKey: string): SymbolDef {
   const def = SYMBOL_LIBRARY[modelKey];

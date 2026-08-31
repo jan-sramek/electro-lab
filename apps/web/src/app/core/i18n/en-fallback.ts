@@ -58,6 +58,16 @@ export const EN_FALLBACK: Record<string, string> = {
     'NE555 astable: Run Transient (~100 ms) — three LEDs blink from OUT. Watch playback or scrub OUT / CT on the scope. Too little R1–R3 or Vcc above ~18 V burns the timer open.',
   'lab.hint.christmasTree':
     'NE555 Christmas tree: Run Transient (~100 ms) — ten LEDs blink in a pyramid from OUT. Watch playback or probe any LED. Too little R1–R10 or high Vcc burns the timer open.',
+  'lab.hint.pushbutton':
+    'Pushbutton LED: hold BTN1 on the canvas or the Hold to press control in the inspector — LED lights while pressed.',
+  'lab.hint.ldr':
+    'LDR night-light: Run DC — with Light low the LED is on. Raise Light on LDR1 toward 1 and Run again — gate falls and the LED goes dark.',
+  'lab.hint.buzzer':
+    'Buzzer + button: hold BTN1 on the canvas or in the inspector — BZ1 draws current (teaching “sound”). Release — silent.',
+  'lab.hint.motor':
+    'NMOS + motor: Run DC with S1 closed — motor current flows; Dfly is the flyback diode. Open S1 — motor stops.',
+  'lab.hint.arduino':
+    'Arduino LED: D2 is a teaching digital pin (Output / HIGH). Run DC — LED lights. Set Level to LOW or Mode to Input and Run again.',
   'lab.toolbar.select': 'Select',
   'lab.toolbar.wire': 'Wire',
   'lab.toolbar.probe': 'Probe',
@@ -86,6 +96,11 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.nmosPreset': 'NMOS LED switch (DC)',
   'lab.toolbar.ne555Preset': 'NE555 astable (transient)',
   'lab.toolbar.christmasTreePreset': 'NE555 Christmas tree (transient)',
+  'lab.toolbar.pushbuttonPreset': 'Pushbutton LED (DC)',
+  'lab.toolbar.ldrPreset': 'LDR night-light (DC)',
+  'lab.toolbar.buzzerPreset': 'Buzzer + button (DC)',
+  'lab.toolbar.motorPreset': 'NMOS + DC motor (DC)',
+  'lab.toolbar.arduinoPreset': 'Arduino LED pin (DC)',
   'lab.toolbar.export': 'Export',
   'lab.toolbar.import': 'Import',
   'lab.toolbar.new': 'New',
@@ -101,7 +116,16 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.tabs.close': 'Close circuit tab',
 
   'lab.palette.title': 'Parts',
-  'lab.palette.dragHint': 'Drag a symbol onto the canvas, or click then click to place.',
+  'lab.palette.dragHint': 'Drag a symbol onto the canvas, or click then click to place. Hover a part for its teaching note.',
+  'lab.palette.group.sources': 'Sources',
+  'lab.palette.group.passives': 'Passives',
+  'lab.palette.group.diodes': 'Diodes & LEDs',
+  'lab.palette.group.transistors': 'Transistors',
+  'lab.palette.group.switches': 'Switches',
+  'lab.palette.group.actuators': 'Actuators',
+  'lab.palette.group.ics': 'ICs',
+  'lab.palette.group.meters': 'Meters',
+  'lab.palette.group.ground': 'Ground',
 
   'lab.symbol.battery': 'Battery',
   'lab.symbol.ac_source': 'AC source',
@@ -114,6 +138,11 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.symbol.bc547': 'BC547',
   'lab.symbol.nmos': 'NMOS',
   'lab.symbol.ne555': 'NE555',
+  'lab.symbol.pushbutton': 'Pushbutton',
+  'lab.symbol.ldr': 'LDR',
+  'lab.symbol.buzzer': 'Buzzer',
+  'lab.symbol.dc_motor': 'DC motor',
+  'lab.symbol.arduino_dio': 'Arduino pin',
   'lab.symbol.op_amp': 'Op-amp',
   'lab.modelNote.op_amp':
     'Teaching model: finite-gain VCVS with clamp to vMax/vMin (default ±15 V). AC stays linear (unclamped).',
@@ -125,6 +154,16 @@ export const EN_FALLBACK: Record<string, string> = {
     'Teaching N-channel MOSFET switch (Vgs ≥ vth → Ron). Drain overcurrent (~0.5 A) or |Vgs| ≳ 20 V burns it open — not a Level-1 SPICE model.',
   'lab.modelNote.ne555':
     'Teaching NE555: thr/trig SR latch, open-drain discharge, totem-pole OUT. Output ≳ 200 mA or Vcc ≳ 18 V burns it open — behavioral, not a full bipolar 555.',
+  'lab.modelNote.pushbutton':
+    'Momentary contact (teaching). Hold the button on the canvas or in the inspector to close — same electrical model as a switch.',
+  'lab.modelNote.ldr':
+    'Photoresistor: Light 0→dark (rDark), 1→bright (rLight). Use in a divider to sense light. Sustained power above ~¼ W burns it open.',
+  'lab.modelNote.buzzer':
+    'Teaching piezo: conducts when forward voltage ≥ vf (like an LED). Current means “sounding”. Above ~50 mA burns it open.',
+  'lab.modelNote.dc_motor':
+    'Teaching DC motor load: when |V| ≥ vStart it draws current through ron. Use a flyback diode. Sustained current above ~0.4 A burns it open.',
+  'lab.modelNote.arduino_dio':
+    'Teaching Arduino digital pin: Output drives vHigh or 0 V through ron; Input is open (add a pull-up/down). Not a full MCU.',
   'lab.modelNote.resistor':
     '¼ W teaching resistor — sustained power above ~0.25 W burns it open.',
   'lab.modelNote.diode':
@@ -135,6 +174,20 @@ export const EN_FALLBACK: Record<string, string> = {
     'Series sense ammeter. Current above ~200 mA burns the meter open (do not place across a supply).',
   'lab.modelNote.relay':
     'Teaching SPST relay: coil resistance between +/−; contacts close when |Vcoil| ≥ pull-in (or Closed / timeline override).',
+  'lab.param.pressed': 'Pressed',
+  'lab.inspector.holdToPress': 'Hold to press',
+  'lab.inspector.holding': 'Pressed — release to open',
+  'lab.param.light': 'Light (0–1)',
+  'lab.param.rDark': 'Dark resistance',
+  'lab.param.rLight': 'Light resistance',
+  'lab.param.vStart': 'Start voltage',
+  'lab.param.pinMode': 'Pin mode',
+  'lab.param.pinModeInput': 'Input',
+  'lab.param.pinModeOutput': 'Output',
+  'lab.param.pinLevel': 'Level',
+  'lab.param.pinLevelLow': 'LOW',
+  'lab.param.pinLevelHigh': 'HIGH',
+  'lab.param.vHigh': 'HIGH voltage',
   'lab.param.capVmax': 'Max voltage',
   'lab.param.thresholdV': 'Threshold Vgs',
   'lab.param.rCoil': 'Coil resistance',
@@ -256,6 +309,18 @@ export const EN_FALLBACK: Record<string, string> = {
     'Timer {ids} burned out (output overcurrent or Vcc too high) and is now open. Replace it and check ROUT / supply voltage.',
   'lab.ne555.peakOverloadWarning':
     'Timer {ids} peaked above teaching output/Vcc limits during the run (spike). It was not permanently burned.',
+  'lab.buzzer.burnedWarning':
+    'Buzzer {ids} burned out from too much current (~50 mA) and is now open. Replace it and add series resistance.',
+  'lab.buzzer.peakOverloadWarning':
+    'Buzzer {ids} peaked above ~50 mA during the run (spike). It was not permanently burned.',
+  'lab.dc_motor.burnedWarning':
+    'Motor {ids} burned out from too much current (~0.4 A) and is now open. Replace it and check drive / series resistance.',
+  'lab.dc_motor.peakOverloadWarning':
+    'Motor {ids} peaked above ~0.4 A during the run (spike). It was not permanently burned.',
+  'lab.ldr.burnedWarning':
+    'LDR {ids} overheated (above ~¼ W) and is now open. Replace it — dark LDRs are high-R; bright+high current can still burn them.',
+  'lab.ldr.peakOverloadWarning':
+    'LDR {ids} peaked above ~¼ W during the run (spike). It was not permanently burned.',
   'lab.ne555.blinkPlayback':
     'Blinking: all LEDs follow OUT. Scrub the scope or watch playback — change RA/RB/CT to alter the period.',
   'lab.led.fadePlayback':
@@ -288,6 +353,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.inspector.ne555Burned':
     'This NE555 burned out (open circuit) from output overcurrent or excessive Vcc. Replace it and check ROUT / supply.',
   'lab.inspector.replaceNe555': 'Replace NE555',
+  'lab.inspector.buzzerBurned':
+    'This buzzer burned out from excessive current (open circuit). Replace it and add series resistance.',
+  'lab.inspector.replaceBuzzer': 'Replace buzzer',
+  'lab.inspector.dcMotorBurned':
+    'This motor burned out from excessive current (open circuit). Replace it and check drive / series resistance.',
+  'lab.inspector.replaceDcMotor': 'Replace motor',
+  'lab.inspector.ldrBurned':
+    'This LDR overheated above ~¼ W and failed open. Replace it and check power (I²R at the current light setting).',
+  'lab.inspector.replaceLdr': 'Replace LDR',
 
   'lab.probe.netFinal': 'Net {id} (final): {v} V',
   'lab.probe.netAt': 'Net {id} @ {t} s: {v} V',
@@ -305,7 +379,7 @@ export const EN_FALLBACK: Record<string, string> = {
 
   'learn.title': 'Learn',
   'learn.body':
-    'Short guided projects that open a ready-made circuit in the Lab. Try the BC547 switch, relay + diode, NMOS switch, or NE555 astable.',
+    'Short guided projects that open a ready-made circuit in the Lab. From LEDs and transistors up to Arduino-style digital pins.',
   'learn.project.bc547.title': 'BC547 LED switch',
   'learn.project.bc547.summary':
     'Use a BC547 (teaching NPN) to turn an LED on and off from a base switch. Same idea as a real TO-92 switch circuit, with a simplified transistor model.',
@@ -346,6 +420,46 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.ne555.step4':
     'Drop R1–R3 too low — output overcurrent burns the timer open; use Replace NE555 to recover.',
   'learn.project.ne555.openLab': 'Open in Lab',
+  'learn.project.pushbutton.title': 'Pushbutton LED',
+  'learn.project.pushbutton.summary':
+    'Close a momentary button to light an LED — the same idea as reading a button on an Arduino pin.',
+  'learn.project.pushbutton.step1': 'Open the Lab example. With Select tool, hold BTN1 on the canvas — the LED lights while pressed.',
+  'learn.project.pushbutton.step2': 'Release the button — the LED goes dark. The inspector Hold to press control does the same.',
+  'learn.project.pushbutton.step3': 'Probe the LED current while holding the button.',
+  'learn.project.pushbutton.step4': 'Try wiring the button to ground instead (active-low) as a challenge.',
+  'learn.project.pushbutton.openLab': 'Open in Lab',
+  'learn.project.ldr.title': 'LDR night-light',
+  'learn.project.ldr.summary':
+    'A pull-up + LDR to ground drives an NMOS so the LED turns on in the dark — classic light sensor practice.',
+  'learn.project.ldr.step1': 'Open the Lab example and Run DC — with Light low the LED should be on.',
+  'learn.project.ldr.step2': 'Select LDR1, raise Light toward 1, Run again — the LED should go dark.',
+  'learn.project.ldr.step3': 'Probe the MOSFET gate net to see the divider voltage change with Light.',
+  'learn.project.ldr.step4': 'Change rDark / rLight (or R1) and watch the trip point move.',
+  'learn.project.ldr.openLab': 'Open in Lab',
+  'learn.project.buzzer.title': 'Buzzer + button',
+  'learn.project.buzzer.summary':
+    'Press a button to drive a teaching piezo buzzer — current means it is “sounding”.',
+  'learn.project.buzzer.step1': 'Open the Lab example. Hold BTN1 on the canvas — BZ1 should show current.',
+  'learn.project.buzzer.step2': 'Release the button — current should drop to ~0.',
+  'learn.project.buzzer.step3': 'Probe BZ1 and compare with the LED sample (same button idea, different load).',
+  'learn.project.buzzer.step4': 'Lower R1 carefully — too much current is hard on a real buzzer.',
+  'learn.project.buzzer.openLab': 'Open in Lab',
+  'learn.project.motor.title': 'NMOS DC motor switch',
+  'learn.project.motor.summary':
+    'Switch a DC motor with an NMOS and a flyback diode — how Arduino drives larger loads.',
+  'learn.project.motor.step1': 'Open the Lab example and Run DC with S1 closed — motor current should flow.',
+  'learn.project.motor.step2': 'Open S1 and Run again — motor current stops.',
+  'learn.project.motor.step3': 'Note Dfly across the motor (cathode toward +V) for inductive kick.',
+  'learn.project.motor.step4': 'Probe MOT1 current; try changing ron / vStart on the motor.',
+  'learn.project.motor.openLab': 'Open in Lab',
+  'learn.project.arduino.title': 'Arduino LED pin',
+  'learn.project.arduino.summary':
+    'A teaching Arduino digital pin drives an LED — digitalWrite HIGH/LOW without a full MCU sim.',
+  'learn.project.arduino.step1': 'Open the Lab example and Run DC — Output/HIGH should light the LED.',
+  'learn.project.arduino.step2': 'Select D2, set Level to LOW, Run again — LED off.',
+  'learn.project.arduino.step3': 'Set Mode to Input — the pin goes high-Z; add a pull-down if you want a defined LED state.',
+  'learn.project.arduino.step4': 'Change vHigh to 3.3 V to mimic a 3.3 V board.',
+  'learn.project.arduino.openLab': 'Open in Lab',
 
   'account.title': 'Account',
   'account.body': 'Sign-in and profile will live here. Coming soon.'

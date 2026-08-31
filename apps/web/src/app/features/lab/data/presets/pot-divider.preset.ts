@@ -11,7 +11,8 @@ export function createPotDividerPreset(): SchematicDocument {
   const v1 = createComponent('battery', 120, 160, 'V1');
   const pot = createComponent('potentiometer', 320, 160, 'POT1');
   pot.params = { r: 10000, pos: 0.3 };
-  const jRet = createComponent('junction', 370, 280, 'J1');
+  // Align under pot.b so the drop is vertical (no long overlap with the return rail).
+  const jRet = createComponent('junction', 340, 280, 'J1');
   const gnd = createComponent('ground', 120, 300, 'GND1');
 
   const doc: SchematicDocument = {

@@ -162,6 +162,83 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
           <svg:line x1="-26" y1="0" x2="18" y2="-16" class="sym thick" />
         }
       }
+      @case ('pushbutton') {
+        <svg:circle cx="-28" cy="0" r="4" class="sym fill" />
+        <svg:circle cx="28" cy="0" r="4" class="sym fill" />
+        <svg:line x1="-24" y1="0" x2="-8" y2="0" class="sym" />
+        <svg:line x1="8" y1="0" x2="24" y2="0" class="sym" />
+        <svg:line x1="-10" y1="-14" x2="10" y2="-14" class="sym thick" />
+        @if (closed()) {
+          <svg:line x1="0" y1="-14" x2="0" y2="0" class="sym thick" />
+        } @else {
+          <svg:line x1="0" y1="-14" x2="0" y2="-4" class="sym" />
+        }
+      }
+      @case ('ldr') {
+        <svg:rect
+          x="-22"
+          y="-12"
+          width="44"
+          height="24"
+          class="sym"
+          fill="none"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:line x1="-40" y1="0" x2="-22" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="22" y1="0" x2="40" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:path class="sym" fill="none" d="M -14 -18 L -6 -10 M -6 -18 L 2 -10" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:polyline
+          class="sym"
+          fill="none"
+          points="-14,0 -8,-8 -2,8 4,-8 10,0 14,0"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:path class="flame flame-a" d="M -6 10 Q -10 -2 -2 -14 Q 2 -2 -6 10" />
+            <svg:path class="flame flame-b" d="M 2 10 Q -2 0 4 -12 Q 8 0 2 10" />
+            <svg:path class="flame-core" d="M -1 6 Q -3 0 0 -6 Q 2 0 -1 6" />
+          </svg:g>
+        }
+      }
+      @case ('buzzer') {
+        <svg:path
+          class="sym"
+          [class.led-on]="ledBrightness() > 0.08 && ledBurn() < 0.08"
+          [class.bjt-charred]="ledBurn() > 0.08"
+          fill="none"
+          d="M -16 -20 L 8 -32 L 8 32 L -16 20 Z"
+        />
+        <svg:line x1="8" y1="-20" x2="20" y2="-28" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="8" y1="0" x2="22" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="8" y1="20" x2="20" y2="28" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:path class="flame flame-a" d="M -6 10 Q -10 -2 -2 -14 Q 2 -2 -6 10" />
+            <svg:path class="flame flame-b" d="M 2 10 Q -2 0 4 -12 Q 8 0 2 10" />
+            <svg:path class="flame-core" d="M -1 6 Q -3 0 0 -6 Q 2 0 -1 6" />
+          </svg:g>
+        }
+      }
+      @case ('dc_motor') {
+        <svg:circle cx="0" cy="0" r="18" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:text x="0" y="5" text-anchor="middle" class="meter-letter">M</svg:text>
+        <svg:line x1="-40" y1="0" x2="-18" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="18" y1="0" x2="40" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:path class="flame flame-a" d="M -6 10 Q -10 -2 -2 -14 Q 2 -2 -6 10" />
+            <svg:path class="flame flame-b" d="M 2 10 Q -2 0 4 -12 Q 8 0 2 10" />
+            <svg:path class="flame-core" d="M -1 6 Q -3 0 0 -6 Q 2 0 -1 6" />
+          </svg:g>
+        }
+      }
+      @case ('arduino_dio') {
+        <svg:rect x="-28" y="-16" width="56" height="32" rx="3" class="sym" fill="none" />
+        <svg:text x="0" y="5" text-anchor="middle" class="meter-letter">IO</svg:text>
+        <svg:line x1="-40" y1="0" x2="-28" y2="0" class="sym" />
+        <svg:line x1="28" y1="0" x2="40" y2="0" class="sym" />
+      }
       @case ('relay') {
         <svg:rect x="-28" y="-18" width="20" height="36" class="sym" fill="none" />
         <svg:path
@@ -334,6 +411,10 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
       stroke: #12263a;
       stroke-width: 2;
       pointer-events: all;
+    }
+    .led-on {
+      fill: rgba(14, 165, 233, 0.28);
+      stroke: #0284c7;
     }
     .bjt-charred {
       stroke: #1c1917;

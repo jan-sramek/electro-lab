@@ -29,6 +29,10 @@ public sealed class DeviceModelRegistry
         new NmosModel(),
         new Ne555Model(),
         new RelayModel(),
+        new LdrModel(),
+        new BuzzerModel(),
+        new DcMotorModel(),
+        new ArduinoDioModel(),
         new AcSourceModel(),
         new AmmeterModel()
     ];

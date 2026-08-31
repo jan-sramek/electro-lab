@@ -24,13 +24,16 @@ import { LED_BURN_A } from '../data/led-limits';
 import { BJT_BASE_BURN_A } from '../data/bjt-limits';
 import {
   AMMETER_BURN_A,
+  BUZZER_BURN_A,
   BurnKind,
   CAP_DEFAULT_VMAX,
   DIODE_BURN_A,
+  MOTOR_BURN_A,
   RESISTOR_BURN_W,
   burnKindOf,
   burnWarningKey,
-  canBurnOut
+  canBurnOut,
+  ldrResistanceOhms
 } from '../data/burnout';
 import { isBjtNpnPart, isNmosPart, isNe555Part } from '../data/symbol-library';
 import { NMOS_DRAIN_BURN_A, NMOS_VGS_BURN_V, NE555_OUT_BURN_A, NE555_VCC_BURN_V } from '../data/nmos-limits';
@@ -376,7 +379,10 @@ export class CircuitSimulationFacade {
         this.applyNmosOverloadFailures(res);
         this.applyNe555OverloadFailures(res);
         this.applyDiodeOverloadFailures(res);
+        this.applyBuzzerOverloadFailures(res);
+        this.applyMotorOverloadFailures(res);
         this.applyResistorPowerFailures(res);
+        this.applyLdrPowerFailures(res);
         this.applyCapacitorOvervoltageFailures(res);
         this.applyAmmeterOverloadFailures(res);
       });
@@ -559,6 +565,11 @@ export class CircuitSimulationFacade {
     this.runInternal(true);
   }
 
+  /** Quiet re-solve after interactive edits (pushbutton hold). */
+  runLive(): void {
+    this.runInternal(false);
+  }
+
   private runInternal(showBusy: boolean): void {
     const doc = this.editor.doc();
     const mode = this.editor.analysisMode();
@@ -730,6 +741,28 @@ export class CircuitSimulationFacade {
     );
   }
 
+  /** Piezo buzzer overload — fail open like an LED. */
+  private applyBuzzerOverloadFailures(res: SimulateResponse): void {
+    this.applyBranchCurrentBurn(
+      res,
+      (c) => c.modelKey === 'buzzer',
+      BUZZER_BURN_A,
+      'lab.buzzer.peakOverloadWarning',
+      'lab.buzzer.burnedWarning'
+    );
+  }
+
+  /** DC motor stall / overcurrent. */
+  private applyMotorOverloadFailures(res: SimulateResponse): void {
+    this.applyBranchCurrentBurn(
+      res,
+      (c) => c.modelKey === 'dc_motor',
+      MOTOR_BURN_A,
+      'lab.dc_motor.peakOverloadWarning',
+      'lab.dc_motor.burnedWarning'
+    );
+  }
+
   /** Ammeter fuse — burned open if series current is far beyond a teaching meter range. */
   private applyAmmeterOverloadFailures(res: SimulateResponse): void {
     this.applyBranchCurrentBurn(
@@ -840,6 +873,31 @@ export class CircuitSimulationFacade {
       sustainedBurnIds,
       'lab.resistor.peakOverloadWarning',
       'lab.resistor.burnedWarning'
+    );
+  }
+
+  /** LDR power burnout — same ¼ W teaching rating at the instantaneous resistance. */
+  private applyLdrPowerFailures(res: SimulateResponse): void {
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of this.editor.doc().components) {
+      if (c.modelKey !== 'ldr' || c.params['burned']) continue;
+      const r = ldrResistanceOhms(c.params);
+      if (r === null || !(r > 0)) continue;
+      const peakI = peakBranchCurrent(res, c.id);
+      if (typeof peakI === 'number' && peakI * peakI * r >= RESISTOR_BURN_W) {
+        peakBurnIds.push(c.id);
+      }
+      const sustI = sustainedBranchCurrent(res, c.id);
+      if (typeof sustI === 'number' && sustI * sustI * r >= RESISTOR_BURN_W) {
+        sustainedBurnIds.push(c.id);
+      }
+    }
+    this.publishBurnResult(
+      peakBurnIds,
+      sustainedBurnIds,
+      'lab.ldr.peakOverloadWarning',
+      'lab.ldr.burnedWarning'
     );
   }
 

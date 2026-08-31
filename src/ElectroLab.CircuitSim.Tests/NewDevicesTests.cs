@@ -600,6 +600,161 @@ public class NewDevicesTests
     }
 
     [Fact]
+    public void Ldr_Darker_Means_Higher_Resistance()
+    {
+        var dark = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("LDR", "ldr", Pins(("a", "n1"), ("b", "gnd")), P(("rDark", 100000), ("rLight", 1000), ("light", 0)))
+            ]
+        };
+        var light = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("LDR", "ldr", Pins(("a", "n1"), ("b", "gnd")), P(("rDark", 100000), ("rLight", 1000), ("light", 1)))
+            ]
+        };
+        var rd = _sim.Simulate(dark);
+        var rl = _sim.Simulate(light);
+        Assert.True(rd.Ok && rl.Ok);
+        Assert.True(Math.Abs(rd.DcOp!.BranchCurrents["LDR"]) < Math.Abs(rl.DcOp!.BranchCurrents["LDR"]));
+    }
+
+    [Fact]
+    public void Buzzer_Conducts_When_ForwardBiased()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "nb")), P(("r", 220))),
+                El("BZ1", "buzzer", Pins(("a", "nb"), ("c", "gnd")), P(("vf", 1), ("ron", 50)))
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.BranchCurrents["BZ1"] > 0.01);
+    }
+
+    [Fact]
+    public void DcMotor_Draws_When_VoltageAboveStart()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("M1", "dc_motor", Pins(("a", "n1"), ("b", "gnd")), P(("ron", 10), ("vStart", 1)))
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["M1"]) > 0.2);
+    }
+
+    [Fact]
+    public void ArduinoDio_OutputHigh_DrivesLed()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El(
+                    "D2",
+                    "arduino_dio",
+                    Pins(("sig", "sig"), ("gnd", "gnd")),
+                    P(("mode", 1), ("level", 1), ("vHigh", 5), ("ron", 40))
+                ),
+                El("R1", "resistor", Pins(("a", "sig"), ("b", "led")), P(("r", 220))),
+                El("D1", "led", Pins(("a", "led"), ("c", "gnd")), P(("vf", 2), ("ron", 20)))
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.BranchCurrents["D1"] > 0.005);
+    }
+
+    [Fact]
+    public void BurnedBuzzer_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El("R1", "resistor", Pins(("a", "n1"), ("b", "nb")), P(("r", 10))),
+                El(
+                    "BZ1",
+                    "buzzer",
+                    Pins(("a", "nb"), ("c", "gnd")),
+                    P(("vf", 1), ("ron", 50)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["BZ1"]) < 1e-9);
+    }
+
+    [Fact]
+    public void BurnedLdr_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El(
+                    "LDR",
+                    "ldr",
+                    Pins(("a", "n1"), ("b", "gnd")),
+                    P(("rDark", 1000), ("rLight", 100), ("light", 1)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["LDR"]) < 1e-9);
+    }
+
+    [Fact]
+    public void BurnedDcMotor_IsOpenCircuit()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("V1", "battery", Pins(("p", "n1"), ("n", "gnd")), P(("v", 5))),
+                El(
+                    "M1",
+                    "dc_motor",
+                    Pins(("a", "n1"), ("b", "gnd")),
+                    P(("ron", 10), ("vStart", 1)),
+                    new Dictionary<string, bool> { ["burned"] = true }
+                )
+            ]
+        };
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["M1"]) < 1e-9);
+    }
+
+    [Fact]
     public void Ne555_Astable_Oscillates_Output()
     {
         var circuit = new Circuit

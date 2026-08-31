@@ -11,6 +11,11 @@ import { createRelayDiodePreset } from './presets/relay-diode.preset';
 import { createNmosSwitchPreset } from './presets/nmos-switch.preset';
 import { createNe555AstablePreset } from './presets/ne555-astable.preset';
 import { createNe555ChristmasTreePreset } from './presets/ne555-christmas-tree.preset';
+import { createPushbuttonLedPreset } from './presets/pushbutton-led.preset';
+import { createLdrNightLightPreset } from './presets/ldr-nightlight.preset';
+import { createBuzzerButtonPreset } from './presets/buzzer-button.preset';
+import { createMotorNmosPreset } from './presets/motor-nmos.preset';
+import { createArduinoLedPreset } from './presets/arduino-led.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
 import { SchematicDocument } from './schematic.model';
 
@@ -142,6 +147,27 @@ describe('Lab preset contracts', () => {
     const tree = compileNetlist(createNe555ChristmasTreePreset());
     expect(tree.elements.some((e) => e.model === 'ne555')).toBeTrue();
     expect(tree.elements.filter((e) => e.model === 'led').length).toBe(10);
+  });
+
+  it('Arduino-path presets compile new teaching models', () => {
+    expect(compileNetlist(createPushbuttonLedPreset()).elements.some((e) => e.model === 'switch')).toBeTrue();
+    expect(compileNetlist(createLdrNightLightPreset()).elements.some((e) => e.model === 'ldr')).toBeTrue();
+    expect(compileNetlist(createBuzzerButtonPreset()).elements.some((e) => e.model === 'buzzer')).toBeTrue();
+    const motor = compileNetlist(createMotorNmosPreset());
+    expect(motor.elements.some((e) => e.model === 'dc_motor')).toBeTrue();
+    expect(motor.elements.some((e) => e.model === 'nmos')).toBeTrue();
+    expect(compileNetlist(createArduinoLedPreset()).elements.some((e) => e.model === 'arduino_dio')).toBeTrue();
+  });
+
+  it('Arduino-path sample layouts avoid long rail collisions', () => {
+    const hits = overlappingHorizontalRails([
+      createPushbuttonLedPreset(),
+      createLdrNightLightPreset(),
+      createBuzzerButtonPreset(),
+      createMotorNmosPreset(),
+      createArduinoLedPreset()
+    ]);
+    expect(hits).withContext(hits.join('; ')).toEqual([]);
   });
 
   it('flags shorted voltage source', () => {

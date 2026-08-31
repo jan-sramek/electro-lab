@@ -123,6 +123,10 @@
   cursor: grab;
 }
 
+.symbol.pushbutton {
+  cursor: pointer;
+}
+
 .hit {
   fill: transparent;
   stroke: none;

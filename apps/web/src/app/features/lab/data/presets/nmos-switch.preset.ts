@@ -8,6 +8,7 @@ import {
 /**
  * Sample: NMOS LED switch.
  * 5 V → gate via RG + switch; RPD pull-down via gate junction; drain LED + RD.
+ * Layout keeps supply / gate / return drops on distinct columns (no long overlapping rails).
  */
 export function createNmosSwitchPreset(): SchematicDocument {
   resetIdSeq(80);
@@ -24,18 +25,21 @@ export function createNmosSwitchPreset(): SchematicDocument {
 
   const jGate = createComponent('junction', 420, 180, 'JG');
 
-  const rpd = createComponent('resistor', 320, 260, 'RPD');
+  // Vertical under JG so the pull-down does not share the gate horizontal.
+  const rpd = createComponent('resistor', 420, 260, 'RPD');
   rpd.params = { r: 100000 };
+  rpd.rotation = 90;
 
   const m1 = createComponent('nmos', 500, 220, 'M1');
 
-  const am = createComponent('ammeter', 260, 40, 'AM1');
-  const rd = createComponent('resistor', 400, 40, 'RD');
+  // Pin a under JV → pure vertical feed; avoids overlapping the gate rail at y=80.
+  const am = createComponent('ammeter', 200, 40, 'AM1');
+  const rd = createComponent('resistor', 320, 40, 'RD');
   rd.params = { r: 220 };
-  const d1 = createComponent('led', 560, 120, 'D1');
+  const d1 = createComponent('led', 420, 100, 'D1');
   d1.params = { ...d1.params, color: 1 };
 
-  const jRet = createComponent('junction', 500, 320, 'J1');
+  const jRet = createComponent('junction', 420, 320, 'J1');
   const gnd = createComponent('ground', 80, 340, 'GND1');
 
   const doc: SchematicDocument = {

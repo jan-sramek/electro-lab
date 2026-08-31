@@ -12,7 +12,22 @@
       </button>
     }
     @for (p of params(); track p.key) {
-      @if (p.type === 'boolean') {
+      @if (p.type === 'momentary') {
+        <div class="hold-field">
+          <span class="hold-label">{{ p.label | t }}</span>
+          <button
+            type="button"
+            class="hold-btn"
+            [class.active]="!!c.params[p.key]"
+            (pointerdown)="onHoldStart($event, p.key)"
+            (pointerup)="onHoldEnd($event, p.key)"
+            (pointercancel)="onHoldEnd($event, p.key)"
+            (lostpointercapture)="onHoldLost(p.key)"
+          >
+            {{ (!!c.params[p.key] ? 'lab.inspector.holding' : 'lab.inspector.holdToPress') | t }}
+          </button>
+        </div>
+      } @else if (p.type === 'boolean') {
         <label class="check">
           <input
             type="checkbox"

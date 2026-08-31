@@ -76,6 +76,7 @@
           (probe)="editor.onProbe($event)"
           (placeAt)="editor.onPlaceAt($event)"
           (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
+          (pushbuttonPress)="onPushbuttonPress($event)"
         />
       </div>
       <p class="hint">{{ hintKey() | t }}</p>
@@ -86,6 +87,7 @@
         [selected]="editor.selected()"
         [selectionCount]="editor.selectedIds().length"
         (paramChange)="editor.onParamChange($event)"
+        (momentaryPress)="onInspectorMomentary($event)"
         (rotate)="editor.rotateSelected()"
         (remove)="editor.deleteSelected()"
         (replaceBurned)="onReplaceBurned()"

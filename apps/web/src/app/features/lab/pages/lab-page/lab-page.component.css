@@ -35,6 +35,14 @@
   border: 1px solid #d8dee6;
   border-radius: 8px;
   padding: 0.85rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Parts column: minimal inset so the accordion spans nearly the full pane. */
+.lab-layout > .side:first-child > * {
+  padding: 0.4rem 0.3rem;
 }
 
 .canvas-wrap {

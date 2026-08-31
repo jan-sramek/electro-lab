@@ -21,12 +21,15 @@ export class InspectorPanelComponent {
   readonly selected = input<SchematicComponent | null>(null);
   readonly selectionCount = input(0);
   readonly paramChange = output<{ key: string; value: number | boolean }>();
+  /** Hold-to-press params (pushbutton) — no undo spam. */
+  readonly momentaryPress = output<{ key: string; pressed: boolean }>();
   readonly rotate = output<void>();
   readonly remove = output<void>();
   readonly replaceBurned = output<void>();
 
   /** In-progress number field text — committed on blur/Enter only (avoids sim on "8" while typing "800"). */
   private readonly numberDrafts = signal<Record<string, number | string>>({});
+  private holdKey: string | null = null;
 
   constructor() {
     effect(() => {
@@ -101,6 +104,30 @@ export class InspectorPanelComponent {
 
   onBool(key: string, value: boolean): void {
     this.paramChange.emit({ key, value: Boolean(value) });
+  }
+
+  onHoldStart(ev: PointerEvent, key: string): void {
+    ev.preventDefault();
+    (ev.currentTarget as HTMLElement).setPointerCapture(ev.pointerId);
+    this.holdKey = key;
+    this.momentaryPress.emit({ key, pressed: true });
+  }
+
+  onHoldEnd(ev: PointerEvent, key: string): void {
+    if (this.holdKey !== key) return;
+    this.holdKey = null;
+    try {
+      (ev.currentTarget as HTMLElement).releasePointerCapture(ev.pointerId);
+    } catch {
+      /* ignore */
+    }
+    this.momentaryPress.emit({ key, pressed: false });
+  }
+
+  onHoldLost(key: string): void {
+    if (this.holdKey !== key) return;
+    this.holdKey = null;
+    this.momentaryPress.emit({ key, pressed: false });
   }
 
   private draftKey(componentId: string, paramKey: string): string {

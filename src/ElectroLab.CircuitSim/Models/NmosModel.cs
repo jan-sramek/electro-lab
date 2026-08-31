@@ -29,15 +29,24 @@ public sealed class NmosModel : IDeviceModel
     public void ContributeDc(ElementInstance element, StampContext ctx, DcBiasHint? hint)
     {
         if (DeviceBurned.IsBurned(element))
+        {
+            // Tiny leak keeps drain nodes from floating when the part fails open.
+            ctx.StampConductance(element.Pins["d"], element.Pins["s"], Goff);
             return;
+        }
 
         var on = hint?.MosfetOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
+        {
+            ctx.StampConductance(element.Pins["d"], element.Pins["s"], Goff);
             return;
+        }
 
         var ron = element.Params["ron"];
         ctx.StampConductance(element.Pins["d"], element.Pins["s"], 1.0 / ron);
     }
+
+    private const double Goff = 1e-9;
 
     public double? BranchCurrent(ElementInstance element, StampContext ctx, double[] solution, DcBiasHint? hint)
     {

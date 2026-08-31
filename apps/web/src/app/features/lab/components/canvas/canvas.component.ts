@@ -45,6 +45,8 @@ interface DragState {
   ids: string[];
   origins: Map<string, { x: number; y: number }>;
   pointer0: { x: number; y: number };
+  /** Pushbutton hold — convert to move-drag after a small threshold. */
+  pushHoldId?: string;
 }
 
 interface WireDragState {
@@ -87,6 +89,8 @@ export class SchematicCanvasComponent {
   readonly probe = output<{ kind: 'net' | 'component'; id: string } | null>();
   readonly placeAt = output<{ x: number; y: number }>();
   readonly dropPlace = output<{ modelKey: string; x: number; y: number }>();
+  /** Momentary press on a pushbutton part (hold = pressed). */
+  readonly pushbuttonPress = output<{ id: string; pressed: boolean }>();
 
   readonly wireFrom = signal<PinRef | null>(null);
   /** Cursor in SVG space while drawing a wire (rubber-band). */
@@ -382,7 +386,13 @@ export class SchematicCanvasComponent {
     for (const comp of this.doc().components) {
       if (ids.includes(comp.id)) origins.set(comp.id, { x: comp.x, y: comp.y });
     }
-    this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y } };
+
+    const pushHoldId = c.modelKey === 'pushbutton' ? c.id : undefined;
+    if (pushHoldId) {
+      this.pushbuttonPress.emit({ id: pushHoldId, pressed: true });
+    }
+
+    this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y }, pushHoldId };
     (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
   }
 
@@ -395,6 +405,14 @@ export class SchematicCanvasComponent {
     if (!origin) return;
     const rawDx = pt.x - this.drag.pointer0.x;
     const rawDy = pt.y - this.drag.pointer0.y;
+
+    if (this.drag.pushHoldId) {
+      // Stay pressed in place until the pointer clearly wants to move the part.
+      if (Math.hypot(rawDx, rawDy) < 10) return;
+      this.pushbuttonPress.emit({ id: this.drag.pushHoldId, pressed: false });
+      this.drag = { ...this.drag, pushHoldId: undefined };
+    }
+
     const dx = snap(origin.x + rawDx) - origin.x;
     const dy = snap(origin.y + rawDy) - origin.y;
     const moving = new Set(this.drag.ids);
@@ -416,12 +434,22 @@ export class SchematicCanvasComponent {
   }
 
   onSymbolPointerUp(ev: PointerEvent): void {
+    if (this.drag?.pushHoldId) {
+      this.pushbuttonPress.emit({ id: this.drag.pushHoldId, pressed: false });
+    }
     if (this.drag) {
       try {
         (ev.currentTarget as Element).releasePointerCapture(ev.pointerId);
       } catch {
         /* ignore */
       }
+    }
+    this.drag = null;
+  }
+
+  onSymbolLostPointerCapture(): void {
+    if (this.drag?.pushHoldId) {
+      this.pushbuttonPress.emit({ id: this.drag.pushHoldId, pressed: false });
     }
     this.drag = null;
   }
@@ -631,6 +659,7 @@ export class SchematicCanvasComponent {
     const i = this.currentOf(id);
     if (typeof i !== 'number' || i <= 1e-6) return 0;
     // Sqrt curve keeps mid-fade glow visible (linear looked “instantly off”).
+    // Reused for buzzer “sounding” intensity.
     return Math.sqrt(Math.min(1, i / LED_FULL_BRIGHT_A));
   }
 
@@ -664,14 +693,14 @@ export class SchematicCanvasComponent {
 
   /** Switch / relay contact glyph: timeline override, then closed flag, else coil voltage for relay. */
   contactsClosed(c: SchematicComponent): boolean {
-    if (c.modelKey === 'switch') return this.switchClosed(c);
+    if (c.modelKey === 'switch' || c.modelKey === 'pushbutton') return this.switchClosed(c);
     if (c.modelKey === 'relay') return this.relayClosed(c);
     return !!c.params['closed'];
   }
 
-  /** Switch glyph follows scrub time when openAt/closeAt timeline is active. */
+  /** Switch / pushbutton glyph follows scrub time when openAt/closeAt timeline is active. */
   switchClosed(c: SchematicComponent): boolean {
-    if (c.modelKey !== 'switch') return !!c.params['closed'];
+    if (c.modelKey !== 'switch' && c.modelKey !== 'pushbutton') return !!c.params['closed'];
     const openAt = paramNumberOrNull(c.params, 'openAt');
     const closeAt = paramNumberOrNull(c.params, 'closeAt');
     const hasOpen = openAt !== null && openAt >= 0;
@@ -764,8 +793,10 @@ export class SchematicCanvasComponent {
   pinDisplayName(modelKey: string, pin: string): string {
     if (pin === 'p') return '+';
     if (pin === 'n') return '−';
-    if ((modelKey === 'led' || modelKey === 'diode') && pin === 'a') return 'A';
-    if ((modelKey === 'led' || modelKey === 'diode') && pin === 'c') return 'K';
+    if ((modelKey === 'led' || modelKey === 'diode' || modelKey === 'buzzer') && pin === 'a') return 'A';
+    if ((modelKey === 'led' || modelKey === 'diode' || modelKey === 'buzzer') && pin === 'c') return 'K';
+    if (modelKey === 'arduino_dio' && pin === 'sig') return 'IO';
+    if (modelKey === 'arduino_dio' && pin === 'gnd') return 'GND';
     if (modelKey === 'relay' && pin === 'cp') return '+';
     if (modelKey === 'relay' && pin === 'cn') return '−';
     if (modelKey === 'nmos' && pin === 'g') return 'G';

@@ -140,6 +140,9 @@ export function diagnoseSchematic(
         sim === 'relay' ||
         sim === 'nmos' ||
         sim === 'ne555' ||
+        sim === 'buzzer' ||
+        sim === 'dc_motor' ||
+        sim === 'arduino_dio' ||
         isBjtNpnPart(c.modelKey)
       );
     });

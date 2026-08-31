@@ -59,6 +59,16 @@ export class LabPageComponent implements OnInit {
       this.onLoadPreset('ne555');
     } else if (example === 'christmas' || example === 'christmasTree' || example === 'tree') {
       this.onLoadPreset('christmasTree');
+    } else if (example === 'pushbutton' || example === 'button') {
+      this.onLoadPreset('pushbutton');
+    } else if (example === 'ldr' || example === 'nightlight') {
+      this.onLoadPreset('ldr');
+    } else if (example === 'buzzer') {
+      this.onLoadPreset('buzzer');
+    } else if (example === 'motor') {
+      this.onLoadPreset('motor');
+    } else if (example === 'arduino' || example === 'dio') {
+      this.onLoadPreset('arduino');
     }
   }
 
@@ -100,7 +110,33 @@ export class LabPageComponent implements OnInit {
       case 'christmasTree':
         this.editor.loadChristmasTreePreset();
         break;
+      case 'pushbutton':
+        this.editor.loadPushbuttonPreset();
+        break;
+      case 'ldr':
+        this.editor.loadLdrPreset();
+        break;
+      case 'buzzer':
+        this.editor.loadBuzzerPreset();
+        break;
+      case 'motor':
+        this.editor.loadMotorPreset();
+        break;
+      case 'arduino':
+        this.editor.loadArduinoPreset();
+        break;
     }
+  }
+
+  onPushbuttonPress(ev: { id: string; pressed: boolean }): void {
+    this.editor.setPushbuttonPressed(ev.id, ev.pressed);
+    this.sim.runLive();
+  }
+
+  onInspectorMomentary(ev: { key: string; pressed: boolean }): void {
+    const c = this.editor.selected();
+    if (!c || c.modelKey !== 'pushbutton' || ev.key !== 'closed') return;
+    this.onPushbuttonPress({ id: c.id, pressed: ev.pressed });
   }
 
   async onImport(file: File): Promise<void> {

@@ -22,6 +22,11 @@ import { createRelayDiodePreset } from '../data/presets/relay-diode.preset';
 import { createNmosSwitchPreset } from '../data/presets/nmos-switch.preset';
 import { createNe555AstablePreset } from '../data/presets/ne555-astable.preset';
 import { createNe555ChristmasTreePreset } from '../data/presets/ne555-christmas-tree.preset';
+import { createPushbuttonLedPreset } from '../data/presets/pushbutton-led.preset';
+import { createLdrNightLightPreset } from '../data/presets/ldr-nightlight.preset';
+import { createBuzzerButtonPreset } from '../data/presets/buzzer-button.preset';
+import { createMotorNmosPreset } from '../data/presets/motor-nmos.preset';
+import { createArduinoLedPreset } from '../data/presets/arduino-led.preset';
 import { ledColorById } from '../data/led-colors';
 import { canBurnOut } from '../data/burnout';
 import {
@@ -43,7 +48,12 @@ export type ExamplePresetId =
   | 'relay'
   | 'nmos'
   | 'ne555'
-  | 'christmasTree';
+  | 'christmasTree'
+  | 'pushbutton'
+  | 'ldr'
+  | 'buzzer'
+  | 'motor'
+  | 'arduino';
 
 @Injectable()
 export class LabEditorStore {
@@ -327,6 +337,40 @@ export class LabEditorStore {
     }));
   }
 
+  /**
+   * Momentary canvas press on a pushbutton (no undo noise).
+   * Clears openAt/closeAt so interactive hold is not overridden by a tran timeline.
+   */
+  setPushbuttonPressed(id: string, pressed: boolean): void {
+    const c = this.doc().components.find((x) => x.id === id);
+    if (!c || c.modelKey !== 'pushbutton') return;
+    const already = !!c.params['closed'] === pressed;
+    const timelineOff =
+      (typeof c.params['openAt'] !== 'number' || (c.params['openAt'] as number) < 0) &&
+      (typeof c.params['closeAt'] !== 'number' || (c.params['closeAt'] as number) < 0);
+    if (already && timelineOff) return;
+
+    const next = assignNets({
+      ...this.doc(),
+      components: this.doc().components.map((x) =>
+        x.id === id
+          ? {
+              ...x,
+              params: {
+                ...x.params,
+                closed: pressed,
+                openAt: -1,
+                closeAt: -1
+              }
+            }
+          : x
+      )
+    });
+    this.doc.set(next);
+    this.persist();
+    this.bump();
+  }
+
   /** Mark burnable parts as failed-open after overload (sticky until replaced). */
   markBurned(ids: string[]): void {
     const set = new Set(ids);
@@ -565,6 +609,26 @@ export class LabEditorStore {
     );
   }
 
+  loadPushbuttonPreset(): void {
+    this.openExampleInNewTab('pushbutton', 'Pushbutton LED', createPushbuttonLedPreset, 'dcOp');
+  }
+
+  loadLdrPreset(): void {
+    this.openExampleInNewTab('ldr', 'LDR night-light', createLdrNightLightPreset, 'dcOp');
+  }
+
+  loadBuzzerPreset(): void {
+    this.openExampleInNewTab('buzzer', 'Buzzer + button', createBuzzerButtonPreset, 'dcOp');
+  }
+
+  loadMotorPreset(): void {
+    this.openExampleInNewTab('motor', 'NMOS + DC motor', createMotorNmosPreset, 'dcOp');
+  }
+
+  loadArduinoPreset(): void {
+    this.openExampleInNewTab('arduino', 'Arduino LED', createArduinoLedPreset, 'dcOp');
+  }
+
   newSchematic(): void {
     if (typeof window !== 'undefined' && !window.confirm('Clear the current schematic?')) {
       return;
@@ -661,7 +725,12 @@ export class LabEditorStore {
       p === 'relay' ||
       p === 'nmos' ||
       p === 'ne555' ||
-      p === 'christmasTree'
+      p === 'christmasTree' ||
+      p === 'pushbutton' ||
+      p === 'ldr' ||
+      p === 'buzzer' ||
+      p === 'motor' ||
+      p === 'arduino'
     ) {
       this.activeExamplePreset.set(p);
     } else {

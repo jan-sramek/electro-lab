@@ -43,6 +43,8 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                 hint.RelayOn[el.Id] = false;
             if (IsNe555(el.Model))
                 hint.Ne555High[el.Id] = false;
+            if (IsPiecewiseMotor(el.Model))
+                hint.MotorOn[el.Id] = true;
         }
 
         string? lastError = null;
@@ -117,6 +119,11 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                     if (Ne555Model.UpdateLatch(el, ctx, solution!, hint))
                         changed = true;
                 }
+                else if (IsPiecewiseMotor(el.Model))
+                {
+                    if (DcMotorModel.UpdateBias(el, ctx, solution!, hint))
+                        changed = true;
+                }
                 else if (IsOpAmp(el.Model))
                 {
                     if (OpAmpModel.UpdateRailBias(el, ctx, solution!, hint))
@@ -186,7 +193,8 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
 
     private static bool IsPiecewiseDiode(string model) =>
         model.Equals("led", StringComparison.OrdinalIgnoreCase) ||
-        model.Equals("diode", StringComparison.OrdinalIgnoreCase);
+        model.Equals("diode", StringComparison.OrdinalIgnoreCase) ||
+        model.Equals("buzzer", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
@@ -199,6 +207,9 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
 
     private static bool IsNe555(string model) =>
         model.Equals("ne555", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPiecewiseMotor(string model) =>
+        model.Equals("dc_motor", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsOpAmp(string model) =>
         model.Equals("op_amp", StringComparison.OrdinalIgnoreCase);

@@ -67,6 +67,76 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
           {{ 'learn.project.ne555.openLab' | t }}
         </a>
       </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.pushbutton.title' | t }}</h2>
+        <p>{{ 'learn.project.pushbutton.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.pushbutton.step1' | t }}</li>
+          <li>{{ 'learn.project.pushbutton.step2' | t }}</li>
+          <li>{{ 'learn.project.pushbutton.step3' | t }}</li>
+          <li>{{ 'learn.project.pushbutton.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'pushbutton' }">
+          {{ 'learn.project.pushbutton.openLab' | t }}
+        </a>
+      </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.ldr.title' | t }}</h2>
+        <p>{{ 'learn.project.ldr.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.ldr.step1' | t }}</li>
+          <li>{{ 'learn.project.ldr.step2' | t }}</li>
+          <li>{{ 'learn.project.ldr.step3' | t }}</li>
+          <li>{{ 'learn.project.ldr.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'ldr' }">
+          {{ 'learn.project.ldr.openLab' | t }}
+        </a>
+      </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.buzzer.title' | t }}</h2>
+        <p>{{ 'learn.project.buzzer.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.buzzer.step1' | t }}</li>
+          <li>{{ 'learn.project.buzzer.step2' | t }}</li>
+          <li>{{ 'learn.project.buzzer.step3' | t }}</li>
+          <li>{{ 'learn.project.buzzer.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'buzzer' }">
+          {{ 'learn.project.buzzer.openLab' | t }}
+        </a>
+      </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.motor.title' | t }}</h2>
+        <p>{{ 'learn.project.motor.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.motor.step1' | t }}</li>
+          <li>{{ 'learn.project.motor.step2' | t }}</li>
+          <li>{{ 'learn.project.motor.step3' | t }}</li>
+          <li>{{ 'learn.project.motor.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'motor' }">
+          {{ 'learn.project.motor.openLab' | t }}
+        </a>
+      </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.arduino.title' | t }}</h2>
+        <p>{{ 'learn.project.arduino.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.arduino.step1' | t }}</li>
+          <li>{{ 'learn.project.arduino.step2' | t }}</li>
+          <li>{{ 'learn.project.arduino.step3' | t }}</li>
+          <li>{{ 'learn.project.arduino.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'arduino' }">
+          {{ 'learn.project.arduino.openLab' | t }}
+        </a>
+      </article>
     </section>
   `,
   styles: `

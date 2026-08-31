@@ -16,20 +16,27 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
       if (pin === 'a') return -branchI;
       if (pin === 'b') return branchI;
       return 0;
+    case 'ldr':
+    case 'dc_motor':
+      if (pin === 'a') return -branchI;
+      if (pin === 'b') return branchI;
+      return 0;
     case 'relay':
       if (pin === 'a') return -branchI;
       if (pin === 'b') return branchI;
       return 0;
     case 'diode':
     case 'led':
+    case 'buzzer':
       if (pin === 'a') return -branchI;
       if (pin === 'c') return branchI;
       return 0;
     case 'battery':
     case 'pulse_source':
     case 'ac_source':
-      if (pin === 'p') return branchI;
-      if (pin === 'n') return -branchI;
+    case 'arduino_dio':
+      if (pin === 'p' || pin === 'sig') return branchI;
+      if (pin === 'n' || pin === 'gnd') return -branchI;
       return 0;
     case 'op_amp':
       if (pin === 'out') return branchI;
@@ -68,6 +75,8 @@ export function isPinCurrentModeled(modelKey: string, pin: string): boolean {
       return pin === 'out';
     case 'nmos':
       return pin === 'd' || pin === 's';
+    case 'arduino_dio':
+      return pin === 'sig' || pin === 'gnd';
     case 'bjt_npn':
       return pin === 'c' || pin === 'e';
     case 'relay':

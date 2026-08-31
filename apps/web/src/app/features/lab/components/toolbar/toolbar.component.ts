@@ -61,7 +61,12 @@ export class LabToolbarComponent {
       value === 'relay' ||
       value === 'nmos' ||
       value === 'ne555' ||
-      value === 'christmasTree'
+      value === 'christmasTree' ||
+      value === 'pushbutton' ||
+      value === 'ldr' ||
+      value === 'buzzer' ||
+      value === 'motor' ||
+      value === 'arduino'
     ) {
       this.loadPreset.emit(value);
     }

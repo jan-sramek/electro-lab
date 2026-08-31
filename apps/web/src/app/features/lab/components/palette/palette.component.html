@@ -1,35 +1,49 @@
 <div class="palette">
   <h2>{{ 'lab.palette.title' | t }}</h2>
-  <ul>
-    @for (key of keys; track key) {
-      <li>
+  <div class="groups">
+    @for (g of groups; track g.id) {
+      <section class="group" [class.open]="isOpen(g.id)">
         <button
           type="button"
-          class="part"
-          draggable="true"
-          (dragstart)="onDragStart($event, key)"
-          (click)="place.emit(key)"
-          [attr.title]="lib[key].label | t"
-          [attr.aria-label]="lib[key].label | t"
+          class="group-head"
+          (click)="toggleGroup(g.id)"
+          [attr.aria-expanded]="isOpen(g.id)"
+          [attr.aria-controls]="'palette-' + g.id"
         >
-          <svg class="thumb" viewBox="-48 -48 96 96" aria-hidden="true">
-            <g
-              appSymbolGlyph
-              [modelKey]="glyphKeyOf(key)"
-              [closed]="true"
-              [ledBrightness]="0"
-              [ledColor]="ledThumbColor(lib[key])"
-            ></g>
-          </svg>
-          <span class="name">
-            {{ lib[key].label | t }}
-            @if (lib[key].teachingNote; as note) {
-              <span class="note">{{ note | t }}</span>
-            }
-          </span>
+          <span class="chev" aria-hidden="true"></span>
+          <span class="group-title">{{ g.labelKey | t }}</span>
+          <span class="count">{{ g.keys.length }}</span>
         </button>
-      </li>
+        @if (isOpen(g.id)) {
+          <ul [attr.id]="'palette-' + g.id" class="group-body">
+            @for (key of g.keys; track key) {
+              <li>
+                <button
+                  type="button"
+                  class="part"
+                  draggable="true"
+                  (dragstart)="onDragStart($event, key)"
+                  (click)="place.emit(key)"
+                  [attr.title]="partTitle(key)"
+                  [attr.aria-label]="lib[key].label | t"
+                >
+                  <svg class="thumb" viewBox="-48 -48 96 96" aria-hidden="true">
+                    <g
+                      appSymbolGlyph
+                      [modelKey]="glyphKeyOf(key)"
+                      [closed]="true"
+                      [ledBrightness]="0"
+                      [ledColor]="ledThumbColor(lib[key])"
+                    ></g>
+                  </svg>
+                  <span class="name">{{ lib[key].label | t }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
     }
-  </ul>
+  </div>
   <p class="hint">{{ 'lab.palette.dragHint' | t }}</p>
 </div>

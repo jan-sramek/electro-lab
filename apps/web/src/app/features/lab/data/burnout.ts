@@ -8,6 +8,10 @@ export const RESISTOR_BURN_W = 0.25;
 export const CAP_DEFAULT_VMAX = 16;
 /** Series ammeter teaching fuse (~200 mA). */
 export const AMMETER_BURN_A = 0.2;
+/** Piezo buzzer teaching current limit. */
+export const BUZZER_BURN_A = 0.05;
+/** Small DC motor teaching stall / overcurrent. */
+export const MOTOR_BURN_A = 0.4;
 
 export type BurnKind =
   | 'led'
@@ -17,10 +21,16 @@ export type BurnKind =
   | 'capacitor'
   | 'ammeter'
   | 'nmos'
-  | 'ne555';
+  | 'ne555'
+  | 'buzzer'
+  | 'dc_motor'
+  | 'ldr';
 
 export function burnKindOf(modelKey: string): BurnKind | null {
   if (modelKey === 'led') return 'led';
+  if (modelKey === 'buzzer') return 'buzzer';
+  if (modelKey === 'dc_motor') return 'dc_motor';
+  if (modelKey === 'ldr') return 'ldr';
   if (isBjtNpnPart(modelKey)) return 'bjt';
   if (isNmosPart(modelKey)) return 'nmos';
   if (isNe555Part(modelKey)) return 'ne555';
@@ -34,6 +44,19 @@ export function burnKindOf(modelKey: string): BurnKind | null {
 
 export function canBurnOut(modelKey: string): boolean {
   return burnKindOf(modelKey) != null;
+}
+
+/** LDR resistance matches CircuitSim LdrModel (log blend dark→light). */
+export function ldrResistanceOhms(params: Record<string, number | boolean>): number | null {
+  const lightRaw = params['light'];
+  const rDark = params['rDark'];
+  const rLight = params['rLight'];
+  if (typeof lightRaw !== 'number' || typeof rDark !== 'number' || typeof rLight !== 'number') {
+    return null;
+  }
+  if (!(rDark > 0) || !(rLight > 0)) return null;
+  const light = Math.max(0, Math.min(1, lightRaw));
+  return rDark * Math.pow(rLight / rDark, light);
 }
 
 export function burnWarningKey(kind: BurnKind): string {
@@ -54,6 +77,12 @@ export function burnWarningKey(kind: BurnKind): string {
       return 'lab.nmos.burnedWarning';
     case 'ne555':
       return 'lab.ne555.burnedWarning';
+    case 'buzzer':
+      return 'lab.buzzer.burnedWarning';
+    case 'dc_motor':
+      return 'lab.dc_motor.burnedWarning';
+    case 'ldr':
+      return 'lab.ldr.burnedWarning';
   }
 }
 
@@ -75,6 +104,12 @@ export function burnInspectorNoteKey(kind: BurnKind): string {
       return 'lab.inspector.nmosBurned';
     case 'ne555':
       return 'lab.inspector.ne555Burned';
+    case 'buzzer':
+      return 'lab.inspector.buzzerBurned';
+    case 'dc_motor':
+      return 'lab.inspector.dcMotorBurned';
+    case 'ldr':
+      return 'lab.inspector.ldrBurned';
   }
 }
 
@@ -96,5 +131,11 @@ export function burnReplaceLabelKey(kind: BurnKind): string {
       return 'lab.inspector.replaceNmos';
     case 'ne555':
       return 'lab.inspector.replaceNe555';
+    case 'buzzer':
+      return 'lab.inspector.replaceBuzzer';
+    case 'dc_motor':
+      return 'lab.inspector.replaceDcMotor';
+    case 'ldr':
+      return 'lab.inspector.replaceLdr';
   }
 }

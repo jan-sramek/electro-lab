@@ -60,6 +60,8 @@
       (pointerdown)="onSymbolPointerDown($event, c)"
       (pointermove)="onSymbolPointerMove($event)"
       (pointerup)="onSymbolPointerUp($event)"
+      (lostpointercapture)="onSymbolLostPointerCapture()"
+      [class.pushbutton]="c.modelKey === 'pushbutton'"
     >
       <!-- Invisible hit box so thin strokes remain easy to select (incl. unwired/error parts). -->
       <rect

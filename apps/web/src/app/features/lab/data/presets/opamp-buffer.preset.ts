@@ -25,18 +25,18 @@ export function createOpAmpBufferPreset(): SchematicDocument {
 
   const u1 = createComponent('op_amp', 420, 220, 'U1');
 
-  // Rf centered so its right pin sits directly above the output junction
-  const rf = createComponent('resistor', 420, 100, 'RF');
+  // Scale-aware: RF.b and U1.out share x with JO (pure verticals).
+  const rf = createComponent('resistor', 418, 100, 'RF');
   rf.params = { r: 10000 };
-  // RF.b at (470,100); place JO under it so the drop is a pure vertical
-  const jOut = createComponent('junction', 470, 220, 'JO');
+  const jOut = createComponent('junction', 438, 220, 'JO');
 
-  const rl = createComponent('resistor', 580, 220, 'RL');
+  const rl = createComponent('resistor', 560, 220, 'RL');
   rl.params = { r: 2000 };
 
   const jGndL = createComponent('junction', 100, 320, 'JL');
-  const jGndM = createComponent('junction', 380, 320, 'JM');
-  const jGndR = createComponent('junction', 630, 320, 'JR');
+  // Under U1.inp / RL.b so return drops are vertical, not overlapping the bottom rail.
+  const jGndM = createComponent('junction', 404, 320, 'JM');
+  const jGndR = createComponent('junction', 580, 320, 'JR');
   const gnd = createComponent('ground', 100, 360, 'GND1');
 
   const doc: SchematicDocument = {

@@ -17,7 +17,8 @@ export function createAcRcPreset(): SchematicDocument {
   const jSense = createComponent('junction', 410, 160, 'JS');
   const vm = createComponent('voltmeter', 410, 230, 'VM1');
   vm.rotation = 90; // p up / n down — probes don't share a horizontal rail
-  const jRet = createComponent('junction', 500, 300, 'J1');
+  // Under C1.b so the drop is vertical (no long overlap with the return rail).
+  const jRet = createComponent('junction', 476, 300, 'J1');
   const gnd = createComponent('ground', 100, 320, 'GND1');
 
   const doc: SchematicDocument = {
