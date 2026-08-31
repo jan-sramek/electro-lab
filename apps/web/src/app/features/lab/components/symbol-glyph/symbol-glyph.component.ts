@@ -306,7 +306,7 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:line x1="-4" y1="16" x2="4" y2="16" class="sym" />
       }
       @case ('junction') {
-        <svg:circle cx="0" cy="0" r="4" class="junction-node" />
+        <svg:circle cx="0" cy="0" r="2.5" class="junction-node" />
       }
       @default {
         <svg:rect x="-24" y="-16" width="48" height="32" class="sym" />

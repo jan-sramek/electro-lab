@@ -18,7 +18,12 @@ import {
   splitWireAtJunction
 } from '../../data/schematic.model';
 import { SYMBOL_LIBRARY, glyphKeyOf } from '../../data/symbol-library';
-import { pinHitRadius, symbolDisplayScale } from '../../data/symbol-scale';
+import {
+  JUNCTION_DOT_RADIUS,
+  pinDotRadius,
+  pinHitRadius,
+  symbolDisplayScale
+} from '../../data/symbol-scale';
 import {
   clearWireWaypoints,
   pinExitDirection,
@@ -34,6 +39,7 @@ import { WireFlowBuilder } from '../../data/wire-flow/wire-flow.builder';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
 import { canBurnOut } from '../../data/burnout';
 import { normalizeLedColorId } from '../../data/led-colors';
+import { placeAllPartLabels, placePartMeasurement } from '../../data/part-label-layout';
 
 interface DragState {
   ids: string[];
@@ -92,6 +98,8 @@ export class SchematicCanvasComponent {
   readonly glyphKeyOf = glyphKeyOf;
   readonly displayScaleFor = symbolDisplayScale;
   readonly pinHitR = pinHitRadius;
+  readonly pinDotR = pinDotRadius;
+  readonly junctionDotR = JUNCTION_DOT_RADIUS;
 
   /** viewBox: x y w h */
   readonly view = signal({ x: 0, y: 0, w: 720, h: 400 });
@@ -111,6 +119,9 @@ export class SchematicCanvasComponent {
   }
 
   readonly nettled = computed(() => assignNets(this.doc()));
+
+  /** Collision-aware id label placements for the current schematic. */
+  readonly partLabelMap = computed(() => placeAllPartLabels(this.nettled().components));
 
   readonly viewBox = computed(() => {
     const v = this.view();
@@ -782,18 +793,16 @@ export class SchematicCanvasComponent {
     const dx = pos.x - c.x;
     const dy = pos.y - c.y;
     const len = Math.hypot(dx, dy) || 1;
-    const out = 8 * symbolDisplayScale(c.modelKey) + 3;
+    const out = 8 * symbolDisplayScale(c.modelKey) + 2;
     return { x: pos.x + (dx / len) * out, y: pos.y + (dy / len) * out };
   }
 
-  labelOffsetY(c: SchematicComponent): number {
-    const h = (SYMBOL_LIBRARY[c.modelKey]?.height ?? 40) * symbolDisplayScale(c.modelKey);
-    const tight = c.modelKey === 'led' || c.modelKey === 'diode';
-    return h / 2 + (tight ? 10 : 12);
+  partLabel(c: SchematicComponent) {
+    return this.partLabelMap().get(c.id) ?? placeAllPartLabels([c]).get(c.id)!;
   }
 
-  measOffsetY(c: SchematicComponent): number {
-    return this.labelOffsetY(c) + 14;
+  partMeas(c: SchematicComponent) {
+    return placePartMeasurement(c, this.partLabel(c));
   }
 
   private endpoint(doc: SchematicDocument, ref: PinRef) {

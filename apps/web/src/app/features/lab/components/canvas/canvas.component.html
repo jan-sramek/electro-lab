@@ -47,7 +47,7 @@
   }
 
   @for (j of junctionDots(); track j.x + ',' + j.y) {
-    <circle class="junction" [attr.cx]="j.x" [attr.cy]="j.y" r="3.5" />
+    <circle class="junction" [attr.cx]="j.x" [attr.cy]="j.y" [attr.r]="junctionDotR" />
   }
 
   @for (c of nettled().components; track c.id) {
@@ -64,10 +64,10 @@
       <!-- Invisible hit box so thin strokes remain easy to select (incl. unwired/error parts). -->
       <rect
         class="hit"
-        [attr.x]="-lib[c.modelKey].width * displayScaleFor(c.modelKey) / 2 - 6"
-        [attr.y]="-lib[c.modelKey].height * displayScaleFor(c.modelKey) / 2 - 6"
-        [attr.width]="lib[c.modelKey].width * displayScaleFor(c.modelKey) + 12"
-        [attr.height]="lib[c.modelKey].height * displayScaleFor(c.modelKey) + 12"
+        [attr.x]="-lib[c.modelKey].width * displayScaleFor(c.modelKey) / 2 - 4"
+        [attr.y]="-lib[c.modelKey].height * displayScaleFor(c.modelKey) / 2 - 4"
+        [attr.width]="lib[c.modelKey].width * displayScaleFor(c.modelKey) + 8"
+        [attr.height]="lib[c.modelKey].height * displayScaleFor(c.modelKey) + 8"
       />
       <g [attr.transform]="'scale(' + displayScaleFor(c.modelKey) + ')'">
         <g
@@ -81,14 +81,35 @@
       </g>
 
       @if (c.modelKey !== 'junction') {
-        <text x="0" [attr.y]="labelOffsetY(c)" text-anchor="middle" class="label">{{ c.id }}</text>
+        @let lbl = partLabel(c);
+        <text
+          [attr.x]="lbl.x"
+          [attr.y]="lbl.y"
+          [attr.text-anchor]="lbl.textAnchor"
+          dominant-baseline="middle"
+          class="label"
+        >{{ c.id }}</text>
       }
       @if (c.modelKey === 'voltmeter' && voltmeterReading(c) !== null) {
-        <text x="0" [attr.y]="measOffsetY(c)" text-anchor="middle" class="meas">
+        @let m = partMeas(c);
+        <text
+          [attr.x]="m.x"
+          [attr.y]="m.y"
+          [attr.text-anchor]="m.textAnchor"
+          dominant-baseline="middle"
+          class="meas"
+        >
           {{ voltmeterReading(c)! | number: '1.2-3' }} V
         </text>
       } @else if (c.modelKey === 'ammeter' && currentOf(c.id) !== null) {
-        <text x="0" [attr.y]="measOffsetY(c)" text-anchor="middle" class="meas">
+        @let m = partMeas(c);
+        <text
+          [attr.x]="m.x"
+          [attr.y]="m.y"
+          [attr.text-anchor]="m.textAnchor"
+          dominant-baseline="middle"
+          class="meas"
+        >
           {{ currentOf(c.id)! * 1000 | number: '1.1-2' }} mA
         </text>
       } @else if (
@@ -97,7 +118,14 @@
         !isDeviceFailedOpen(c) &&
         currentOf(c.id) !== null
       ) {
-        <text x="0" [attr.y]="measOffsetY(c)" text-anchor="middle" class="meas">
+        @let m = partMeas(c);
+        <text
+          [attr.x]="m.x"
+          [attr.y]="m.y"
+          [attr.text-anchor]="m.textAnchor"
+          dominant-baseline="middle"
+          class="meas"
+        >
           {{ currentOf(c.id)! * 1000 | number: '1.1-2' }} mA
         </text>
       }
@@ -117,7 +145,7 @@
         [class.active]="isWireFrom(c.id, pinName)"
         [attr.cx]="pos.x"
         [attr.cy]="pos.y"
-        [attr.r]="pinHitR(c.modelKey) - 3"
+        [attr.r]="pinDotR(c.modelKey)"
         (click)="onPinClick($event, c.id, pinName)"
       />
       @if (isSelected(c.id)) {
@@ -141,14 +169,14 @@
         class="wire-flow"
         [attr.d]="flow.path"
         [style.--flow-period]="flow.periodMs + 'ms'"
-        [style.opacity]="0.65 + flow.strength * 0.35"
+        [style.opacity]="0.4 + flow.strength * 0.28"
         pointer-events="none"
       />
       <path
         class="wire-flow-core"
         [attr.d]="flow.path"
         [style.--flow-period]="flow.periodMs + 'ms'"
-        [style.opacity]="0.55 + flow.strength * 0.45"
+        [style.opacity]="0.28 + flow.strength * 0.25"
         pointer-events="none"
       />
     }

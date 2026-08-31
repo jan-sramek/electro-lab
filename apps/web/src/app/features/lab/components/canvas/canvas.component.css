@@ -42,7 +42,7 @@
 
 .wire {
   stroke: #334155;
-  stroke-width: 2.5;
+  stroke-width: 2;
   fill: none;
   cursor: pointer;
 }
@@ -50,13 +50,13 @@
 .wire-hit {
   fill: none;
   stroke: transparent;
-  stroke-width: 14;
+  stroke-width: 12;
   pointer-events: stroke;
   cursor: pointer;
 }
 
 .schematic.tool-wire .wire-hit {
-  stroke-width: 18;
+  stroke-width: 16;
 }
 
 .schematic.tool-wire.wiring .wire-hit:hover {
@@ -64,8 +64,8 @@
 }
 
 .wire.has-flow {
-  stroke: #0f766e;
-  stroke-width: 3;
+  stroke: #64748b;
+  stroke-width: 2.1;
 }
 
 .wire-hit:hover + .wire {
@@ -74,7 +74,7 @@
 
 .wire.selected {
   stroke: #0b6e4f;
-  stroke-width: 3.5;
+  stroke-width: 2.8;
 }
 
 .rubber-band {
@@ -87,28 +87,27 @@
 
 .wire-flow {
   fill: none;
-  stroke: #10b981;
-  stroke-width: 4;
+  stroke: #2dd4bf;
+  stroke-width: 2.2;
   stroke-linecap: round;
-  stroke-dasharray: 10 8;
+  stroke-dasharray: 7 9;
   animation: wire-flow var(--flow-period, 550ms) linear infinite;
   pointer-events: none;
-  filter: drop-shadow(0 0 1.5px rgba(16, 185, 129, 0.85));
 }
 
 .wire-flow-core {
   fill: none;
-  stroke: #ecfdf5;
-  stroke-width: 1.75;
+  stroke: #ccfbf1;
+  stroke-width: 0.9;
   stroke-linecap: round;
-  stroke-dasharray: 10 8;
+  stroke-dasharray: 7 9;
   animation: wire-flow var(--flow-period, 550ms) linear infinite;
   pointer-events: none;
 }
 
 @keyframes wire-flow {
   to {
-    stroke-dashoffset: -18;
+    stroke-dashoffset: -16;
   }
 }
 
@@ -152,22 +151,24 @@
 
 .label {
   fill: #334155;
-  font-size: 11px;
+  font-size: 5px;
   font-family: 'Segoe UI', system-ui, sans-serif;
   pointer-events: none;
+  opacity: 0.85;
 }
 
 .meas {
   fill: #0b6e4f;
-  font-size: 10px;
+  font-size: 4.75px;
   font-family: 'Segoe UI', system-ui, sans-serif;
   pointer-events: none;
+  opacity: 0.88;
 }
 
 .pin {
   fill: #fff;
   stroke: #1d4ed8;
-  stroke-width: 2;
+  stroke-width: 1.5;
   cursor: crosshair;
   pointer-events: none;
 }
@@ -180,7 +181,7 @@
 }
 
 .schematic.tool-wire .pin {
-  stroke-width: 2.5;
+  stroke-width: 2;
 }
 
 .pin-hit:hover + .pin,
@@ -195,18 +196,18 @@
 
 .pin-label {
   fill: #1e3a5f;
-  font-size: 10px;
+  font-size: 6.5px;
   font-family: ui-monospace, monospace;
   font-weight: 600;
   pointer-events: none;
   paint-order: stroke;
   stroke: #f8fafc;
-  stroke-width: 3px;
+  stroke-width: 1.75px;
 }
 
 .node-tag {
   fill: #1d4ed8;
-  font-size: 11px;
+  font-size: 7px;
   font-family: 'Segoe UI', system-ui, sans-serif;
   pointer-events: none;
 }

@@ -588,12 +588,12 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     modelKey: 'junction',
     label: 'lab.symbol.junction',
     schematicOnly: true,
-    displayScale: 0.75,
+    displayScale: 0.65,
     pins: [{ name: 'j', ox: 0, oy: 0 }],
     defaultParams: {},
     paramDefs: [],
-    width: 12,
-    height: 12
+    width: 10,
+    height: 10
   }
 };
 
