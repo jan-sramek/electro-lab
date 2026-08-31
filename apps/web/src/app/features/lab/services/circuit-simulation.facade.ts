@@ -1,9 +1,9 @@
-import { Injectable, NgZone, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, NgZone, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { Subject, catchError, debounceTime, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
 import { SimulateRequest, SimulateResponse } from '../api/circuit-api.types';
-import { AnalysisMode, SchematicDocument, SchematicComponent, assignNets, parseHighlightedIds } from '../data/schematic.model';
+import { AnalysisMode, SchematicDocument, SchematicComponent, assignNets, parseHighlightedIds, paramNumber } from '../data/schematic.model';
 import {
   allSwitchesOpen,
   compileNetlistWithCapIc,
@@ -32,7 +32,9 @@ import {
   burnWarningKey,
   canBurnOut
 } from '../data/burnout';
-import { isBjtNpnPart } from '../data/symbol-library';
+import { isBjtNpnPart, isNmosPart, isNe555Part } from '../data/symbol-library';
+import { NMOS_DRAIN_BURN_A, NMOS_VGS_BURN_V, NE555_OUT_BURN_A, NE555_VCC_BURN_V } from '../data/nmos-limits';
+import { TransientPlayback } from '../data/wire-flow/transient-playback';
 
 function peakBranchCurrent(res: SimulateResponse, id: string): number | null {
   const dc = res.dcOp?.branchCurrents?.[id];
@@ -73,8 +75,8 @@ function baseCurrentAt(
   const bNet = c.pins['b']?.net;
   const eNet = c.pins['e']?.net;
   if (!bNet || !eNet) return null;
-  const vf = typeof c.params['vf'] === 'number' ? (c.params['vf'] as number) : 0.7;
-  const rb = typeof c.params['rb'] === 'number' ? (c.params['rb'] as number) : 0;
+  const vf = paramNumber(c.params, 'vf', 0.7);
+  const rb = paramNumber(c.params, 'rb', 0);
   if (!(rb > 0)) return null;
 
   const ibFromVoltage = (idx: number): number => {
@@ -188,6 +190,7 @@ export class CircuitSimulationFacade {
   private readonly editorPersistence = inject(SchematicPersistence);
   private readonly i18n = inject(I18nService);
   private readonly zone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly simulate$ = new Subject<{ body: SimulateRequest; showBusy: boolean }>();
   /** Debounced auto-sim after schematic edits (no Run-button flicker). */
   private readonly autoRun$ = new Subject<void>();
@@ -202,7 +205,7 @@ export class CircuitSimulationFacade {
   readonly highlightNetIds = signal<string[]>([]);
   /** Sample index into tran.time for canvas/probe scrubbing. */
   readonly scrubIndex = signal(0);
-  private scrubPlayTimer: ReturnType<typeof setInterval> | null = null;
+  private scrubPlayback: TransientPlayback | null = null;
 
   /** Last final capacitor voltages after a successful tran (for open-switch discharge). */
   private storedCapIc = new Map<string, number>();
@@ -342,14 +345,19 @@ export class CircuitSimulationFacade {
           this.rememberCapVoltages(res);
         }
         if (res.tran?.time?.length) {
-          if (this.scrubPlayTimer != null && !this.showBusyForRequest) {
-            /* keep playing */
+          if (this.scrubPlayback?.running && !this.showBusyForRequest) {
+            /* keep looping playback across debounced auto-sim */
           } else {
             this.stopScrubPlayback();
             const start = this.pickTranScrubIndex(res);
             this.scrubIndex.set(start);
             if (this.lastRunInjectedIc) {
               this.maybeStartDischargePlayback(res);
+            } else if (
+              this.editor.activeExamplePreset() === 'ne555' ||
+              this.editor.activeExamplePreset() === 'christmasTree'
+            ) {
+              this.maybeStartBlinkPlayback(res);
             }
           }
         }
@@ -365,6 +373,8 @@ export class CircuitSimulationFacade {
         }
         this.applyLedOverloadFailures(res);
         this.applyBjtBaseOverloadFailures(res);
+        this.applyNmosOverloadFailures(res);
+        this.applyNe555OverloadFailures(res);
         this.applyDiodeOverloadFailures(res);
         this.applyResistorPowerFailures(res);
         this.applyCapacitorOvervoltageFailures(res);
@@ -387,6 +397,8 @@ export class CircuitSimulationFacade {
       this.syncCapIcFromStorage();
       this.autoRun$.next();
     });
+
+    this.destroyRef.onDestroy(() => this.stopScrubPlayback());
   }
 
   setScrubIndex(idx: number): void {
@@ -399,6 +411,9 @@ export class CircuitSimulationFacade {
     const tran = res.tran;
     if (!tran?.time?.length) return 0;
     if (this.lastRunInjectedIc) return 0;
+    if (this.editor.activeExamplePreset() === 'ne555' || this.editor.activeExamplePreset() === 'christmasTree') {
+      return 0;
+    }
 
     const last = tran.time.length - 1;
     const ledIds = this.editor
@@ -423,40 +438,53 @@ export class CircuitSimulationFacade {
     return bestMag > 1e-4 ? bestIdx : last;
   }
 
+  /** Loop transient scrub so NE555 LED branches visibly blink on the canvas. */
+  private maybeStartBlinkPlayback(res: SimulateResponse): void {
+    const tran = res.tran;
+    if (!tran?.time?.length) return;
+    const n = tran.time.length;
+    if (n <= 1) return;
+
+    const note = this.i18n.t('lab.ne555.blinkPlayback');
+    if (!this.warnings().includes(note)) {
+      this.warnings.set([...this.warnings(), note]);
+    }
+
+    this.startScrubPlayback(n, { mode: 'loop', framesPerSweep: 80, frameMs: 40 });
+  }
+
   /** Simple 0→end scrub so the student sees the LED fade after opening the switch. */
   private maybeStartDischargePlayback(res: SimulateResponse): void {
     const tran = res.tran;
     if (!tran?.time?.length) return;
-    const end = tran.time.length - 1;
-    if (end <= 0) return;
+    const n = tran.time.length;
+    if (n <= 1) return;
 
     const note = this.i18n.t('lab.led.fadePlayback');
     if (!this.warnings().includes(note)) {
       this.warnings.set([...this.warnings(), note]);
     }
 
-    const frames = 60;
-    const step = Math.max(1, Math.ceil(end / frames));
-    let i = 0;
+    this.startScrubPlayback(n, { mode: 'once', framesPerSweep: 60, frameMs: 50 });
+  }
+
+  private startScrubPlayback(
+    sampleCount: number,
+    opts: { mode: 'loop' | 'once'; framesPerSweep: number; frameMs: number }
+  ): void {
+    this.stopScrubPlayback();
     this.zone.runOutsideAngular(() => {
-      this.scrubPlayTimer = setInterval(() => {
-        this.zone.run(() => {
-          i += step;
-          if (i >= end) {
-            this.scrubIndex.set(end);
-            this.stopScrubPlayback();
-            return;
-          }
-          this.scrubIndex.set(i);
-        });
-      }, 50);
+      this.scrubPlayback = new TransientPlayback(sampleCount, (idx) => {
+        this.zone.run(() => this.scrubIndex.set(idx));
+      });
+      this.scrubPlayback.start(opts);
     });
   }
 
   private stopScrubPlayback(): void {
-    if (this.scrubPlayTimer != null) {
-      clearInterval(this.scrubPlayTimer);
-      this.scrubPlayTimer = null;
+    if (this.scrubPlayback) {
+      this.scrubPlayback.stop();
+      this.scrubPlayback = null;
     }
   }
 
@@ -664,9 +692,9 @@ export class CircuitSimulationFacade {
     for (const c of doc.components) {
       if (!isBjtNpnPart(c.modelKey) || c.params['burned']) continue;
       const peak = peakBaseCurrent(res, doc, c);
-      if (peak != null && peak >= BJT_BASE_BURN_A) peakBurnIds.push(c.id);
+      if (typeof peak === 'number' && peak >= BJT_BASE_BURN_A) peakBurnIds.push(c.id);
       const sustained = sustainedBaseCurrent(res, doc, c);
-      if (sustained != null && sustained >= BJT_BASE_BURN_A) sustainedBurnIds.push(c.id);
+      if (typeof sustained === 'number' && sustained >= BJT_BASE_BURN_A) sustainedBurnIds.push(c.id);
     }
 
     const notes = [...this.warnings()];
@@ -713,6 +741,62 @@ export class CircuitSimulationFacade {
     );
   }
 
+  /** NMOS: drain overcurrent or excessive |Vgs|. */
+  private applyNmosOverloadFailures(res: SimulateResponse): void {
+    const doc = assignNets(this.editor.doc());
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of doc.components) {
+      if (!isNmosPart(c.modelKey) || c.params['burned']) continue;
+      const peakI = peakBranchCurrent(res, c.id);
+      const sustI = sustainedBranchCurrent(res, c.id);
+      const peakVgs = peakPinVoltageAbs(res, c, 'g', 's');
+      const sustVgs = sustainedPinVoltageAbs(res, c, 'g', 's');
+      const peakHit =
+        (typeof peakI === 'number' && Math.abs(peakI) >= NMOS_DRAIN_BURN_A) ||
+        (typeof peakVgs === 'number' && peakVgs >= NMOS_VGS_BURN_V);
+      const sustHit =
+        (typeof sustI === 'number' && Math.abs(sustI) >= NMOS_DRAIN_BURN_A) ||
+        (typeof sustVgs === 'number' && sustVgs >= NMOS_VGS_BURN_V);
+      if (peakHit) peakBurnIds.push(c.id);
+      if (sustHit) sustainedBurnIds.push(c.id);
+    }
+    this.publishBurnResult(
+      peakBurnIds,
+      sustainedBurnIds,
+      'lab.nmos.peakOverloadWarning',
+      'lab.nmos.burnedWarning'
+    );
+  }
+
+  /** NE555: output overcurrent or excessive Vcc. */
+  private applyNe555OverloadFailures(res: SimulateResponse): void {
+    const doc = assignNets(this.editor.doc());
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of doc.components) {
+      if (!isNe555Part(c.modelKey) || c.params['burned']) continue;
+      const peakI = peakBranchCurrent(res, c.id);
+      const sustI = sustainedBranchCurrent(res, c.id);
+      const peakVcc = peakPinVoltageAbs(res, c, 'vcc', 'gnd');
+      const sustVcc = sustainedPinVoltageAbs(res, c, 'vcc', 'gnd');
+      const peakHit =
+        (typeof peakI === 'number' && Math.abs(peakI) >= NE555_OUT_BURN_A) ||
+        (typeof peakVcc === 'number' && peakVcc >= NE555_VCC_BURN_V);
+      const sustHit =
+        (typeof sustI === 'number' && Math.abs(sustI) >= NE555_OUT_BURN_A) ||
+        (typeof sustVcc === 'number' && sustVcc >= NE555_VCC_BURN_V);
+      if (peakHit) peakBurnIds.push(c.id);
+      if (sustHit) sustainedBurnIds.push(c.id);
+    }
+    this.publishBurnResult(
+      peakBurnIds,
+      sustainedBurnIds,
+      'lab.ne555.peakOverloadWarning',
+      'lab.ne555.burnedWarning'
+    );
+  }
+
   private applyBranchCurrentBurn(
     res: SimulateResponse,
     match: (c: SchematicComponent) => boolean,
@@ -740,7 +824,7 @@ export class CircuitSimulationFacade {
     const sustainedBurnIds: string[] = [];
     for (const c of this.editor.doc().components) {
       if (c.modelKey !== 'resistor' || c.params['burned']) continue;
-      const r = typeof c.params['r'] === 'number' ? (c.params['r'] as number) : 0;
+      const r = paramNumber(c.params, 'r', 0);
       if (!(r > 0)) continue;
       const peakI = peakBranchCurrent(res, c.id);
       if (typeof peakI === 'number' && peakI * peakI * r >= RESISTOR_BURN_W) {
@@ -766,13 +850,12 @@ export class CircuitSimulationFacade {
     const sustainedBurnIds: string[] = [];
     for (const c of doc.components) {
       if (c.modelKey !== 'capacitor' || c.params['burned']) continue;
-      const vmax =
-        typeof c.params['vmax'] === 'number' ? (c.params['vmax'] as number) : CAP_DEFAULT_VMAX;
+      const vmax = paramNumber(c.params, 'vmax', CAP_DEFAULT_VMAX);
       if (!(vmax > 0)) continue;
       const peak = peakPinVoltageAbs(res, c, 'a', 'b');
-      if (peak != null && peak >= vmax) peakBurnIds.push(c.id);
+      if (typeof peak === 'number' && peak >= vmax) peakBurnIds.push(c.id);
       const sustained = sustainedPinVoltageAbs(res, c, 'a', 'b');
-      if (sustained != null && sustained >= vmax) sustainedBurnIds.push(c.id);
+      if (typeof sustained === 'number' && sustained >= vmax) sustainedBurnIds.push(c.id);
     }
     this.publishBurnResult(
       peakBurnIds,
@@ -820,7 +903,7 @@ export class CircuitSimulationFacade {
       const vc = nodeVoltageFromResult(res, cNet, scrub);
       if (va == null || vc == null) continue;
       const vac = va - vc;
-      const vf = typeof c.params['vf'] === 'number' ? (c.params['vf'] as number) : 2;
+      const vf = paramNumber(c.params, 'vf', 2);
       if (vac < -0.3 || (Math.abs(vac) > vf * 0.5 && vac < 0)) {
         warn.push(this.i18n.t('lab.led.reverseBiasTip', { id: c.id }));
         this.highlightComponentIds.set([

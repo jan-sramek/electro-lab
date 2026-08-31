@@ -40,7 +40,7 @@ Optional streaming (WebSocket/SSE) only if later transient/live modes need it.
 - Multi-trace scope with time scrub driving canvas/probe; probe tool for net V / branch I
 - Wire-current animation (KCL fill); status banner for errors / warnings / IC / probe
 - Duplicate / clipboard / JSON import-export; named local circuit tabs
-- Teaching pack: battery, R, C (optional `ic`), L (optional `ic`), LED/diode, switch (`openAt` / `closeAt`), SPST relay (coil + contacts), pulse, pot, ammeter/voltmeter, op-amp (VCVS with teaching rails), switch-like NPN BJT + named **BC547** catalog alias, AC source (sine in transient when `freq` > 0)
+- Teaching pack: battery, R, C (optional `ic`), L (optional `ic`), LED/diode, switch (`openAt` / `closeAt`), SPST relay (coil + contacts), pulse, pot, ammeter/voltmeter, op-amp (VCVS with teaching rails), switch-like NPN BJT + named **BC547** catalog alias, teaching **NMOS** and **NE555**, AC source (sine in transient when `freq` > 0)
 - Example presets including LED series, **LED fade** (two-run capacitor IC carry-over), RC, pot, pulse, op-amp invert, AC RC LPF, BJT LED switch
 - Transient option `initFromDc` (Lab toolbar checkbox) to seed C/L state from a DC solve at t = 0
 - Lab polarity cues (`+`/`−`, A/K) and diagnostics for AC nonlinear opens, silent AC sources, switch+inductor spikes

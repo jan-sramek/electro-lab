@@ -8,6 +8,9 @@ import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
 import { createAcRcPreset } from './presets/ac-rc.preset';
 import { createBjtSwitchPreset } from './presets/bjt-switch.preset';
 import { createRelayDiodePreset } from './presets/relay-diode.preset';
+import { createNmosSwitchPreset } from './presets/nmos-switch.preset';
+import { createNe555AstablePreset } from './presets/ne555-astable.preset';
+import { createNe555ChristmasTreePreset } from './presets/ne555-christmas-tree.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
 import { SchematicDocument } from './schematic.model';
 
@@ -23,6 +26,7 @@ function overlappingHorizontalRails(docs: SchematicDocument[]): string[] {
       const a = pinWorldPos(ca, w.a.pin);
       const b = pinWorldPos(cb, w.b.pin);
       if (!a || !b) continue;
+      // Layout check uses plain HV/VH elbows (not pin-exit stubs).
       const pts = orthogonalPolyline(a.x, a.y, b.x, b.y);
       for (let i = 0; i < pts.length - 1; i++) {
         const p = pts[i]!;
@@ -83,7 +87,7 @@ describe('Lab preset contracts', () => {
     expect(pulse.elements.some((e) => e.model === 'pulse_source')).toBeTrue();
   });
 
-  it('compiles op-amp, AC, BJT, and relay presets', () => {
+  it('compiles op-amp, AC, BJT, relay, NMOS, and NE555 presets', () => {
     const oa = compileNetlist(createOpAmpBufferPreset());
     expect(oa.elements.some((e) => e.model === 'op_amp')).toBeTrue();
     const ac = compileNetlist(createAcRcPreset());
@@ -100,6 +104,13 @@ describe('Lab preset contracts', () => {
     expect(relay.elements.some((e) => e.model === 'diode' && e.id === 'Dfly')).toBeTrue();
     expect(relay.elements.some((e) => e.model === 'led')).toBeTrue();
     expect(relay.elements.some((e) => e.model === 'switch')).toBeTrue();
+    const nmos = compileNetlist(createNmosSwitchPreset());
+    expect(nmos.elements.some((e) => e.model === 'nmos')).toBeTrue();
+    expect(nmos.elements.some((e) => e.id === 'M1')).toBeTrue();
+    const ne555 = compileNetlist(createNe555AstablePreset());
+    expect(ne555.elements.some((e) => e.model === 'ne555')).toBeTrue();
+    expect(ne555.elements.some((e) => e.id === 'U1')).toBeTrue();
+    expect(ne555.elements.filter((e) => e.model === 'led').length).toBe(3);
   });
 
   it('avoids long overlapping horizontal wire rails (supply vs return)', () => {
@@ -115,6 +126,22 @@ describe('Lab preset contracts', () => {
       createRelayDiodePreset()
     ]);
     expect(hits).withContext(hits.join('; ')).toEqual([]);
+  });
+
+  it('NMOS sample layout compiles without long rail collisions', () => {
+    const hits = overlappingHorizontalRails([createNmosSwitchPreset()]);
+    expect(hits).withContext(hits.join('; ')).toEqual([]);
+  });
+
+  it('NE555 astable preset compiles three parallel LEDs', () => {
+    const ne555 = compileNetlist(createNe555AstablePreset());
+    expect(ne555.elements.filter((e) => e.model === 'led').length).toBe(3);
+  });
+
+  it('NE555 Christmas tree preset compiles ten LEDs', () => {
+    const tree = compileNetlist(createNe555ChristmasTreePreset());
+    expect(tree.elements.some((e) => e.model === 'ne555')).toBeTrue();
+    expect(tree.elements.filter((e) => e.model === 'led').length).toBe(10);
   });
 
   it('flags shorted voltage source', () => {

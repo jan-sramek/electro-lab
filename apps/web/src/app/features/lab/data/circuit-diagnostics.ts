@@ -134,7 +134,14 @@ export function diagnoseSchematic(
   if (mode === 'ac') {
     const nonlinear = simParts.filter((c) => {
       const sim = simModelOf(c.modelKey);
-      return sim === 'led' || sim === 'diode' || sim === 'relay' || isBjtNpnPart(c.modelKey);
+      return (
+        sim === 'led' ||
+        sim === 'diode' ||
+        sim === 'relay' ||
+        sim === 'nmos' ||
+        sim === 'ne555' ||
+        isBjtNpnPart(c.modelKey)
+      );
     });
     if (nonlinear.length > 0) {
       out.push(diag('ac_nonlinear_open', 'warning', nonlinear.map((c) => c.id)));

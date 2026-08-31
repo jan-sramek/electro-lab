@@ -1,4 +1,5 @@
 import { SYMBOL_LIBRARY, simModelOf, symbolOf } from './symbol-library';
+import { symbolDisplayScale } from './symbol-scale';
 
 export interface SchematicPin {
   net: string;
@@ -25,6 +26,8 @@ export interface SchematicWire {
   id: string;
   a: PinRef;
   b: PinRef;
+  /** Optional absolute world elbows for manual wire routing. */
+  waypoints?: { x: number; y: number }[];
 }
 
 export interface SchematicDocument {
@@ -47,6 +50,35 @@ export function resetIdSeq(n = 1): void {
 
 export function pinKey(ref: PinRef): string {
   return `${ref.componentId}:${ref.pin}`;
+}
+
+/** Read a numeric schematic param (params are number | boolean — index access does not narrow). */
+export function paramNumber(
+  params: Record<string, number | boolean>,
+  key: string,
+  fallback: number
+): number {
+  const v = params[key];
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
+
+/** Read a boolean schematic param. */
+export function paramBool(
+  params: Record<string, number | boolean>,
+  key: string,
+  fallback = false
+): boolean {
+  const v = params[key];
+  return typeof v === 'boolean' ? v : fallback;
+}
+
+/** Read a numeric schematic param when present; null if missing or non-numeric. */
+export function paramNumberOrNull(
+  params: Record<string, number | boolean>,
+  key: string
+): number | null {
+  const v = params[key];
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
 /**
@@ -76,11 +108,12 @@ export function pinWorldPos(
 ): { x: number; y: number } | null {
   const pin = c.pins[pinName];
   if (!pin) return null;
-  const r = rotateOffset(pin.ox, pin.oy, c.rotation);
+  const s = symbolDisplayScale(c.modelKey);
+  const r = rotateOffset(pin.ox * s, pin.oy * s, c.rotation);
   return { x: c.x + r.ox, y: c.y + r.oy };
 }
 
-/** Orthogonal (HV/VH) polyline for pin-to-pin wires. */
+/** Orthogonal (HV/VH) polyline for pin-to-pin wires (legacy helper; prefer wire-routing). */
 export function orthogonalPolyline(
   x1: number,
   y1: number,
@@ -146,21 +179,25 @@ export function createComponent(
                       ? 'VP'
                       : sim === 'bjt_npn'
                         ? 'Q'
-                        : sim === 'relay'
-                          ? 'K'
-                          : sim === 'op_amp'
+                        : sim === 'nmos'
+                          ? 'M'
+                          : sim === 'ne555'
                             ? 'U'
-                            : sim === 'ammeter'
-                              ? 'AM'
-                              : sim === 'voltmeter'
-                                ? 'VM'
-                                : sim === 'ac_source'
-                                  ? 'AC'
-                                  : def.modelKey === 'ground'
-                                    ? 'GND'
-                                    : def.modelKey === 'junction'
-                                      ? 'J'
-                                      : 'X';
+                            : sim === 'relay'
+                              ? 'K'
+                              : sim === 'op_amp'
+                                ? 'U'
+                                : sim === 'ammeter'
+                                  ? 'AM'
+                                  : sim === 'voltmeter'
+                                    ? 'VM'
+                                    : sim === 'ac_source'
+                                      ? 'AC'
+                                      : def.modelKey === 'ground'
+                                        ? 'GND'
+                                        : def.modelKey === 'junction'
+                                          ? 'J'
+                                          : 'X';
   return {
     id: id ?? nextId(prefix),
     modelKey: def.modelKey,

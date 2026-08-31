@@ -39,6 +39,34 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
           {{ 'learn.project.relay.openLab' | t }}
         </a>
       </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.nmos.title' | t }}</h2>
+        <p>{{ 'learn.project.nmos.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.nmos.step1' | t }}</li>
+          <li>{{ 'learn.project.nmos.step2' | t }}</li>
+          <li>{{ 'learn.project.nmos.step3' | t }}</li>
+          <li>{{ 'learn.project.nmos.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'nmos' }">
+          {{ 'learn.project.nmos.openLab' | t }}
+        </a>
+      </article>
+
+      <article class="project">
+        <h2>{{ 'learn.project.ne555.title' | t }}</h2>
+        <p>{{ 'learn.project.ne555.summary' | t }}</p>
+        <ol class="checklist">
+          <li>{{ 'learn.project.ne555.step1' | t }}</li>
+          <li>{{ 'learn.project.ne555.step2' | t }}</li>
+          <li>{{ 'learn.project.ne555.step3' | t }}</li>
+          <li>{{ 'learn.project.ne555.step4' | t }}</li>
+        </ol>
+        <a class="cta" routerLink="/lab" [queryParams]="{ example: 'ne555' }">
+          {{ 'learn.project.ne555.openLab' | t }}
+        </a>
+      </article>
     </section>
   `,
   styles: `

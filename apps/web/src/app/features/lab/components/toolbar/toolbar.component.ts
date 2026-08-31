@@ -58,7 +58,10 @@ export class LabToolbarComponent {
       value === 'opamp' ||
       value === 'ac' ||
       value === 'bjt' ||
-      value === 'relay'
+      value === 'relay' ||
+      value === 'nmos' ||
+      value === 'ne555' ||
+      value === 'christmasTree'
     ) {
       this.loadPreset.emit(value);
     }

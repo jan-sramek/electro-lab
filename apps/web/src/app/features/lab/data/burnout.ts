@@ -1,4 +1,4 @@
-import { isBjtNpnPart, simModelOf } from './symbol-library';
+import { isBjtNpnPart, isNmosPart, isNe555Part, simModelOf } from './symbol-library';
 
 /** Teaching overload thresholds. */
 export const DIODE_BURN_A = 0.1;
@@ -9,11 +9,21 @@ export const CAP_DEFAULT_VMAX = 16;
 /** Series ammeter teaching fuse (~200 mA). */
 export const AMMETER_BURN_A = 0.2;
 
-export type BurnKind = 'led' | 'bjt' | 'diode' | 'resistor' | 'capacitor' | 'ammeter';
+export type BurnKind =
+  | 'led'
+  | 'bjt'
+  | 'diode'
+  | 'resistor'
+  | 'capacitor'
+  | 'ammeter'
+  | 'nmos'
+  | 'ne555';
 
 export function burnKindOf(modelKey: string): BurnKind | null {
   if (modelKey === 'led') return 'led';
   if (isBjtNpnPart(modelKey)) return 'bjt';
+  if (isNmosPart(modelKey)) return 'nmos';
+  if (isNe555Part(modelKey)) return 'ne555';
   const sim = simModelOf(modelKey);
   if (sim === 'diode') return 'diode';
   if (sim === 'resistor') return 'resistor';
@@ -40,6 +50,10 @@ export function burnWarningKey(kind: BurnKind): string {
       return 'lab.capacitor.burnedWarning';
     case 'ammeter':
       return 'lab.ammeter.burnedWarning';
+    case 'nmos':
+      return 'lab.nmos.burnedWarning';
+    case 'ne555':
+      return 'lab.ne555.burnedWarning';
   }
 }
 
@@ -57,6 +71,10 @@ export function burnInspectorNoteKey(kind: BurnKind): string {
       return 'lab.inspector.capacitorBurned';
     case 'ammeter':
       return 'lab.inspector.ammeterBurned';
+    case 'nmos':
+      return 'lab.inspector.nmosBurned';
+    case 'ne555':
+      return 'lab.inspector.ne555Burned';
   }
 }
 
@@ -74,5 +92,9 @@ export function burnReplaceLabelKey(kind: BurnKind): string {
       return 'lab.inspector.replaceCapacitor';
     case 'ammeter':
       return 'lab.inspector.replaceAmmeter';
+    case 'nmos':
+      return 'lab.inspector.replaceNmos';
+    case 'ne555':
+      return 'lab.inspector.replaceNe555';
   }
 }

@@ -33,6 +33,8 @@ export interface SymbolDef {
   teachingNote?: string;
   /** If true, omitted from CircuitEngine netlist; used only for grounding. */
   schematicOnly?: boolean;
+  /** Extra canvas scale multiplier (LED/diode default smaller for dense layouts). */
+  displayScale?: number;
   pins: PinDef[];
   defaultParams: Record<string, number | boolean>;
   paramDefs: ParamDef[];
@@ -54,6 +56,14 @@ export function glyphKeyOf(modelKey: string): string {
 
 export function isBjtNpnPart(modelKey: string): boolean {
   return simModelOf(modelKey) === 'bjt_npn';
+}
+
+export function isNmosPart(modelKey: string): boolean {
+  return simModelOf(modelKey) === 'nmos';
+}
+
+export function isNe555Part(modelKey: string): boolean {
+  return simModelOf(modelKey) === 'ne555';
 }
 
 export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
@@ -182,6 +192,58 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     width: 40,
     height: 56
   },
+  nmos: {
+    modelKey: 'nmos',
+    label: 'lab.symbol.nmos',
+    teachingNote: 'lab.modelNote.nmos',
+    pins: [
+      { name: 'd', ox: 0, oy: -40 },
+      { name: 'g', ox: -40, oy: 0 },
+      { name: 's', ox: 0, oy: 40 }
+    ],
+    defaultParams: { vth: 2, ron: 5, burned: false },
+    paramDefs: [
+      { key: 'vth', label: 'lab.param.thresholdV', type: 'number', min: 0, step: 0.1, unit: 'V' },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.1,
+        step: 1,
+        unit: 'Ω'
+      }
+    ],
+    width: 40,
+    height: 56
+  },
+  ne555: {
+    modelKey: 'ne555',
+    label: 'lab.symbol.ne555',
+    teachingNote: 'lab.modelNote.ne555',
+    pins: [
+      { name: 'gnd', ox: -36, oy: -36 },
+      { name: 'trig', ox: -36, oy: -12 },
+      { name: 'out', ox: -36, oy: 12 },
+      { name: 'reset', ox: -36, oy: 36 },
+      { name: 'ctrl', ox: 36, oy: 36 },
+      { name: 'thr', ox: 36, oy: 12 },
+      { name: 'dis', ox: 36, oy: -12 },
+      { name: 'vcc', ox: 36, oy: -36 }
+    ],
+    defaultParams: { ron: 10, burned: false },
+    paramDefs: [
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.1,
+        step: 1,
+        unit: 'Ω'
+      }
+    ],
+    width: 72,
+    height: 72
+  },
   ammeter: {
     modelKey: 'ammeter',
     label: 'lab.symbol.ammeter',
@@ -242,6 +304,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   led: {
     modelKey: 'led',
     label: 'lab.symbol.led',
+    displayScale: 0.68,
     pins: [
       { name: 'a', ox: 0, oy: -40 },
       { name: 'c', ox: 0, oy: 40 }
@@ -271,6 +334,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     modelKey: 'diode',
     label: 'lab.symbol.diode',
     teachingNote: 'lab.modelNote.diode',
+    displayScale: 0.68,
     pins: [
       { name: 'a', ox: -40, oy: 0 },
       { name: 'c', ox: 40, oy: 0 }
@@ -524,6 +588,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     modelKey: 'junction',
     label: 'lab.symbol.junction',
     schematicOnly: true,
+    displayScale: 0.75,
     pins: [{ name: 'j', ox: 0, oy: 0 }],
     defaultParams: {},
     paramDefs: [],
@@ -544,6 +609,8 @@ export const PALETTE_ORDER = [
   'relay',
   'bjt_npn',
   'bc547',
+  'nmos',
+  'ne555',
   'op_amp',
   'current_source',
   'capacitor',

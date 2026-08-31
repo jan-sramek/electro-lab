@@ -19,6 +19,9 @@ import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
 import { createAcRcPreset } from '../data/presets/ac-rc.preset';
 import { createBjtSwitchPreset } from '../data/presets/bjt-switch.preset';
 import { createRelayDiodePreset } from '../data/presets/relay-diode.preset';
+import { createNmosSwitchPreset } from '../data/presets/nmos-switch.preset';
+import { createNe555AstablePreset } from '../data/presets/ne555-astable.preset';
+import { createNe555ChristmasTreePreset } from '../data/presets/ne555-christmas-tree.preset';
 import { ledColorById } from '../data/led-colors';
 import { canBurnOut } from '../data/burnout';
 import {
@@ -37,7 +40,10 @@ export type ExamplePresetId =
   | 'opamp'
   | 'ac'
   | 'bjt'
-  | 'relay';
+  | 'relay'
+  | 'nmos'
+  | 'ne555'
+  | 'christmasTree';
 
 @Injectable()
 export class LabEditorStore {
@@ -540,6 +546,25 @@ export class LabEditorStore {
     this.openExampleInNewTab('relay', 'Relay + diode', createRelayDiodePreset, 'dcOp');
   }
 
+  loadNmosPreset(): void {
+    this.openExampleInNewTab('nmos', 'NMOS LED switch', createNmosSwitchPreset, 'dcOp');
+  }
+
+  loadNe555Preset(): void {
+    this.openExampleInNewTab('ne555', 'NE555 astable', createNe555AstablePreset, 'tran', 0.1, 5e-5);
+  }
+
+  loadChristmasTreePreset(): void {
+    this.openExampleInNewTab(
+      'christmasTree',
+      'NE555 Christmas tree',
+      createNe555ChristmasTreePreset,
+      'tran',
+      0.1,
+      5e-5
+    );
+  }
+
   newSchematic(): void {
     if (typeof window !== 'undefined' && !window.confirm('Clear the current schematic?')) {
       return;
@@ -633,7 +658,10 @@ export class LabEditorStore {
       p === 'opamp' ||
       p === 'ac' ||
       p === 'bjt' ||
-      p === 'relay'
+      p === 'relay' ||
+      p === 'nmos' ||
+      p === 'ne555' ||
+      p === 'christmasTree'
     ) {
       this.activeExamplePreset.set(p);
     } else {

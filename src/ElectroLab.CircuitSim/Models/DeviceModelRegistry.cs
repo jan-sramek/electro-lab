@@ -26,6 +26,8 @@ public sealed class DeviceModelRegistry
         new PulseSourceModel(),
         new OpAmpModel(),
         new BjtNpnModel(),
+        new NmosModel(),
+        new Ne555Model(),
         new RelayModel(),
         new AcSourceModel(),
         new AmmeterModel()

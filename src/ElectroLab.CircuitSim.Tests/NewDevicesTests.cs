@@ -438,6 +438,210 @@ public class NewDevicesTests
         Assert.Contains(result.Warnings, w => w.Contains("D1") && w.Contains("nonlinear"));
     }
 
+    [Fact]
+    public void NmosSwitch_PassesCurrent_WhenGateAboveThreshold()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VG", "battery", Pins(("p", "ng"), ("n", "gnd")), P(("v", 5))),
+                El("VD", "battery", Pins(("p", "nd"), ("n", "gnd")), P(("v", 10))),
+                El("RD", "resistor", Pins(("a", "nd"), ("b", "d")), P(("r", 100))),
+                El("M1", "nmos", Pins(("d", "d"), ("g", "ng"), ("s", "gnd")), P(("vth", 2), ("ron", 5)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.BranchCurrents["M1"] > 0.05);
+        Assert.True(result.DcOp.NodeVoltages["d"] < 2.0);
+    }
+
+    [Fact]
+    public void NmosSwitch_Blocks_WhenGateBelowThreshold()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VG", "battery", Pins(("p", "ng"), ("n", "gnd")), P(("v", 1))),
+                El("VD", "battery", Pins(("p", "nd"), ("n", "gnd")), P(("v", 10))),
+                El("RD", "resistor", Pins(("a", "nd"), ("b", "d")), P(("r", 100))),
+                El("M1", "nmos", Pins(("d", "d"), ("g", "ng"), ("s", "gnd")), P(("vth", 2), ("ron", 5)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(Math.Abs(result.DcOp!.BranchCurrents["M1"]) < 1e-6);
+        Assert.Equal(10.0, result.DcOp.NodeVoltages["d"], 2);
+    }
+
+    [Fact]
+    public void Ne555_OutputHigh_WhenTriggered()
+    {
+        // thr low, trig low, reset high → latch sets → OUT toward Vcc.
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VCC", "battery", Pins(("p", "vcc"), ("n", "gnd")), P(("v", 5))),
+                El("RL", "resistor", Pins(("a", "out"), ("b", "gnd")), P(("r", 1000))),
+                El(
+                    "U1",
+                    "ne555",
+                    Pins(
+                        ("gnd", "gnd"),
+                        ("trig", "gnd"),
+                        ("out", "out"),
+                        ("reset", "vcc"),
+                        ("ctrl", "ctrl"),
+                        ("thr", "gnd"),
+                        ("dis", "dis"),
+                        ("vcc", "vcc")
+                    ),
+                    P(("ron", 10))
+                ),
+                El("RC", "resistor", Pins(("a", "ctrl"), ("b", "gnd")), P(("r", 1e6)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.NodeVoltages["out"] > 4.0, $"Vout={result.DcOp.NodeVoltages["out"]}");
+    }
+
+    [Fact]
+    public void Ne555_OutputLow_WhenThresholdHigh()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VCC", "battery", Pins(("p", "vcc"), ("n", "gnd")), P(("v", 5))),
+                El("RL", "resistor", Pins(("a", "out"), ("b", "gnd")), P(("r", 1000))),
+                El(
+                    "U1",
+                    "ne555",
+                    Pins(
+                        ("gnd", "gnd"),
+                        ("trig", "vcc"),
+                        ("out", "out"),
+                        ("reset", "vcc"),
+                        ("ctrl", "ctrl"),
+                        ("thr", "vcc"),
+                        ("dis", "dis"),
+                        ("vcc", "vcc")
+                    ),
+                    P(("ron", 10))
+                ),
+                El("RC", "resistor", Pins(("a", "ctrl"), ("b", "gnd")), P(("r", 1e6)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(result.DcOp!.NodeVoltages["out"] < 0.5, $"Vout={result.DcOp.NodeVoltages["out"]}");
+    }
+
+    [Fact]
+    public void Ne555_Astable_Rb10ohm_LatchesHigh_TimingNetworkIdles()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VCC", "battery", Pins(("p", "vcc"), ("n", "gnd")), P(("v", 5))),
+                El("RA", "resistor", Pins(("a", "vcc"), ("b", "dis")), P(("r", 10000))),
+                El("RB", "resistor", Pins(("a", "dis"), ("b", "thr")), P(("r", 10))),
+                El("CT", "capacitor", Pins(("a", "thr"), ("b", "gnd")), P(("c", 4.7e-7))),
+                El("CC", "capacitor", Pins(("a", "ctrl"), ("b", "gnd")), P(("c", 1e-8))),
+                El("R1", "resistor", Pins(("a", "out"), ("b", "led1")), P(("r", 220))),
+                El("D1", "led", Pins(("a", "led1"), ("c", "gnd")), P(("vf", 2), ("ron", 5))),
+                El("R2", "resistor", Pins(("a", "out"), ("b", "led2")), P(("r", 220))),
+                El("D2", "led", Pins(("a", "led2"), ("c", "gnd")), P(("vf", 2), ("ron", 5))),
+                El("R3", "resistor", Pins(("a", "out"), ("b", "led3")), P(("r", 220))),
+                El("D3", "led", Pins(("a", "led3"), ("c", "gnd")), P(("vf", 2), ("ron", 5))),
+                El(
+                    "U1",
+                    "ne555",
+                    Pins(
+                        ("gnd", "gnd"),
+                        ("trig", "thr"),
+                        ("out", "out"),
+                        ("reset", "vcc"),
+                        ("ctrl", "ctrl"),
+                        ("thr", "thr"),
+                        ("dis", "dis"),
+                        ("vcc", "vcc")
+                    ),
+                    P(("ron", 10))
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new AnalysisOptions { TStop = 0.1, Dt = 5e-5 });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var outV = result.Tran!.NodeVoltages.First(s => s.Id == "out").Values;
+        var rb = result.Tran.BranchCurrents.First(s => s.Id == "RB").Values;
+        var ra = result.Tran.BranchCurrents.First(s => s.Id == "RA").Values;
+        var d1 = result.Tran.BranchCurrents.First(s => s.Id == "D1").Values;
+        // RB ≪ RA breaks astable timing — output sticks high; timing network idles.
+        Assert.True(outV.Min() > 4.5, "OUT should latch high with RB=10 Ω");
+        Assert.True(rb.Max(v => Math.Abs(v)) < 0.01, "RB branch should be nearly idle when DIS is off");
+        Assert.True(ra.Max(v => Math.Abs(v)) < 0.01, "RA branch should be nearly idle when DIS is off");
+        Assert.True(d1.Max() > 0.005, "LEDs should still conduct when OUT is high");
+    }
+
+    [Fact]
+    public void Ne555_Astable_Oscillates_Output()
+    {
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VCC", "battery", Pins(("p", "vcc"), ("n", "gnd")), P(("v", 5))),
+                El("RA", "resistor", Pins(("a", "vcc"), ("b", "dis")), P(("r", 10000))),
+                El("RB", "resistor", Pins(("a", "dis"), ("b", "thr")), P(("r", 10000))),
+                El("CT", "capacitor", Pins(("a", "thr"), ("b", "gnd")), P(("c", 4.7e-7))),
+                El("CC", "capacitor", Pins(("a", "ctrl"), ("b", "gnd")), P(("c", 1e-8))),
+                El("R1", "resistor", Pins(("a", "out"), ("b", "led")), P(("r", 220))),
+                El("D1", "led", Pins(("a", "led"), ("c", "gnd")), P(("vf", 2), ("ron", 5))),
+                El(
+                    "U1",
+                    "ne555",
+                    Pins(
+                        ("gnd", "gnd"),
+                        ("trig", "thr"),
+                        ("out", "out"),
+                        ("reset", "vcc"),
+                        ("ctrl", "ctrl"),
+                        ("thr", "thr"),
+                        ("dis", "dis"),
+                        ("vcc", "vcc")
+                    ),
+                    P(("ron", 10))
+                )
+            ]
+        };
+
+        var result = _sim.Simulate(circuit, "tran", new AnalysisOptions { TStop = 0.05, Dt = 5e-5 });
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        var outSeries = result.Tran!.NodeVoltages.First(s => s.Id == "out").Values;
+        Assert.Contains(outSeries, v => v > 3.5);
+        Assert.Contains(outSeries, v => v < 0.5);
+        var ledSeries = result.Tran.BranchCurrents.First(s => s.Id == "D1").Values;
+        Assert.Contains(ledSeries, i => i > 0.005);
+        Assert.Contains(ledSeries, i => i < 1e-4);
+    }
+
     private static ElementInstance El(
         string id,
         string model,

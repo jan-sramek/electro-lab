@@ -9,19 +9,28 @@ import {
   assignNets,
   closestPointOnOrthogonalWire,
   createComponent,
-  orthogonalPolyline,
   pinKey,
   pinWorldPos,
   polylineToPath,
+  paramNumber,
+  paramNumberOrNull,
   snap,
   splitWireAtJunction
 } from '../../data/schematic.model';
 import { SYMBOL_LIBRARY, glyphKeyOf } from '../../data/symbol-library';
+import { pinHitRadius, symbolDisplayScale } from '../../data/symbol-scale';
+import {
+  clearWireWaypoints,
+  pinExitDirection,
+  routeOrthogonal,
+  wirePolyline,
+  withWireWaypoint
+} from '../../data/wire-routing';
 import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
-import { estimateAllWireCurrents } from '../../data/wire-current';
+import { WireFlowBuilder } from '../../data/wire-flow/wire-flow.builder';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
 import { canBurnOut } from '../../data/burnout';
 import { normalizeLedColorId } from '../../data/led-colors';
@@ -29,6 +38,11 @@ import { normalizeLedColorId } from '../../data/led-colors';
 interface DragState {
   ids: string[];
   origins: Map<string, { x: number; y: number }>;
+  pointer0: { x: number; y: number };
+}
+
+interface WireDragState {
+  wireId: string;
   pointer0: { x: number; y: number };
 }
 
@@ -76,11 +90,14 @@ export class SchematicCanvasComponent {
   readonly marqueeRect = signal<{ x: number; y: number; w: number; h: number } | null>(null);
   readonly lib = SYMBOL_LIBRARY;
   readonly glyphKeyOf = glyphKeyOf;
+  readonly displayScaleFor = symbolDisplayScale;
+  readonly pinHitR = pinHitRadius;
 
   /** viewBox: x y w h */
   readonly view = signal({ x: 0, y: 0, w: 720, h: 400 });
   private pan: { x0: number; y0: number; vx: number; vy: number } | null = null;
   private drag: DragState | null = null;
+  private wireDrag: WireDragState | null = null;
   private marquee: MarqueeState | null = null;
 
   constructor() {
@@ -104,37 +121,9 @@ export class SchematicCanvasComponent {
     const d = this.nettled();
     const res = this.result();
     const live = !!res?.ok;
-    const wireCurrents = live
-      ? estimateAllWireCurrents(d.components, d.wires, (id) => this.currentOf(id))
-      : null;
-    const out: {
-      id: string;
-      d: string;
-      pts: { x: number; y: number }[];
-      flow: { path: string; periodMs: number; strength: number } | null;
-    }[] = [];
-    for (const w of d.wires) {
-      const a = this.endpoint(d, w.a);
-      const b = this.endpoint(d, w.b);
-      if (!a || !b) continue;
-      const pts = orthogonalPolyline(a.x, a.y, b.x, b.y);
-      const path = polylineToPath(pts);
-      let flow: { path: string; periodMs: number; strength: number } | null = null;
-      if (wireCurrents) {
-        const iAlong = wireCurrents.get(w.id) ?? 0;
-        if (Math.abs(iAlong) > 1e-6) {
-          const mag = Math.abs(iAlong);
-          const strength = Math.min(1, mag / 0.012);
-          const periodMs = Math.round(
-            Math.max(220, Math.min(900, 480 / Math.sqrt(strength + 0.2)))
-          );
-          const drawPts = iAlong >= 0 ? pts : [...pts].reverse();
-          flow = { path: polylineToPath(drawPts), periodMs, strength };
-        }
-      }
-      out.push({ id: w.id, d: path, pts, flow });
-    }
-    return out;
+    // scrubIndex is read inside currentOf() for transient — keeps flow in sync with playback.
+    this.scrubIndex();
+    return WireFlowBuilder.build(d, live, (id) => this.currentOf(id));
   });
 
   readonly junctionDots = computed(() => {
@@ -158,9 +147,14 @@ export class SchematicCanvasComponent {
     const from = this.wireFrom();
     const cursor = this.wireCursor();
     if (!from || !cursor) return null;
-    const a = this.endpoint(this.nettled(), from);
+    const d = this.nettled();
+    const a = this.endpoint(d, from);
     if (!a) return null;
-    return polylineToPath(orthogonalPolyline(a.x, a.y, cursor.x, cursor.y));
+    const ca = d.components.find((c) => c.id === from.componentId);
+    const exitA = ca ? pinExitDirection(ca, from.pin) : null;
+    return polylineToPath(
+      routeOrthogonal(a.x, a.y, cursor.x, cursor.y, { exitA, exitB: null })
+    );
   });
 
   readonly netTags = computed(() => {
@@ -335,8 +329,9 @@ export class SchematicCanvasComponent {
     const def = SYMBOL_LIBRARY[c.modelKey];
     if (!def) return false;
     const pad = 8;
-    let bw = def.width + pad * 2;
-    let bh = def.height + pad * 2;
+    const s = symbolDisplayScale(c.modelKey);
+    let bw = def.width * s + pad * 2;
+    let bh = def.height * s + pad * 2;
     if (c.rotation === 90 || c.rotation === 270) {
       const t = bw;
       bw = bh;
@@ -399,7 +394,13 @@ export class SchematicCanvasComponent {
         const o = this.drag!.origins.get(c.id);
         if (!o) return c;
         return { ...c, x: o.x + dx, y: o.y + dy };
-      })
+      }),
+      // Re-auto-route when endpoints move so manual elbows do not drift.
+      wires: this.doc().wires.map((w) =>
+        moving.has(w.a.componentId) || moving.has(w.b.componentId)
+          ? clearWireWaypoints(w)
+          : w
+      )
     });
   }
 
@@ -501,9 +502,54 @@ export class SchematicCanvasComponent {
     }
 
     if (tool !== 'select') return;
+    // Selection handled on pointerdown; ignore click after drag.
+  }
+
+  onWirePointerDown(ev: PointerEvent, wireId: string): void {
+    if (this.tool() !== 'select' || ev.button !== 0) return;
+    ev.stopPropagation();
     this.selectWire.emit({
       id: wireId,
       additive: ev.ctrlKey || ev.metaKey
+    });
+    const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
+    const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
+    this.wireDrag = { wireId, pointer0: { x: pt.x, y: pt.y } };
+    (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
+  }
+
+  onWirePointerMove(ev: PointerEvent): void {
+    if (!this.wireDrag) return;
+    const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
+    const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
+    const moved = Math.hypot(pt.x - this.wireDrag.pointer0.x, pt.y - this.wireDrag.pointer0.y);
+    if (moved < 3) return;
+    const id = this.wireDrag.wireId;
+    this.docChange.emit({
+      ...this.doc(),
+      wires: this.doc().wires.map((w) =>
+        w.id === id ? withWireWaypoint(w, { x: pt.x, y: pt.y }) : w
+      )
+    });
+  }
+
+  onWirePointerUp(ev: PointerEvent): void {
+    if (this.wireDrag) {
+      try {
+        (ev.currentTarget as Element).releasePointerCapture(ev.pointerId);
+      } catch {
+        /* ignore */
+      }
+    }
+    this.wireDrag = null;
+  }
+
+  onWireDblClick(ev: MouseEvent, wireId: string): void {
+    if (this.tool() !== 'select') return;
+    ev.stopPropagation();
+    this.docChange.emit({
+      ...this.doc(),
+      wires: this.doc().wires.map((w) => (w.id === wireId ? clearWireWaypoints(w) : w))
     });
   }
 
@@ -615,10 +661,8 @@ export class SchematicCanvasComponent {
   /** Switch glyph follows scrub time when openAt/closeAt timeline is active. */
   switchClosed(c: SchematicComponent): boolean {
     if (c.modelKey !== 'switch') return !!c.params['closed'];
-    const openAtRaw = c.params['openAt'];
-    const closeAtRaw = c.params['closeAt'];
-    const openAt = typeof openAtRaw === 'number' ? openAtRaw : null;
-    const closeAt = typeof closeAtRaw === 'number' ? closeAtRaw : null;
+    const openAt = paramNumberOrNull(c.params, 'openAt');
+    const closeAt = paramNumberOrNull(c.params, 'closeAt');
     const hasOpen = openAt !== null && openAt >= 0;
     const hasClose = closeAt !== null && closeAt >= 0;
     const res = this.result();
@@ -639,10 +683,8 @@ export class SchematicCanvasComponent {
   /** Relay contacts: timeline / manual closed, else |Vcoil| ≥ vPull from sim. */
   relayClosed(c: SchematicComponent): boolean {
     if (c.modelKey !== 'relay') return !!c.params['closed'];
-    const openAtRaw = c.params['openAt'];
-    const closeAtRaw = c.params['closeAt'];
-    const openAt = typeof openAtRaw === 'number' ? openAtRaw : null;
-    const closeAt = typeof closeAtRaw === 'number' ? closeAtRaw : null;
+    const openAt = paramNumberOrNull(c.params, 'openAt');
+    const closeAt = paramNumberOrNull(c.params, 'closeAt');
     const hasOpen = openAt !== null && openAt >= 0;
     const hasClose = closeAt !== null && closeAt >= 0;
     const res = this.result();
@@ -662,7 +704,7 @@ export class SchematicCanvasComponent {
     const cp = c.pins['cp']?.net;
     const cn = c.pins['cn']?.net;
     if (!cp || !cn) return false;
-    const vPull = typeof c.params['vPull'] === 'number' ? (c.params['vPull'] as number) : 3.5;
+    const vPull = paramNumber(c.params, 'vPull', 3.5);
     const vp = this.voltageOf(cp);
     const vn = this.voltageOf(cn);
     if (vp === null || vn === null) return false;
@@ -715,6 +757,22 @@ export class SchematicCanvasComponent {
     if ((modelKey === 'led' || modelKey === 'diode') && pin === 'c') return 'K';
     if (modelKey === 'relay' && pin === 'cp') return '+';
     if (modelKey === 'relay' && pin === 'cn') return '−';
+    if (modelKey === 'nmos' && pin === 'g') return 'G';
+    if (modelKey === 'nmos' && pin === 'd') return 'D';
+    if (modelKey === 'nmos' && pin === 's') return 'S';
+    if (modelKey === 'ne555') {
+      const map: Record<string, string> = {
+        gnd: '1',
+        trig: '2',
+        out: '3',
+        reset: '4',
+        ctrl: '5',
+        thr: '6',
+        dis: '7',
+        vcc: '8'
+      };
+      return map[pin] ?? pin;
+    }
     return pin;
   }
 
@@ -724,7 +782,18 @@ export class SchematicCanvasComponent {
     const dx = pos.x - c.x;
     const dy = pos.y - c.y;
     const len = Math.hypot(dx, dy) || 1;
-    return { x: pos.x + (dx / len) * 12, y: pos.y + (dy / len) * 12 };
+    const out = 8 * symbolDisplayScale(c.modelKey) + 3;
+    return { x: pos.x + (dx / len) * out, y: pos.y + (dy / len) * out };
+  }
+
+  labelOffsetY(c: SchematicComponent): number {
+    const h = (SYMBOL_LIBRARY[c.modelKey]?.height ?? 40) * symbolDisplayScale(c.modelKey);
+    const tight = c.modelKey === 'led' || c.modelKey === 'diode';
+    return h / 2 + (tight ? 10 : 12);
+  }
+
+  measOffsetY(c: SchematicComponent): number {
+    return this.labelOffsetY(c) + 14;
   }
 
   private endpoint(doc: SchematicDocument, ref: PinRef) {

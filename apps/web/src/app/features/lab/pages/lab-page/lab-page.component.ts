@@ -53,6 +53,12 @@ export class LabPageComponent implements OnInit {
       this.onLoadPreset('bjt');
     } else if (example === 'relay') {
       this.onLoadPreset('relay');
+    } else if (example === 'nmos' || example === 'mosfet') {
+      this.onLoadPreset('nmos');
+    } else if (example === 'ne555' || example === '555') {
+      this.onLoadPreset('ne555');
+    } else if (example === 'christmas' || example === 'christmasTree' || example === 'tree') {
+      this.onLoadPreset('christmasTree');
     }
   }
 
@@ -84,6 +90,15 @@ export class LabPageComponent implements OnInit {
         break;
       case 'relay':
         this.editor.loadRelayPreset();
+        break;
+      case 'nmos':
+        this.editor.loadNmosPreset();
+        break;
+      case 'ne555':
+        this.editor.loadNe555Preset();
+        break;
+      case 'christmasTree':
+        this.editor.loadChristmasTreePreset();
         break;
     }
   }

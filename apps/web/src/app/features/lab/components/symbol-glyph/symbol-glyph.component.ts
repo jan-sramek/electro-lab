@@ -68,6 +68,53 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
           points="-2,22 0,28 6,22"
         />
       }
+      @case ('nmos') {
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="-4" cy="-4" rx="18" ry="22" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 8 C -10 0, -12 -14, -2 -28 C 2 -18, 8 -8, 0 8 Z"
+            />
+          </svg:g>
+        }
+        <svg:line x1="-36" y1="0" x2="-16" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-16" y1="-14" x2="-16" y2="14" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-10" y1="-18" x2="-10" y2="18" class="sym thick" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-10" y1="-12" x2="0" y2="-12" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-10" y1="12" x2="0" y2="12" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="0" y1="-12" x2="0" y2="-40" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="0" y1="12" x2="0" y2="40" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:line x1="-4" y1="20" x2="0" y2="12" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:polyline
+          class="sym"
+          [class.bjt-charred]="ledBurn() > 0.08"
+          fill="none"
+          points="-2,28 0,40 6,32"
+        />
+      }
+      @case ('ne555') {
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-4" rx="28" ry="24" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 8 C -12 0, -14 -16, -2 -30 C 2 -18, 10 -8, 0 8 Z"
+            />
+          </svg:g>
+        }
+        <svg:rect
+          x="-28"
+          y="-28"
+          width="56"
+          height="56"
+          rx="4"
+          class="sym"
+          fill="none"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:text x="0" y="5" text-anchor="middle" class="meter-letter">555</svg:text>
+      }
       @case ('ammeter') {
         @if (ledBurn() > 0.08) {
           <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">

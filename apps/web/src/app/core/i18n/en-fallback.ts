@@ -31,7 +31,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.hint':
     'Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.',
   'lab.hint.wire':
-    'Wire mode: click a pin to start (blue preview follows the cursor), then click another pin — or click an existing wire to make a T-junction. Click empty canvas to cancel.',
+    'Wire mode: click a pin to start (blue preview follows the cursor), then click another pin — or click an existing wire to make a T-junction. In Select mode, drag a wire to reshape it; double-click a wire to reset auto-route. Click empty canvas to cancel.',
   'lab.hint.probe':
     'Probe mode: click a part body to read branch current (mA), or a net/wire node for voltage (V). The value appears in the status banner. In Transient, scrub the scope — the probe and canvas follow that time.',
   'lab.hint.led':
@@ -52,6 +52,12 @@ export const EN_FALLBACK: Record<string, string> = {
     'BC547 LED switch: Run DC with S1 Closed — base current turns Q1 on and the LED lights. Open S1 (uncheck Closed) and Run again — the LED goes out. Probe AM1 for collector current; try changing RB.',
   'lab.hint.relay':
     'Relay + diode: Run DC with S1 Closed — coil energizes K1 and the LED lights through the contacts. Dfly is the flyback diode across the coil (cathode to coil+). Open S1 — contacts open and the LED goes out.',
+  'lab.hint.nmos':
+    'NMOS LED switch: Run DC with S1 Closed — gate high, LED on. Open S1 (RPD pulls the gate down) and Run again — LED off. Drain overcurrent or |Vgs| ≳ 20 V burns M1 open.',
+  'lab.hint.ne555':
+    'NE555 astable: Run Transient (~100 ms) — three LEDs blink from OUT. Watch playback or scrub OUT / CT on the scope. Too little R1–R3 or Vcc above ~18 V burns the timer open.',
+  'lab.hint.christmasTree':
+    'NE555 Christmas tree: Run Transient (~100 ms) — ten LEDs blink in a pyramid from OUT. Watch playback or probe any LED. Too little R1–R10 or high Vcc burns the timer open.',
   'lab.toolbar.select': 'Select',
   'lab.toolbar.wire': 'Wire',
   'lab.toolbar.probe': 'Probe',
@@ -77,6 +83,9 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.acPreset': 'AC RC low-pass',
   'lab.toolbar.bjtPreset': 'BC547 LED switch (DC)',
   'lab.toolbar.relayPreset': 'Relay + flyback diode (DC)',
+  'lab.toolbar.nmosPreset': 'NMOS LED switch (DC)',
+  'lab.toolbar.ne555Preset': 'NE555 astable (transient)',
+  'lab.toolbar.christmasTreePreset': 'NE555 Christmas tree (transient)',
   'lab.toolbar.export': 'Export',
   'lab.toolbar.import': 'Import',
   'lab.toolbar.new': 'New',
@@ -103,6 +112,8 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.symbol.relay': 'Relay',
   'lab.symbol.bjt_npn': 'NPN BJT',
   'lab.symbol.bc547': 'BC547',
+  'lab.symbol.nmos': 'NMOS',
+  'lab.symbol.ne555': 'NE555',
   'lab.symbol.op_amp': 'Op-amp',
   'lab.modelNote.op_amp':
     'Teaching model: finite-gain VCVS with clamp to vMax/vMin (default ±15 V). AC stays linear (unclamped).',
@@ -110,6 +121,10 @@ export const EN_FALLBACK: Record<string, string> = {
     'Teaching model: base diode + small internal rb + collector–emitter on-resistance (not SPICE). Use an external base resistor — Ib above ~25 mA burns it open.',
   'lab.modelNote.bc547':
     'BC547-style NPN (TO-92). Teaching switch model — use a base resistor; Ib above ~25 mA burns the part open (not a datasheet/SPICE transistor).',
+  'lab.modelNote.nmos':
+    'Teaching N-channel MOSFET switch (Vgs ≥ vth → Ron). Drain overcurrent (~0.5 A) or |Vgs| ≳ 20 V burns it open — not a Level-1 SPICE model.',
+  'lab.modelNote.ne555':
+    'Teaching NE555: thr/trig SR latch, open-drain discharge, totem-pole OUT. Output ≳ 200 mA or Vcc ≳ 18 V burns it open — behavioral, not a full bipolar 555.',
   'lab.modelNote.resistor':
     '¼ W teaching resistor — sustained power above ~0.25 W burns it open.',
   'lab.modelNote.diode':
@@ -121,6 +136,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.modelNote.relay':
     'Teaching SPST relay: coil resistance between +/−; contacts close when |Vcoil| ≥ pull-in (or Closed / timeline override).',
   'lab.param.capVmax': 'Max voltage',
+  'lab.param.thresholdV': 'Threshold Vgs',
   'lab.param.rCoil': 'Coil resistance',
   'lab.param.vPull': 'Pull-in voltage',
   'lab.symbol.current_source': 'Current source',
@@ -232,6 +248,16 @@ export const EN_FALLBACK: Record<string, string> = {
     'Ammeter {ids} overloaded (~200 mA) and is now open. Replace it — ammeters go in series, never across a supply.',
   'lab.ammeter.peakOverloadWarning':
     'Ammeter {ids} peaked above ~200 mA during the run (spike). It was not permanently burned.',
+  'lab.nmos.burnedWarning':
+    'MOSFET {ids} burned out (drain overcurrent or gate overvoltage) and is now open. Replace it and check gate drive / load current.',
+  'lab.nmos.peakOverloadWarning':
+    'MOSFET {ids} peaked above teaching drain/gate limits during the run (spike). It was not permanently burned.',
+  'lab.ne555.burnedWarning':
+    'Timer {ids} burned out (output overcurrent or Vcc too high) and is now open. Replace it and check ROUT / supply voltage.',
+  'lab.ne555.peakOverloadWarning':
+    'Timer {ids} peaked above teaching output/Vcc limits during the run (spike). It was not permanently burned.',
+  'lab.ne555.blinkPlayback':
+    'Blinking: all LEDs follow OUT. Scrub the scope or watch playback — change RA/RB/CT to alter the period.',
   'lab.led.fadePlayback':
     'Fading: capacitor is discharging through the resistor and LED. Scrub the scope or watch playback.',
   'lab.led.fadeDischargeHint':
@@ -256,6 +282,12 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.inspector.ammeterBurned':
     'This ammeter overloaded and failed open. Replace it — never place an ammeter directly across a voltage source.',
   'lab.inspector.replaceAmmeter': 'Replace ammeter',
+  'lab.inspector.nmosBurned':
+    'This MOSFET burned out (open circuit) from drain overcurrent or excessive gate voltage. Replace it and check the load / gate drive.',
+  'lab.inspector.replaceNmos': 'Replace MOSFET',
+  'lab.inspector.ne555Burned':
+    'This NE555 burned out (open circuit) from output overcurrent or excessive Vcc. Replace it and check ROUT / supply.',
+  'lab.inspector.replaceNe555': 'Replace NE555',
 
   'lab.probe.netFinal': 'Net {id} (final): {v} V',
   'lab.probe.netAt': 'Net {id} @ {t} s: {v} V',
@@ -273,7 +305,7 @@ export const EN_FALLBACK: Record<string, string> = {
 
   'learn.title': 'Learn',
   'learn.body':
-    'Short guided projects that open a ready-made circuit in the Lab. Start with the BC547 LED switch or the relay + diode example.',
+    'Short guided projects that open a ready-made circuit in the Lab. Try the BC547 switch, relay + diode, NMOS switch, or NE555 astable.',
   'learn.project.bc547.title': 'BC547 LED switch',
   'learn.project.bc547.summary':
     'Use a BC547 (teaching NPN) to turn an LED on and off from a base switch. Same idea as a real TO-92 switch circuit, with a simplified transistor model.',
@@ -293,6 +325,27 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.relay.step4':
     'Raise K1 pull-in above 5 V (or open S1) so the coil cannot energize — the LED stays dark.',
   'learn.project.relay.openLab': 'Open in Lab',
+  'learn.project.nmos.title': 'NMOS LED switch',
+  'learn.project.nmos.summary':
+    'Use a teaching NMOS to switch an LED from a gate switch. Same idea as a logic-level FET switch, with a simple Vgs threshold model.',
+  'learn.project.nmos.step1': 'Open the Lab example and Run DC — the LED should light with S1 closed.',
+  'learn.project.nmos.step2': 'Select S1, uncheck Closed, Run again — RPD pulls the gate down and the LED goes dark.',
+  'learn.project.nmos.step3': 'Probe AM1 or the LED for drain current while the switch is closed.',
+  'learn.project.nmos.step4':
+    'Drop RD very low or raise the supply a lot — excess drain current or |Vgs| burns M1 open; use Replace MOSFET to recover.',
+  'learn.project.nmos.openLab': 'Open in Lab',
+  'learn.project.ne555.title': 'NE555 astable blinker',
+  'learn.project.ne555.summary':
+    'Build a classic 555 astable with Ra/Rb/C timing and watch three colored LEDs blink together in Transient analysis.',
+  'learn.project.ne555.step1':
+    'Open the Lab example and Run Transient (~100 ms) — red, green, and yellow LEDs should blink in sync.',
+  'learn.project.ne555.step2':
+    'Probe OUT or CT and scrub the scope to see the square wave and capacitor ramp.',
+  'learn.project.ne555.step3':
+    'Change RA/RB/CT to alter period (teaching approximation of the classic formulas).',
+  'learn.project.ne555.step4':
+    'Drop R1–R3 too low — output overcurrent burns the timer open; use Replace NE555 to recover.',
+  'learn.project.ne555.openLab': 'Open in Lab',
 
   'account.title': 'Account',
   'account.body': 'Sign-in and profile will live here. Coming soon.'

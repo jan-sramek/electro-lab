@@ -52,8 +52,12 @@ public sealed class TransientAnalysis : IAnalysis
                 state.Bias.LedOn[el.Id] = true;
             if (IsPiecewiseBjt(el.Model))
                 state.Bias.BjtOn[el.Id] = true;
+            if (IsPiecewiseMosfet(el.Model))
+                state.Bias.MosfetOn[el.Id] = true;
             if (IsPiecewiseRelay(el.Model))
                 state.Bias.RelayOn[el.Id] = false;
+            if (IsNe555(el.Model))
+                state.Bias.Ne555High[el.Id] = false;
         }
 
         var warnings = new List<string>();
@@ -121,9 +125,19 @@ public sealed class TransientAnalysis : IAnalysis
                             changed = true;
                         }
                     }
+                    else if (IsPiecewiseMosfet(el.Model))
+                    {
+                        if (NmosModel.UpdateGateBias(el, ctx, solution, state.Bias))
+                            changed = true;
+                    }
                     else if (IsPiecewiseRelay(el.Model))
                     {
                         if (RelayModel.UpdateCoilBias(el, ctx, solution, state.Bias))
+                            changed = true;
+                    }
+                    else if (IsNe555(el.Model))
+                    {
+                        if (Ne555Model.UpdateLatch(el, ctx, solution, state.Bias))
                             changed = true;
                     }
                     else if (IsOpAmp(el.Model))
@@ -252,9 +266,19 @@ public sealed class TransientAnalysis : IAnalysis
                             changed = true;
                         }
                     }
+                    else if (IsPiecewiseMosfet(el.Model))
+                    {
+                        if (NmosModel.UpdateGateBias(el, ctx, solution, state.Bias))
+                            changed = true;
+                    }
                     else if (IsPiecewiseRelay(el.Model))
                     {
                         if (RelayModel.UpdateCoilBias(el, ctx, solution, state.Bias))
+                            changed = true;
+                    }
+                    else if (IsNe555(el.Model))
+                    {
+                        if (Ne555Model.UpdateLatch(el, ctx, solution, state.Bias))
                             changed = true;
                     }
                     else if (IsOpAmp(el.Model))
@@ -321,8 +345,14 @@ public sealed class TransientAnalysis : IAnalysis
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsPiecewiseMosfet(string model) =>
+        model.Equals("nmos", StringComparison.OrdinalIgnoreCase);
+
     private static bool IsPiecewiseRelay(string model) =>
         model.Equals("relay", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsNe555(string model) =>
+        model.Equals("ne555", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsOpAmp(string model) =>
         model.Equals("op_amp", StringComparison.OrdinalIgnoreCase);
