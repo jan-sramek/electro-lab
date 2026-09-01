@@ -1,68 +1,28 @@
-import {
-  allSwitchesOpen,
-  compileNetlistWithCapIc,
-  finalCapVoltagesFromTran,
-  schematicCapFingerprint
-} from './cap-ic';
 import { createLedFadePreset } from './presets/led-fade.preset';
-import { SimulateResponse } from '../api/circuit-api.types';
+import { electricalSimKey } from './cap-ic';
 
-describe('cap-ic helpers', () => {
-  it('fingerprints change when a wire is added', () => {
+describe('electricalSimKey', () => {
+  it('ignores component x/y position', () => {
     const doc = createLedFadePreset();
-    const a = schematicCapFingerprint(doc);
-    const b = schematicCapFingerprint({
+    const keyA = electricalSimKey(doc, 'tran', 6, 0.002, 1000, false);
+    const moved = {
       ...doc,
-      wires: [
-        ...doc.wires,
-        { id: 'WX', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'V1', pin: 'n' } }
-      ]
-    });
-    expect(a).not.toEqual(b);
+      components: doc.components.map((c) => ({ ...c, x: c.x + 120, y: c.y + 80 }))
+    };
+    const keyB = electricalSimKey(moved, 'tran', 6, 0.002, 1000, false);
+    expect(keyB).toBe(keyA);
   });
 
-  it('allSwitchesOpen follows closed flag', () => {
+  it('changes when a component param changes', () => {
     const doc = createLedFadePreset();
-    expect(allSwitchesOpen(doc)).toBeFalse();
-    const open = {
+    const keyA = electricalSimKey(doc, 'tran', 6, 0.002, 1000, false);
+    const tuned = {
       ...doc,
       components: doc.components.map((c) =>
-        c.modelKey === 'switch' ? { ...c, params: { ...c.params, closed: false } } : c
+        c.modelKey === 'capacitor' ? { ...c, params: { ...c.params, c: 0.01 } } : c
       )
     };
-    expect(allSwitchesOpen(open)).toBeTrue();
-  });
-
-  it('compileNetlistWithCapIc injects ic only when asked', () => {
-    const doc = createLedFadePreset();
-    const stored = new Map([['C1', 4.5]]);
-    const cold = compileNetlistWithCapIc(doc, stored, false);
-    expect(cold.elements.find((e) => e.id === 'C1')?.params['ic']).toBeUndefined();
-    const hot = compileNetlistWithCapIc(doc, stored, true);
-    expect(hot.elements.find((e) => e.id === 'C1')?.params['ic']).toBe(4.5);
-  });
-
-  it('finalCapVoltagesFromTran reads last node samples', () => {
-    const doc = createLedFadePreset();
-    const nettled = doc; // already assigned in factory
-    const nA = nettled.components.find((c) => c.id === 'C1')!.pins['a'].net;
-    const res: SimulateResponse = {
-      schemaVersion: 1,
-      ok: true,
-      analysisType: 'tran',
-      errors: [],
-      warnings: [],
-      tran: {
-        time: [0, 1],
-        nodeVoltages: [
-          { id: nA, values: [0, 4.2] },
-          { id: 'gnd', values: [0, 0] }
-        ],
-        branchCurrents: []
-      }
-    };
-    // C1 b is on ground rail — assign nets so b is gnd
-    const map = finalCapVoltagesFromTran(doc, res);
-    expect(map.get('C1')).toBeCloseTo(4.2, 5);
+    const keyB = electricalSimKey(tuned, 'tran', 6, 0.002, 1000, false);
+    expect(keyB).not.toBe(keyA);
   });
 });

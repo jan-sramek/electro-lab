@@ -7,6 +7,8 @@ export interface TransientPlaybackOptions {
   frameMs?: number;
   /** `loop` wraps 0→end indefinitely; `once` stops at the last sample. */
   mode?: TransientPlaybackMode;
+  /** First sample index (e.g. skip t=0 zero capacitor current). */
+  startIndex?: number;
 }
 
 /**
@@ -32,18 +34,20 @@ export class TransientPlayback {
   start(opts?: TransientPlaybackOptions): void {
     this.stop();
     const end = this.sampleCount - 1;
-    if (end <= 0) {
-      this.onIndex(0);
+    const start = Math.min(Math.max(0, opts?.startIndex ?? 0), end);
+    if (end <= start) {
+      this.onIndex(start);
       return;
     }
 
     const frames = opts?.framesPerSweep ?? 90;
     const frameMs = opts?.frameMs ?? 42;
     const mode = opts?.mode ?? 'loop';
-    const step = Math.max(1, Math.ceil(end / frames));
+    const span = end - start;
+    const step = Math.max(1, Math.ceil(span / frames));
 
-    this.index = 0;
-    this.onIndex(0);
+    this.index = start;
+    this.onIndex(start);
 
     this.timer = setInterval(() => {
       this.index += step;
@@ -54,7 +58,7 @@ export class TransientPlayback {
           this.stop();
           return;
         }
-        this.index = 0;
+        this.index = start;
       }
       this.onIndex(this.index);
     }, frameMs);

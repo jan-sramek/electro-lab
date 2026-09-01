@@ -110,6 +110,240 @@ public class LedFadeProbe
         Assert.True(Math.Abs(vn.Values[0]) < 1e-9, $"expected 0 IC, V={vn.Values[0]}");
     }
 
+    /// <summary>
+    /// Lab LED-fade preset topology: parallel cap + R→LED at the switch output,
+    /// LED cathode returns at the capacitor bottom (not a separate ground tee).
+    /// </summary>
+    [Fact]
+    public void LedFadePreset_Charge_SwitchClosed_CapBranchCarriesCurrent()
+    {
+        var sim = new CircuitSimulator();
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                new()
+                {
+                    Id = "V1",
+                    Model = "battery",
+                    Pins = new Dictionary<string, string> { ["p"] = "n1", ["n"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["v"] = 5 }
+                },
+                new()
+                {
+                    Id = "S1",
+                    Model = "switch",
+                    Pins = new Dictionary<string, string> { ["a"] = "n1", ["b"] = "n2" },
+                    Params = new Dictionary<string, double>(),
+                    BoolParams = new Dictionary<string, bool> { ["closed"] = true }
+                },
+                new()
+                {
+                    Id = "C1",
+                    Model = "capacitor",
+                    Pins = new Dictionary<string, string> { ["a"] = "n2", ["b"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["c"] = 0.0022 }
+                },
+                new()
+                {
+                    Id = "R1",
+                    Model = "resistor",
+                    Pins = new Dictionary<string, string> { ["a"] = "n2", ["b"] = "n4" },
+                    Params = new Dictionary<string, double> { ["r"] = 220 }
+                },
+                new()
+                {
+                    Id = "D1",
+                    Model = "led",
+                    Pins = new Dictionary<string, string> { ["a"] = "n4", ["c"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["vf"] = 2, ["ron"] = 20 }
+                },
+            ]
+        };
+
+        var result = sim.Simulate(
+            circuit,
+            "tran",
+            new AnalysisOptions { TStop = 2.0, Dt = 0.002 }
+        );
+        Assert.True(result.Ok, string.Join(";", result.Errors));
+        var iC = result.Tran!.BranchCurrents.First(s => s.Id == "C1").Values;
+        var times = result.Tran.Time;
+
+        var iCap0 = SignedNear(times, iC, 0.004);
+        var iCapEnd = SignedNear(times, iC, 1.9);
+
+        Assert.True(Math.Abs(iCap0) > 5e-4, $"cap should charge early, I={iCap0}");
+        Assert.True(Math.Abs(iCapEnd) < Math.Abs(iCap0), $"cap current should decay, early={iCap0} end={iCapEnd}");
+    }
+
+    [Fact]
+    public void LedFadePreset_FrontendNetlist_MatchesCompileNetlistTopology()
+    {
+        var sim = new CircuitSimulator();
+        var circuit = LedFadeFrontendNetlist();
+
+        var result = sim.Simulate(
+            circuit,
+            "tran",
+            new AnalysisOptions { TStop = 6.0, Dt = 0.002 }
+        );
+        Assert.True(result.Ok, string.Join(";", result.Errors));
+
+        var nodeIds = result.Tran!.NodeVoltages.Select(s => s.Id).ToHashSet();
+        Assert.Contains("n1", nodeIds);
+        Assert.Contains("gnd", nodeIds);
+
+        var iC = result.Tran.BranchCurrents.First(s => s.Id == "C1").Values;
+        var times = result.Tran.Time;
+        var iEarly = SignedNear(times, iC, 0.004);
+        Assert.True(Math.Abs(iEarly) > 1e-4, $"C1 should carry charge current early, I={iEarly}");
+    }
+
+    [Fact]
+    public void LedFadePreset_InitFromDc_SuppressesCapChargeCurrent()
+    {
+        var sim = new CircuitSimulator();
+        var circuit = LedFadeFrontendNetlist();
+        var result = sim.Simulate(
+            circuit,
+            "tran",
+            new AnalysisOptions { TStop = 6.0, Dt = 0.002, InitFromDc = true }
+        );
+        Assert.True(result.Ok, string.Join(";", result.Errors));
+        var iC = result.Tran!.BranchCurrents.First(s => s.Id == "C1").Values;
+        var times = result.Tran.Time;
+        var iEarly = SignedNear(times, iC, 0.004);
+        var iMax = iC.Max(Math.Abs);
+        Assert.True(iMax < 1e-3, $"initFromDc should pre-charge cap in DC, max I={iMax}");
+        Assert.True(Math.Abs(iEarly) < 1e-3, $"early cap I should be ~0 with initFromDc, I={iEarly}");
+    }
+
+    private static Circuit LedFadeFrontendNetlist() => new()
+    {
+        Ground = "gnd",
+        Elements =
+        [
+            new()
+            {
+                Id = "V1",
+                Model = "battery",
+                Pins = new Dictionary<string, string> { ["p"] = "n0", ["n"] = "gnd" },
+                Params = new Dictionary<string, double> { ["v"] = 5, ["esr"] = 0 }
+            },
+            new()
+            {
+                Id = "S1",
+                Model = "switch",
+                Pins = new Dictionary<string, string> { ["a"] = "n0", ["b"] = "n1" },
+                Params = new Dictionary<string, double> { ["openAt"] = -1 },
+                BoolParams = new Dictionary<string, bool> { ["closed"] = true }
+            },
+            new()
+            {
+                Id = "C1",
+                Model = "capacitor",
+                Pins = new Dictionary<string, string> { ["a"] = "n1", ["b"] = "gnd" },
+                Params = new Dictionary<string, double> { ["c"] = 0.0022 }
+            },
+            new()
+            {
+                Id = "R1",
+                Model = "resistor",
+                Pins = new Dictionary<string, string> { ["a"] = "n1", ["b"] = "n2" },
+                Params = new Dictionary<string, double> { ["r"] = 220 }
+            },
+            new()
+            {
+                Id = "D1",
+                Model = "led",
+                Pins = new Dictionary<string, string> { ["a"] = "n2", ["c"] = "gnd" },
+                Params = new Dictionary<string, double> { ["vf"] = 2, ["ron"] = 20 }
+            },
+        ]
+    };
+
+    [Fact]
+    public void LedFadePreset_Discharge_OpenSwitch_LedFadesFromStoredCharge()
+    {
+        var sim = new CircuitSimulator();
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                new()
+                {
+                    Id = "V1",
+                    Model = "battery",
+                    Pins = new Dictionary<string, string> { ["p"] = "n1", ["n"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["v"] = 5 }
+                },
+                new()
+                {
+                    Id = "S1",
+                    Model = "switch",
+                    Pins = new Dictionary<string, string> { ["a"] = "n1", ["b"] = "n2" },
+                    Params = new Dictionary<string, double>(),
+                    BoolParams = new Dictionary<string, bool> { ["closed"] = false }
+                },
+                new()
+                {
+                    Id = "C1",
+                    Model = "capacitor",
+                    Pins = new Dictionary<string, string> { ["a"] = "n2", ["b"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["c"] = 0.0022, ["ic"] = 4.8 }
+                },
+                new()
+                {
+                    Id = "R1",
+                    Model = "resistor",
+                    Pins = new Dictionary<string, string> { ["a"] = "n2", ["b"] = "n4" },
+                    Params = new Dictionary<string, double> { ["r"] = 220 }
+                },
+                new()
+                {
+                    Id = "D1",
+                    Model = "led",
+                    Pins = new Dictionary<string, string> { ["a"] = "n4", ["c"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["vf"] = 2, ["ron"] = 20 }
+                },
+            ]
+        };
+
+        var result = sim.Simulate(
+            circuit,
+            "tran",
+            new AnalysisOptions { TStop = 3.0, Dt = 0.002 }
+        );
+        Assert.True(result.Ok, string.Join(";", result.Errors));
+        var iD = result.Tran!.BranchCurrents.First(s => s.Id == "D1").Values;
+        var times = result.Tran.Time;
+
+        var i0 = AbsNear(times, iD, 0.004);
+        var iEnd = AbsNear(times, iD, 2.9);
+
+        Assert.True(i0 > 0.003, $"LED should glow from stored charge, I={i0}");
+        Assert.True(iEnd < i0 * 0.1, $"LED should fade, start={i0} end={iEnd}");
+    }
+
+    private static double SignedNear(IReadOnlyList<double> times, IReadOnlyList<double> values, double t)
+    {
+        var bestIdx = 0;
+        var bestDt = double.MaxValue;
+        for (var i = 0; i < times.Count; i++)
+        {
+            var dt = Math.Abs(times[i] - t);
+            if (dt < bestDt)
+            {
+                bestDt = dt;
+                bestIdx = i;
+            }
+        }
+        return values[bestIdx];
+    }
+
     private static double AbsNear(IReadOnlyList<double> times, IReadOnlyList<double> values, double t)
     {
         var bestIdx = 0;

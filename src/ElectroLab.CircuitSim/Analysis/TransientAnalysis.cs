@@ -325,7 +325,14 @@ public sealed class TransientAnalysis : IAnalysis
                 }
                 else if (el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase))
                 {
-                    state.IndCurrent[el.Id] = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
+                    var reported = model.BranchCurrent(el, ctx, solution, state.Bias) ?? 0;
+                    if (Math.Abs(reported) < 1e-6)
+                    {
+                        var est = SeriesLoopCurrent.NeighborBranchCurrent(el, models, ctx, solution, state.Bias);
+                        state.IndCurrent[el.Id] = est ?? 0;
+                    }
+                    else
+                        state.IndCurrent[el.Id] = reported;
                 }
             }
 

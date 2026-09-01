@@ -250,6 +250,7 @@ public class DcOperatingPointTests
         Assert.True(result.Ok, string.Join("; ", result.Errors));
         Assert.Equal(5.0, result.DcOp!.NodeVoltages["n2"], 2);
         Assert.Equal(0.05, result.DcOp.BranchCurrents["R1"], 3);
+        Assert.Equal(0.05, result.DcOp.BranchCurrents["L1"], 3);
     }
 
     [Fact]

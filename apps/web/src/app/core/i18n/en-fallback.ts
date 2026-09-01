@@ -27,6 +27,8 @@ export const EN_FALLBACK: Record<string, string> = {
     'AC source needs Frequency (Hz) > 0 for a sine wave in Transient. Without it the source is 0 V.',
   'diag.switch_inductor_spike':
     'Switching an inductor can make large voltage spikes (ideal teaching model). Use care with openAt/closeAt timing.',
+  'diag.dc_rc_needs_tran':
+    'Capacitors need Transient analysis for charge and discharge — switch to Transient and set tStop long enough (e.g. 6 s for LED fade).',
 
   'lab.title': 'Circuit Lab',
   'lab.fromLearn': 'From Learn:',
@@ -294,6 +296,10 @@ export const EN_FALLBACK: Record<string, string> = {
     'Capacitor charge stored (≈ {v} V). Open the switch and Run again to watch the LED fade.',
   'lab.capIc.injecting':
     'Discharging from stored capacitor voltage (≈ {v} V). Scrub the scope to watch the fade.',
+  'lab.energy.stored':
+    'Stored capacitor energy (≈ {v} V) — Run with the switch closed to charge from the battery.',
+  'lab.energy.discharging':
+    'Continuing from stored energy (≈ {v} V) — open-circuit path.',
 
   'lab.led.overloaded': 'Overloaded!',
   'lab.led.failedOpen': 'Burned out!',
@@ -351,7 +357,9 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.ne555.blinkPlayback':
     'Blinking: all LEDs follow OUT. Scrub the scope or watch playback — change RA/RB/CT to alter the period.',
   'lab.led.fadePlayback':
-    'Fading: capacitor is discharging through the resistor and LED. Scrub the scope or watch playback.',
+    'Playing capacitor discharge — LED fades as stored charge drains.',
+  'lab.led.chargePlayback':
+    'Playing capacitor charge — watch current split between the cap branch and the LED.',
   'lab.led.fadeDischargeHint':
     'Using stored capacitor voltage from the last Run (switch is open).',
   'lab.led.fadeEngineStale':

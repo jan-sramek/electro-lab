@@ -1,30 +1,41 @@
 import {
+  AnalysisMode,
   SchematicDocument,
-  assignNets,
-  compileNetlist
+  assignNets
 } from './schematic.model';
 import { SimulateResponse } from '../api/circuit-api.types';
+import { energyTopologyFingerprint } from './circuit-topology';
+import { allEnergyPathsOpen } from './switch-state';
 
-export type CompiledCircuit = ReturnType<typeof compileNetlist>;
+export { energyTopologyFingerprint, schematicCapFingerprint } from './circuit-topology';
+export { allEnergyPathsOpen, allSwitchesOpen } from './switch-state';
 
-/** Stable key for “same caps/wiring” — clear stored IC when this changes. */
-export function schematicCapFingerprint(doc: SchematicDocument): string {
+function stableParams(params: Record<string, unknown>): string {
+  const keys = Object.keys(params).sort();
+  return keys.map((k) => `${k}=${JSON.stringify(params[k])}`).join(';');
+}
+
+/**
+ * Fingerprint for auto-sim — topology, params, and analysis settings.
+ * Ignores canvas x/y so dragging parts does not re-solve.
+ */
+export function electricalSimKey(
+  doc: SchematicDocument,
+  mode: AnalysisMode,
+  tStop: number,
+  dt: number,
+  acFreq: number,
+  initFromDc: boolean
+): string {
   const comps = [...doc.components]
-    .map((c) => `${c.id}:${c.modelKey}`)
+    .map((c) => `${c.id}:${c.modelKey}:${c.rotation}:${stableParams(c.params)}`)
     .sort()
     .join('|');
   const wires = [...doc.wires]
     .map((w) => `${w.a.componentId}.${w.a.pin}-${w.b.componentId}.${w.b.pin}`)
     .sort()
     .join('|');
-  return `${comps}::${wires}`;
-}
-
-/** True when every switch on the schematic is open (or there are no switches). */
-export function allSwitchesOpen(doc: SchematicDocument): boolean {
-  const switches = doc.components.filter((c) => c.modelKey === 'switch');
-  if (!switches.length) return false;
-  return switches.every((c) => !c.params['closed']);
+  return `${comps}::${wires}::${mode}:${tStop}:${dt}:${acFreq}:${initFromDc}`;
 }
 
 /** Final V(a)−V(b) per capacitor from the last transient sample. */
@@ -56,21 +67,19 @@ export function finalCapVoltagesFromTran(
   return out;
 }
 
-/** Inject stored IC into capacitor params when discharging (switches open). */
-export function compileNetlistWithCapIc(
+export function maxStoredCapVoltageAbs(stored: Map<string, number>): number {
+  let best = 0;
+  for (const v of stored.values()) {
+    const abs = Math.abs(v);
+    if (abs > best) best = abs;
+  }
+  return best;
+}
+
+/** Whether stored energy should drive discharge fade playback for this schematic. */
+export function shouldAnimateCapDischarge(
   doc: SchematicDocument,
-  stored: Map<string, number> | null,
-  inject: boolean
-): CompiledCircuit {
-  const circuit = compileNetlist(doc);
-  if (!inject || !stored?.size) return circuit;
-  return {
-    ...circuit,
-    elements: circuit.elements.map((el) => {
-      if (el.model !== 'capacitor') return el;
-      const ic = stored.get(el.id);
-      if (ic === undefined) return el;
-      return { ...el, params: { ...el.params, ic } };
-    })
-  };
+  usedEnergySeed: boolean
+): boolean {
+  return usedEnergySeed && allEnergyPathsOpen(doc);
 }

@@ -1,5 +1,6 @@
 import { AnalysisMode, SchematicDocument, assignNets } from './schematic.model';
 import { SYMBOL_LIBRARY, isBjtNpnPart, simModelOf } from './symbol-library';
+import { hasRcEnergyNetwork } from './circuit-topology';
 
 export type DiagnosticCode =
   | 'empty_circuit'
@@ -10,7 +11,8 @@ export type DiagnosticCode =
   | 'shorted_voltage_source'
   | 'ac_nonlinear_open'
   | 'ac_source_tran_no_freq'
-  | 'switch_inductor_spike';
+  | 'switch_inductor_spike'
+  | 'dc_rc_needs_tran';
 
 export interface CircuitDiagnostic {
   code: DiagnosticCode;
@@ -128,6 +130,11 @@ export function diagnoseSchematic(
 
     if (islandNets.length > 0) {
       out.push(diag('dc_capacitor_island', 'warning', islandCaps, islandNets));
+    }
+
+    if (hasRcEnergyNetwork(doc)) {
+      const caps = simParts.filter((c) => c.modelKey === 'capacitor').map((c) => c.id);
+      out.push(diag('dc_rc_needs_tran', 'warning', caps));
     }
   }
 

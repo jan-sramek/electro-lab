@@ -160,6 +160,15 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                 currents[el.Id] = amps;
         }
 
+        foreach (var (el, _) in models)
+        {
+            if (!el.Model.Equals("inductor", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!currents.TryGetValue(el.Id, out var reported) || Math.Abs(reported) >= 1e-6) continue;
+            var est = SeriesLoopCurrent.NeighborBranchCurrent(el, models, ctx, solution!, hint);
+            if (est is double amps)
+                currents[el.Id] = amps;
+        }
+
         return new SimulationResult
         {
             Ok = true,

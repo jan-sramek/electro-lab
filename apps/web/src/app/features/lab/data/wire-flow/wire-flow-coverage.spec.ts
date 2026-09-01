@@ -3,6 +3,7 @@ import { createNe555AstablePreset } from '../presets/ne555-astable.preset';
 import { createNe555ChristmasTreePreset } from '../presets/ne555-christmas-tree.preset';
 import { createNmosSwitchPreset } from '../presets/nmos-switch.preset';
 import { createLedPreset } from '../presets/led-series.preset';
+import { createLedFadePreset } from '../presets/led-fade.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -44,6 +45,42 @@ describe('wire flow coverage on presets', () => {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(`${id} gate/pull idle`)
         .toBeLessThan(1e-6);
+    }
+  });
+
+  it('LED fade charge — cap branch, LED branch, and cap→ground animate', () => {
+    const doc = createLedFadePreset();
+    const Iin = 0.012;
+    const Icap = 0.005;
+    const Iled = 0.007;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id === 'JT') return null;
+      if (id === 'V1' || id === 'S1') return Iin;
+      if (id === 'C1') return Icap;
+      if (id === 'D1' || id === 'R1') return Iled;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('NE555 astable — timing-only currents still animate ground return', () => {
+    const doc = assignNets(createNe555AstablePreset());
+    const Ict = 0.0003;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'RA' || id === 'RB' || id === 'CT' || id === 'CC') return Ict;
+      if (id === 'V1' || id === 'U1' || id === 'R1' || id === 'R2' || id === 'R3') return 0;
+      if (id === 'D1' || id === 'D2' || id === 'D3') return 0;
+      return null;
+    });
+    const wGnd = doc.wires.find((w) => w.b.componentId === 'GND1' || w.a.componentId === 'GND1')!;
+    expect(Math.abs(currents.get(wGnd.id) ?? 0)).toBeGreaterThan(1e-6);
+    for (const id of ['W11', 'W25']) {
+      if (doc.wires.some((w) => w.id === id)) {
+        expect(Math.abs(currents.get(id) ?? 0))
+          .withContext(id)
+          .toBeGreaterThan(1e-6);
+      }
     }
   });
 

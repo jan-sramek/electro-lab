@@ -1,15 +1,25 @@
 import { Injectable, NgZone, computed, DestroyRef, effect, inject, signal } from '@angular/core';
-import { Subject, catchError, debounceTime, of, switchMap, tap } from 'rxjs';
+import { Subject, catchError, debounceTime, from, of, switchMap, tap } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
-import { SimulateRequest, SimulateResponse } from '../api/circuit-api.types';
-import { AnalysisMode, SchematicDocument, SchematicComponent, assignNets, parseHighlightedIds, paramNumber } from '../data/schematic.model';
+import { SimulateRequest, SimulateResponse, TranResult } from '../api/circuit-api.types';
+import { AnalysisMode, SchematicDocument, SchematicComponent, assignNets, compileNetlist, parseHighlightedIds, paramNumber } from '../data/schematic.model';
 import {
-  allSwitchesOpen,
-  compileNetlistWithCapIc,
-  finalCapVoltagesFromTran,
-  schematicCapFingerprint
-} from '../data/cap-ic';
+  allEnergyPathsOpen,
+  controllableSwitchStateKey
+} from '../data/switch-state';
+import { EnergyStateStore } from '../data/energy-state.store';
+import {
+  TranEnergyState,
+  effectiveTargetTStop,
+  extractEnergyState,
+  injectEnergyState,
+  isEnergySettled,
+  maxSegmentTStop,
+  mergeTranSegment,
+  planTranSegments
+} from '../data/tran-continuation';
 import {
   SINGULAR_FALLBACK_KEY,
   diagnoseSchematic,
@@ -38,6 +48,19 @@ import {
 import { isBjtNpnPart, isNmosPart, isNe555Part } from '../data/symbol-library';
 import { NMOS_DRAIN_BURN_A, NMOS_VGS_BURN_V, NE555_OUT_BURN_A, NE555_VCC_BURN_V } from '../data/nmos-limits';
 import { TransientPlayback } from '../data/wire-flow/transient-playback';
+import { TranPlaybackPolicy, PlaybackMode } from '../data/tran-playback-policy';
+import { electricalSimKey } from '../data/cap-ic';
+import { hasRcEnergyNetwork } from '../data/circuit-topology';
+import { isRcFadeTeachingCircuit, recommendedRcTranSettings } from '../data/rc-tran-defaults';
+
+interface SimulateJob {
+  body: SimulateRequest;
+  showBusy: boolean;
+  doc: SchematicDocument;
+  energySeed: TranEnergyState | null;
+  usedEnergySeed: boolean;
+  userInitFromDc: boolean;
+}
 
 function peakBranchCurrent(res: SimulateResponse, id: string): number | null {
   const dc = res.dcOp?.branchCurrents?.[id];
@@ -194,7 +217,7 @@ export class CircuitSimulationFacade {
   private readonly i18n = inject(I18nService);
   private readonly zone = inject(NgZone);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly simulate$ = new Subject<{ body: SimulateRequest; showBusy: boolean }>();
+  private readonly simulate$ = new Subject<SimulateJob>();
   /** Debounced auto-sim after schematic edits (no Run-button flicker). */
   private readonly autoRun$ = new Subject<void>();
   private showBusyForRequest = false;
@@ -209,14 +232,25 @@ export class CircuitSimulationFacade {
   /** Sample index into tran.time for canvas/probe scrubbing. */
   readonly scrubIndex = signal(0);
   private scrubPlayback: TransientPlayback | null = null;
+  /** Tab that owns the active scrub playback (NE555 blink / LED fade charge). */
+  private playbackSlotId: string | null = null;
+  /** Bumped on tab change so stale onStop callbacks are ignored. */
+  private playbackGeneration = 0;
+  private activePlaybackMode: PlaybackMode | 'none' = 'none';
+  private lastSwitchStateKey = '';
+  private lastElectricalSimKey = '';
+  private lastAutoRunSlotId: string | null = null;
+  private pendingCapVoltageResult: SimulateResponse | null = null;
+  private tranPlaybackActive = false;
+  /** One-shot discharge fade when the switch opens — not on mid-discharge re-runs. */
+  private pendingDischargePlayback = false;
 
-  /** Last final capacitor voltages after a successful tran (for open-switch discharge). */
-  private storedCapIc = new Map<string, number>();
-  private storedCapFingerprint = '';
-  /** Reactive summary for status banner (max |Vc| among stored caps). */
-  private readonly storedCapIcVolts = signal<number | null>(null);
-  /** True when the last request injected capacitor IC (discharge / fade run). */
-  private lastRunInjectedIc = false;
+  private readonly energyStore = new EnergyStateStore();
+  private readonly playbackPolicy = new TranPlaybackPolicy();
+  /** True when the last transient used persisted C/L initial conditions. */
+  private lastRunUsedEnergySeed = false;
+  /** tStop used for the in-flight / last transient request (may exceed toolbar value). */
+  private lastRunTStop = 0;
   /** Client diagnostic warnings kept across the API response merge. */
   private clientWarningKeys: string[] = [];
 
@@ -231,18 +265,16 @@ export class CircuitSimulationFacade {
 
   readonly highlightedNets = computed(() => this.highlightNetIds());
 
-  /** Banner line when Lab has stored Vc for a discharge re-run. */
+  /** Banner when a prior transient left stored capacitor / inductor energy. */
   readonly capIcStatus = computed(() => {
     this.editor.revision();
-    const v = this.storedCapIcVolts();
-    if (v === null || this.storedCapIc.size === 0) return null;
-    const fp = schematicCapFingerprint(this.editor.doc());
-    if (fp !== this.storedCapFingerprint) return null;
-    const vs = Math.abs(v).toFixed(2);
-    if (allSwitchesOpen(this.editor.doc())) {
-      return this.i18n.t('lab.capIc.injecting', { v: vs });
+    const doc = this.editor.doc();
+    if (!this.energyStore.fingerprintMatches(doc) || !this.energyStore.hasSeed()) return null;
+    const v = this.energyStore.maxCapVoltageAbs();
+    if (allEnergyPathsOpen(doc)) {
+      return this.i18n.t('lab.energy.discharging', { v: v.toFixed(2) });
     }
-    return this.i18n.t('lab.capIc.ready', { v: vs });
+    return this.i18n.t('lab.energy.stored', { v: v.toFixed(2) });
   });
 
   readonly probeSummary = computed(() => {
@@ -316,12 +348,12 @@ export class CircuitSimulationFacade {
   constructor() {
     this.simulate$
       .pipe(
-        tap((req) => {
-          this.showBusyForRequest = req.showBusy;
-          if (req.showBusy) this.busy.set(true);
+        tap((job) => {
+          this.showBusyForRequest = job.showBusy;
+          if (job.showBusy) this.busy.set(true);
         }),
-        switchMap((req) =>
-          this.api.simulate(req.body).pipe(
+        switchMap((job) =>
+          from(this.runSimulationJob(job)).pipe(
             catchError((err) => {
               if (this.showBusyForRequest) this.busy.set(false);
               const rawErrors: string[] =
@@ -341,27 +373,83 @@ export class CircuitSimulationFacade {
       )
       .subscribe((res) => {
         if (!res) return;
+        const priorRes = this.result();
+        const priorScrub = this.scrubIndex();
         this.result.set(res);
         if (this.showBusyForRequest) this.busy.set(false);
         const warn = [...(res.warnings ?? [])];
-        if (res.ok && res.tran?.time?.length) {
-          this.rememberCapVoltages(res);
-        }
+        const doc = this.editor.doc();
+        const storedBefore = this.energyStore.maxCapVoltageAbs();
+
+        let playback: ReturnType<TranPlaybackPolicy['resolve']> = {
+          scrubIndex: 0,
+          endScrubIndex: 0,
+          playback: 'none',
+          timing: null
+        };
+
         if (res.tran?.time?.length) {
-          if (this.scrubPlayback?.running && !this.showBusyForRequest) {
-            /* keep looping playback across debounced auto-sim */
+          const keepRunningPlayback =
+            this.activePlaybackMode === 'blink-loop' &&
+            this.scrubPlayback?.running &&
+            !this.showBusyForRequest &&
+            this.playbackSlotId === this.editor.activeSlotId();
+          if (keepRunningPlayback) {
+            /* NE555 blink loop only — charge/discharge always re-resolve on new results */
           } else {
             this.stopScrubPlayback();
-            const start = this.pickTranScrubIndex(res);
-            this.scrubIndex.set(start);
-            if (this.lastRunInjectedIc) {
-              this.maybeStartDischargePlayback(res);
+            playback = this.playbackPolicy.resolve(
+              {
+                doc,
+                activePreset: this.editor.activeExamplePreset(),
+                usedEnergySeed: this.lastRunUsedEnergySeed,
+                storedCapVoltageAbs: storedBefore,
+                animateDischargePlayback: this.pendingDischargePlayback,
+                tStop: this.lastRunTStop > 0 ? this.lastRunTStop : this.editor.tStop()
+              },
+              res
+            );
+            if (playback.playback === 'discharge-once') {
+              this.pendingDischargePlayback = false;
             } else if (
-              this.editor.activeExamplePreset() === 'ne555' ||
-              this.editor.activeExamplePreset() === 'christmasTree'
+              allEnergyPathsOpen(doc) &&
+              this.lastRunUsedEnergySeed &&
+              priorRes?.tran?.time?.length
             ) {
-              this.maybeStartBlinkPlayback(res);
+              this.scrubIndex.set(this.scrubIndexForSameTime(priorRes, priorScrub, res));
+            } else {
+              this.scrubIndex.set(playback.scrubIndex);
             }
+            if (playback.playback === 'discharge-once' && playback.timing) {
+              this.maybeStartTranPlayback(
+                res,
+                playback.timing,
+                'lab.led.fadePlayback',
+                playback.endScrubIndex
+              );
+            } else if (playback.playback === 'charge-once' && playback.timing) {
+              this.maybeStartTranPlayback(
+                res,
+                playback.timing,
+                'lab.led.chargePlayback',
+                playback.endScrubIndex
+              );
+            } else if (playback.playback === 'blink-loop' && playback.timing) {
+              this.maybeStartBlinkPlayback(res, playback.timing);
+            }
+          }
+        }
+
+        if (res.ok && res.tran?.time?.length) {
+          if (playback.playback === 'discharge-once') {
+            this.pendingCapVoltageResult = res;
+          } else if (playback.playback === 'charge-once') {
+            // Snapshot Vc immediately so opening the switch always has stored charge.
+            this.captureEnergyState(res);
+          } else if (this.tranPlaybackActive && this.scrubPlayback?.running) {
+            this.pendingCapVoltageResult = res;
+          } else {
+            this.captureEnergyState(res);
           }
         }
         this.appendLedPolarityTips(res, warn);
@@ -393,15 +481,60 @@ export class CircuitSimulationFacade {
 
     effect(() => {
       this.editor.revision();
-      this.editor.activeSlotId();
-      this.editor.analysisMode();
-      this.editor.tStop();
-      this.editor.dt();
-      this.editor.acFreq();
-      this.editor.initFromDc();
-      this.editor.doc();
-      this.syncCapIcFromStorage();
-      this.autoRun$.next();
+      const slotId = this.editor.activeSlotId();
+      const mode = this.editor.analysisMode();
+      const tStop = this.editor.tStop();
+      const dt = this.editor.dt();
+      const acFreq = this.editor.acFreq();
+      const initFromDc = this.editor.initFromDc();
+      const doc = this.editor.doc();
+      this.energyStore.syncSlot(doc, slotId, this.editorPersistence);
+
+      const switchKey = controllableSwitchStateKey(doc);
+      if (switchKey !== this.lastSwitchStateKey) {
+        if (isRcFadeTeachingCircuit(doc)) {
+          this.ensureRcFadeTeachingReady(true);
+        }
+        if (allEnergyPathsOpen(doc) && this.lastSwitchStateKey !== '') {
+          const prior = this.result();
+          if (prior?.ok && prior.tran?.time?.length) {
+            this.energyStore.captureChargePrior(doc, prior);
+            this.energyStore.persist(this.editor.activeSlotId(), this.editorPersistence);
+          }
+          this.pendingDischargePlayback = true;
+        }
+        if (allEnergyPathsClosed(doc)) {
+          this.pendingDischargePlayback = false;
+        }
+        this.lastSwitchStateKey = switchKey;
+        this.invalidatePlayback();
+      }
+
+      if (slotId !== this.lastAutoRunSlotId) {
+        this.lastAutoRunSlotId = slotId;
+        this.lastElectricalSimKey = '';
+        this.resetPlaybackForSlotChange();
+      }
+
+      if (mode === 'tran' && isRcFadeTeachingCircuit(doc)) {
+        this.ensureRcFadeTeachingReady(false);
+      }
+
+      const key = electricalSimKey(doc, mode, tStop, dt, acFreq, initFromDc);
+      if (key === this.lastElectricalSimKey) return;
+      this.lastElectricalSimKey = key;
+
+      const urgentDischarge =
+        mode === 'tran' &&
+        allEnergyPathsOpen(doc) &&
+        this.energyStore.fingerprintMatches(doc) &&
+        this.energyStore.maxCapVoltageAbs() > 0.05;
+
+      if (urgentDischarge) {
+        this.runInternal(false);
+      } else {
+        this.autoRun$.next();
+      }
     });
 
     this.destroyRef.onDestroy(() => this.stopScrubPlayback());
@@ -412,40 +545,56 @@ export class CircuitSimulationFacade {
     this.scrubIndex.set(idx);
   }
 
-  /** Discharge runs start at t=0; otherwise prefer peak LED or final sample. */
-  private pickTranScrubIndex(res: SimulateResponse): number {
+  /** Scrub 0→end for capacitor charge or discharge (LED fade teaching). */
+  private maybeStartTranPlayback(
+    res: SimulateResponse,
+    timing: {
+      mode: 'once' | 'loop';
+      framesPerSweep: number;
+      frameMs: number;
+      sampleCount?: number;
+      startIndex?: number;
+    },
+    noteKey: string,
+    endScrubIndex?: number
+  ): void {
     const tran = res.tran;
-    if (!tran?.time?.length) return 0;
-    if (this.lastRunInjectedIc) return 0;
-    if (this.editor.activeExamplePreset() === 'ne555' || this.editor.activeExamplePreset() === 'christmasTree') {
-      return 0;
+    if (!tran?.time?.length) return;
+    const n = timing.sampleCount ?? tran.time.length;
+    if (n <= 1) return;
+
+    const note = this.i18n.t(noteKey);
+    if (!this.warnings().includes(note)) {
+      this.warnings.set([...this.warnings(), note]);
     }
 
-    const last = tran.time.length - 1;
-    const ledIds = this.editor
-      .doc()
-      .components.filter((c) => c.modelKey === 'led')
-      .map((c) => c.id);
-    if (!ledIds.length) return last;
-
-    let bestIdx = last;
-    let bestMag = 0;
-    for (const id of ledIds) {
-      const series = tran.branchCurrents.find((s) => s.id === id);
-      if (!series?.values.length) continue;
-      for (let i = 0; i < series.values.length; i++) {
-        const mag = Math.abs(series.values[i]!);
-        if (mag > bestMag) {
-          bestMag = mag;
-          bestIdx = i;
+    this.tranPlaybackActive = true;
+    this.activePlaybackMode = noteKey.includes('charge') ? 'charge-once' : 'discharge-once';
+    const gen = this.playbackGeneration;
+    const ownerSlotId = this.editor.activeSlotId();
+    this.startScrubPlayback(n, timing, () => {
+      if (gen !== this.playbackGeneration) return;
+      if (ownerSlotId !== this.editor.activeSlotId()) return;
+      this.zone.run(() => {
+        this.tranPlaybackActive = false;
+        this.activePlaybackMode = 'none';
+        if (typeof endScrubIndex === 'number') {
+          this.scrubIndex.set(endScrubIndex);
         }
-      }
-    }
-    return bestMag > 1e-4 ? bestIdx : last;
+        const pending = this.pendingCapVoltageResult;
+        if (pending) {
+          this.captureEnergyState(pending);
+          this.pendingCapVoltageResult = null;
+        }
+      });
+    });
   }
 
   /** Loop transient scrub so NE555 LED branches visibly blink on the canvas. */
-  private maybeStartBlinkPlayback(res: SimulateResponse): void {
+  private maybeStartBlinkPlayback(
+    res: SimulateResponse,
+    timing: { mode: 'once' | 'loop'; framesPerSweep: number; frameMs: number }
+  ): void {
     const tran = res.tran;
     if (!tran?.time?.length) return;
     const n = tran.time.length;
@@ -456,112 +605,128 @@ export class CircuitSimulationFacade {
       this.warnings.set([...this.warnings(), note]);
     }
 
-    this.startScrubPlayback(n, { mode: 'loop', framesPerSweep: 80, frameMs: 40 });
-  }
-
-  /** Simple 0→end scrub so the student sees the LED fade after opening the switch. */
-  private maybeStartDischargePlayback(res: SimulateResponse): void {
-    const tran = res.tran;
-    if (!tran?.time?.length) return;
-    const n = tran.time.length;
-    if (n <= 1) return;
-
-    const note = this.i18n.t('lab.led.fadePlayback');
-    if (!this.warnings().includes(note)) {
-      this.warnings.set([...this.warnings(), note]);
-    }
-
-    this.startScrubPlayback(n, { mode: 'once', framesPerSweep: 60, frameMs: 50 });
+    this.tranPlaybackActive = true;
+    this.activePlaybackMode = 'blink-loop';
+    this.startScrubPlayback(n, timing);
   }
 
   private startScrubPlayback(
     sampleCount: number,
-    opts: { mode: 'loop' | 'once'; framesPerSweep: number; frameMs: number }
+    opts: {
+      mode: 'loop' | 'once';
+      framesPerSweep: number;
+      frameMs: number;
+      startIndex?: number;
+    },
+    onStop?: () => void
   ): void {
-    this.stopScrubPlayback();
+    this.stopScrubPlaybackTimer();
+    this.playbackSlotId = this.editor.activeSlotId();
     this.zone.runOutsideAngular(() => {
-      this.scrubPlayback = new TransientPlayback(sampleCount, (idx) => {
-        this.zone.run(() => this.scrubIndex.set(idx));
-      });
+      this.scrubPlayback = new TransientPlayback(
+        sampleCount,
+        (idx) => {
+          this.zone.run(() => this.scrubIndex.set(idx));
+        },
+        onStop
+      );
       this.scrubPlayback.start(opts);
     });
   }
 
-  private stopScrubPlayback(): void {
+  /** Stop the timer only — used when replacing playback without dropping mode. */
+  private stopScrubPlaybackTimer(): void {
+    this.playbackGeneration++;
     if (this.scrubPlayback) {
       this.scrubPlayback.stop();
       this.scrubPlayback = null;
     }
   }
 
-  private rememberCapVoltages(res: SimulateResponse): void {
+  /** Stop scrub playback without clearing the latest simulation result. */
+  private invalidatePlayback(): void {
+    this.stopScrubPlaybackTimer();
+    this.playbackSlotId = null;
+    this.activePlaybackMode = 'none';
+    this.tranPlaybackActive = false;
+    this.pendingCapVoltageResult = null;
+  }
+
+  /** Drop playback when switching circuit tabs. */
+  private resetPlaybackForSlotChange(): void {
+    this.invalidatePlayback();
+    this.scrubIndex.set(0);
+    this.result.set(null);
+    this.pendingDischargePlayback = false;
+    this.lastSwitchStateKey = controllableSwitchStateKey(this.editor.doc());
+  }
+
+  private stopScrubPlayback(): void {
+    this.invalidatePlayback();
+  }
+
+  private captureEnergyState(res: SimulateResponse): void {
     const doc = this.editor.doc();
-    const fp = schematicCapFingerprint(doc);
-    // Always refresh store after a successful tran on the current topology.
-    this.storedCapFingerprint = fp;
-    this.storedCapIc = finalCapVoltagesFromTran(doc, res);
-    this.publishCapIcVolts();
-    this.persistCapIc();
+    this.energyStore.capture(doc, res);
+    this.energyStore.persist(this.editor.activeSlotId(), this.editorPersistence);
   }
 
-  private clearCapIcIfStale(): void {
-    this.syncCapIcFromStorage();
-    const fp = schematicCapFingerprint(this.editor.doc());
-    if (fp !== this.storedCapFingerprint) {
-      this.storedCapIc = new Map();
-      this.storedCapFingerprint = '';
-      this.storedCapIcVolts.set(null);
-      this.editorPersistence.clearCapIc();
+  /** New RC+switch circuits need transient + longer tStop for fade playback (not DC / 5 ms). */
+  private ensureRcFadeTeachingReady(switchToTran: boolean): void {
+    const doc = this.editor.doc();
+    if (!isRcFadeTeachingCircuit(doc)) return;
+    const rec = recommendedRcTranSettings(this.editor.tStop(), this.editor.dt());
+    if (rec) {
+      this.editor.setTStop(rec.tStop);
+      this.editor.setDt(rec.dt);
     }
-  }
-
-  private persistCapIc(): void {
-    const slotId = this.editor.activeSlotId();
-    if (!slotId || this.storedCapIc.size === 0 || !this.storedCapFingerprint) {
-      this.editorPersistence.clearCapIc();
-      return;
-    }
-    const voltages: Record<string, number> = {};
-    for (const [id, v] of this.storedCapIc) voltages[id] = v;
-    this.editorPersistence.saveCapIc({
-      slotId,
-      fingerprint: this.storedCapFingerprint,
-      voltages
-    });
-  }
-
-  /** Keep in-memory Vc in sync with localStorage (survives F5). */
-  private syncCapIcFromStorage(): void {
-    const slotId = this.editor.activeSlotId();
-    const fp = schematicCapFingerprint(this.editor.doc());
-    const saved = this.editorPersistence.loadCapIc();
-    if (saved && slotId && saved.slotId === slotId && saved.fingerprint === fp) {
-      this.storedCapFingerprint = saved.fingerprint;
-      this.storedCapIc = new Map(Object.entries(saved.voltages));
-      this.publishCapIcVolts();
-      return;
-    }
-    if (this.storedCapFingerprint && this.storedCapFingerprint !== fp) {
-      this.storedCapIc = new Map();
-      this.storedCapFingerprint = '';
-      this.storedCapIcVolts.set(null);
+    if (switchToTran && this.editor.analysisMode() !== 'tran') {
+      this.editor.setAnalysisMode('tran');
     }
   }
 
-  private publishCapIcVolts(): void {
-    if (this.storedCapIc.size === 0) {
-      this.storedCapIcVolts.set(null);
-      return;
-    }
+  /** Keep the scope/canvas at the same simulated time after a mid-discharge re-solve. */
+  private scrubIndexForSameTime(
+    prior: SimulateResponse,
+    priorScrub: number,
+    next: SimulateResponse
+  ): number {
+    const prevTran = prior.tran;
+    const nextTran = next.tran;
+    if (!prevTran?.time?.length || !nextTran?.time?.length) return 0;
+    const prevIdx = Math.max(0, Math.min(priorScrub, prevTran.time.length - 1));
+    const t = prevTran.time[prevIdx] ?? 0;
     let best = 0;
-    for (const v of this.storedCapIc.values()) {
-      if (Math.abs(v) > Math.abs(best)) best = v;
+    let bestDt = Infinity;
+    for (let i = 0; i < nextTran.time.length; i++) {
+      const dt = Math.abs((nextTran.time[i] ?? 0) - t);
+      if (dt < bestDt) {
+        bestDt = dt;
+        best = i;
+      }
     }
-    this.storedCapIcVolts.set(best);
+    return best;
+  }
+
+  /** Seed discharge from the current scrub frame before a parameter edit re-run. */
+  private syncEnergyBeforeDischargeRerun(doc: SchematicDocument): void {
+    if (!allEnergyPathsOpen(doc) || this.pendingDischargePlayback) return;
+    const prior = this.result();
+    if (!prior?.ok || !prior.tran?.time?.length) return;
+    const idx = Math.max(0, Math.min(this.scrubIndex(), prior.tran.time.length - 1));
+    this.energyStore.captureAtIndex(doc, prior, idx);
+    this.energyStore.persist(this.editor.activeSlotId(), this.editorPersistence);
+  }
+
+  private syncEnergyStore(): void {
+    const doc = this.editor.doc();
+    this.energyStore.clearIfStale(doc);
+    this.energyStore.syncSlot(doc, this.editor.activeSlotId(), this.editorPersistence);
   }
 
   /** Explicit toolbar Run — shows busy state on the button. */
   run(): void {
+    this.stopScrubPlayback();
     this.runInternal(true);
   }
 
@@ -572,7 +737,13 @@ export class CircuitSimulationFacade {
 
   private runInternal(showBusy: boolean): void {
     const doc = this.editor.doc();
-    const mode = this.editor.analysisMode();
+    let mode = this.editor.analysisMode();
+    if (showBusy && mode === 'dcOp' && hasRcEnergyNetwork(doc)) {
+      this.ensureRcFadeTeachingReady(true);
+      mode = this.editor.analysisMode();
+    } else if (isRcFadeTeachingCircuit(doc)) {
+      this.ensureRcFadeTeachingReady(false);
+    }
     const diags = diagnoseSchematic(doc, mode);
     const errors = diagnosticErrors(diags);
     const warns = diagnosticWarnings(diags);
@@ -607,11 +778,12 @@ export class CircuitSimulationFacade {
       return;
     }
 
-    this.clearCapIcIfStale();
-    const injectIc = mode === 'tran' && allSwitchesOpen(doc) && this.storedCapIc.size > 0;
-    this.lastRunInjectedIc = injectIc;
+    this.syncEnergyStore();
+    this.syncEnergyBeforeDischargeRerun(doc);
+    const energySeed = mode === 'tran' ? this.energyStore.seedForDischargeRun(doc) : null;
+    this.lastRunUsedEnergySeed = energySeed !== null;
 
-    const circuit = compileNetlistWithCapIc(doc, this.storedCapIc, injectIc);
+    const circuit = compileNetlist(doc);
     if (circuit.elements.length === 0) {
       this.result.set(null);
       this.error.set(null);
@@ -647,7 +819,107 @@ export class CircuitSimulationFacade {
               circuit
             };
 
-    this.simulate$.next({ body, showBusy });
+    this.simulate$.next({
+      body,
+      showBusy,
+      doc,
+      energySeed,
+      usedEnergySeed: this.lastRunUsedEnergySeed,
+      userInitFromDc: this.editor.initFromDc()
+    });
+  }
+
+  private async runSimulationJob(job: SimulateJob): Promise<SimulateResponse> {
+    if (job.body.analysis.type !== 'tran') {
+      return firstValueFrom(this.api.simulate(job.body));
+    }
+    return this.runTranContinuation(job);
+  }
+
+  /**
+   * General long transient: chain engine segments (20 000-step cap each),
+   * carry capacitor / inductor state forward, merge waveforms for scope + playback.
+   */
+  private async runTranContinuation(job: SimulateJob): Promise<SimulateResponse> {
+    const dt = job.body.analysis.dt ?? this.editor.dt();
+    const userTStop = job.body.analysis.tStop ?? this.editor.tStop();
+    const targetTStop = effectiveTargetTStop(job.doc, userTStop, dt);
+    const segMax = maxSegmentTStop(dt);
+    const needsContinuation =
+      job.showBusy ||
+      job.usedEnergySeed ||
+      targetTStop > segMax * 1.001 ||
+      targetTStop > userTStop * 1.001;
+
+    if (!needsContinuation) {
+      const base = compileNetlist(job.doc);
+      const circuit = job.energySeed ? injectEnergyState(base, job.energySeed) : base;
+      this.lastRunTStop = targetTStop;
+      const body: SimulateRequest = {
+        ...job.body,
+        analysis: {
+          ...job.body.analysis,
+          type: 'tran',
+          tStop: targetTStop,
+          dt,
+          initFromDc: job.userInitFromDc && !job.usedEnergySeed
+        },
+        circuit
+      };
+      return firstValueFrom(this.api.simulate(body));
+    }
+
+    const segmentStops = planTranSegments(targetTStop, dt);
+    this.lastRunTStop = targetTStop;
+
+    const baseCircuit = compileNetlist(job.doc);
+    let merged: TranResult | null = null;
+    let lastRes: SimulateResponse | null = null;
+    let segmentEnergy: TranEnergyState | null = job.energySeed;
+    const warnings: string[] = [];
+
+    for (let i = 0; i < segmentStops.length; i++) {
+      const segTStop = segmentStops[i]!;
+      const circuit = segmentEnergy ? injectEnergyState(baseCircuit, segmentEnergy) : baseCircuit;
+      const useInitFromDc =
+        i === 0 &&
+        job.userInitFromDc &&
+        !segmentEnergy?.caps.size &&
+        !segmentEnergy?.inductors.size;
+
+      const body: SimulateRequest = {
+        ...job.body,
+        analysis: {
+          ...job.body.analysis,
+          type: 'tran',
+          tStop: segTStop,
+          dt,
+          initFromDc: useInitFromDc
+        },
+        circuit
+      };
+
+      const res = await firstValueFrom(this.api.simulate(body));
+      lastRes = res;
+      if (!res.ok) return res;
+      warnings.push(...(res.warnings ?? []));
+
+      const offset = merged?.time.length ? merged.time[merged.time.length - 1]! : 0;
+      merged = mergeTranSegment(merged, res.tran!, offset);
+      segmentEnergy = extractEnergyState(job.doc, res);
+
+      if (isEnergySettled(job.doc, res)) break;
+    }
+
+    if (!lastRes || !merged) return lastRes ?? { schemaVersion: 1, ok: false, analysisType: 'tran', errors: [], warnings: [] };
+
+    return {
+      ...lastRes,
+      ok: true,
+      analysisType: 'tran',
+      warnings: [...new Set(warnings)],
+      tran: merged
+    };
   }
 
   /**

@@ -126,6 +126,31 @@ describe('wire current direction', () => {
     }
   });
 
+  it('pot wiper tap: load leg animates from series hint', () => {
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [
+        createComponent('battery', 80, 120, 'V1'),
+        createComponent('potentiometer', 240, 120, 'POT1'),
+        createComponent('resistor', 400, 200, 'RL'),
+        createComponent('ground', 80, 240, 'GND1')
+      ],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'POT1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'POT1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W3', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W4', a: { componentId: 'POT1', pin: 'w' }, b: { componentId: 'RL', pin: 'a' } },
+        { id: 'W5', a: { componentId: 'RL', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const I = 0.001;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) =>
+      id === 'GND1' ? null : id === 'POT1' ? I : id === 'RL' ? I * 0.4 : I
+    );
+    expect(Math.abs(currents.get('W4') ?? 0)).toBeGreaterThan(1e-6);
+    expect(Math.abs(currents.get('W5') ?? 0)).toBeGreaterThan(1e-6);
+  });
+
   it('BJT switch: collector and emitter legs animate', () => {
     const doc = createBjtSwitchPreset();
     const currentOf = (id: string): number | null => {
@@ -155,11 +180,36 @@ describe('wire current direction', () => {
       return null;
     };
     const currents = estimateAllWireCurrents(doc.components, doc.wires, currentOf);
-    for (const id of ['W1', 'W2', 'W5', 'W6', 'W8', 'W9', 'W11', 'W12', 'W13', 'W14']) {
-      expect(Math.abs(currents.get(id) ?? 0))
-        .withContext(id)
+    for (const w of doc.wires) {
+      expect(Math.abs(currents.get(w.id) ?? 0))
+        .withContext(`${w.id} ${w.a.componentId}.${w.a.pin} → ${w.b.componentId}.${w.b.pin}`)
         .toBeGreaterThan(1e-6);
     }
+  });
+
+  it('LED fade charge: parallel cap and LED branches both animate at junction', () => {
+    const doc = createLedFadePreset();
+    const Iin = 0.015;
+    const Icap = 0.006;
+    const Iled = 0.009;
+    const currentOf = (id: string): number | null => {
+      if (id === 'GND1' || id === 'JT') return null;
+      if (id === 'V1' || id === 'S1') return Iin;
+      if (id === 'C1') return Icap;
+      if (id === 'D1' || id === 'R1') return Iled;
+      return null;
+    };
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, currentOf);
+    for (const id of ['W3', 'W5']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} should carry charge split`)
+        .toBeGreaterThan(1e-6);
+    }
+    expect(Math.abs(currents.get('W4') ?? 0))
+      .withContext('W4 cap→ground return during charge')
+      .toBeGreaterThan(1e-6);
+    expect(Math.abs(currents.get('W3') ?? 0)).toBeCloseTo(Icap, 4);
+    expect(Math.abs(currents.get('W5') ?? 0)).toBeCloseTo(Iled, 4);
   });
 
   it('LED fade discharge: loop on C↔LED only — no ghost on switch/battery/gnd', () => {

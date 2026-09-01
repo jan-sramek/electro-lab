@@ -36,6 +36,7 @@ import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 import { WireFlowBuilder } from '../../data/wire-flow/wire-flow.builder';
+import { resolveCapacitorBranchCurrent } from '../../data/cap-branch-current';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
 import { canBurnOut } from '../../data/burnout';
 import { normalizeLedColorId } from '../../data/led-colors';
@@ -138,7 +139,7 @@ export class SchematicCanvasComponent {
     const live = !!res?.ok;
     // scrubIndex is read inside currentOf() for transient — keeps flow in sync with playback.
     this.scrubIndex();
-    return WireFlowBuilder.build(d, live, (id) => this.currentOf(id));
+    return WireFlowBuilder.build(d, live, (id) => this.branchCurrentOf(id));
   });
 
   readonly junctionDots = computed(() => {
@@ -602,6 +603,14 @@ export class SchematicCanvasComponent {
 
   voltageOf(net: string): number | null {
     const res = this.result();
+    const ground = this.nettled().groundNet;
+    if (net === ground) return 0;
+    if (res?.tran && res.analysisType === 'tran') {
+      const s = res.tran.nodeVoltages.find((x) => x.id === net);
+      const idx = Math.max(0, Math.min(this.scrubIndex(), (s?.values.length ?? 1) - 1));
+      const v = s?.values[idx];
+      return typeof v === 'number' ? v : null;
+    }
     if (res?.dcOp) {
       const v = res.dcOp.nodeVoltages?.[net];
       return typeof v === 'number' ? v : null;
@@ -619,8 +628,25 @@ export class SchematicCanvasComponent {
     return null;
   }
 
-  currentOf(id: string): number | null {
+  /** Branch current with capacitor I = C·dV/dt fallback when the engine reports ~0. */
+  branchCurrentOf(id: string): number | null {
     const res = this.result();
+    const comp = this.doc().components.find((c) => c.id === id);
+    if (comp?.modelKey === 'capacitor' && res?.tran) {
+      const raw = this.rawBranchCurrent(id);
+      return resolveCapacitorBranchCurrent(this.doc(), id, res, this.scrubIndex(), raw);
+    }
+    return this.rawBranchCurrent(id);
+  }
+
+  private rawBranchCurrent(id: string): number | null {
+    const res = this.result();
+    if (res?.tran && res.analysisType === 'tran') {
+      const s = res.tran.branchCurrents.find((x) => x.id === id);
+      const idx = Math.max(0, Math.min(this.scrubIndex(), (s?.values.length ?? 1) - 1));
+      const i = s?.values[idx];
+      return typeof i === 'number' ? i : null;
+    }
     if (res?.dcOp) {
       const i = res.dcOp.branchCurrents?.[id];
       return typeof i === 'number' ? i : null;
@@ -633,9 +659,15 @@ export class SchematicCanvasComponent {
     }
     if (res?.ac?.points?.length) {
       const ph = res.ac.points[0]!.branchCurrents?.[id];
-      return ph ? ph.mag : null;
+      if (!ph) return null;
+      const rad = (ph.phaseDeg * Math.PI) / 180;
+      return ph.mag * Math.cos(rad);
     }
     return null;
+  }
+
+  currentOf(id: string): number | null {
+    return this.branchCurrentOf(id);
   }
 
   /** Differential reading for schematic-only voltmeter (p − n). */
