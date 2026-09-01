@@ -1,5 +1,6 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Meta } from '@angular/platform-browser';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LabEditorStore, ExamplePresetId } from '../../services/lab-editor.store';
 import { CircuitSimulationFacade } from '../../services/circuit-simulation.facade';
 import { SchematicPersistence } from '../../services/schematic-persistence';
@@ -12,6 +13,9 @@ import { StatusBannerComponent } from '../../components/status-banner/status-ban
 import { ScopeComponent } from '../../components/scope/scope.component';
 import { CircuitTabsComponent } from '../../components/circuit-tabs/circuit-tabs.component';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { LearnSeoService } from '../../../learn/services/learn-seo.service';
+import { parseLearnFromSlug } from '../../../learn/data/learn-catalog';
+import { learnUnitPath, LearnUnit } from '../../../learn/data/learn-catalog.model';
 
 @Component({
   selector: 'app-lab-page',
@@ -25,7 +29,8 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
     StatusBannerComponent,
     ScopeComponent,
     CircuitTabsComponent,
-    TranslatePipe
+    TranslatePipe,
+    RouterLink
   ],
   providers: [SchematicPersistence, LabEditorStore, CircuitSimulationFacade],
   templateUrl: './lab-page.component.html',
@@ -35,6 +40,12 @@ export class LabPageComponent implements OnInit {
   readonly editor = inject(LabEditorStore);
   readonly sim = inject(CircuitSimulationFacade);
   private readonly route = inject(ActivatedRoute);
+  private readonly meta = inject(Meta);
+  private readonly learnSeo = inject(LearnSeoService);
+
+  /** Learn unit when opened via `?from=module/unit`. */
+  readonly learnContext = signal<LearnUnit | null>(null);
+  readonly learnUnitPath = learnUnitPath;
 
   /** Context hint under the canvas: tool mode first, then example preset, else generic. */
   hintKey(): string {
@@ -47,9 +58,24 @@ export class LabPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    this.learnSeo.clearLearnSeo();
     this.editor.initFromStorage();
+
+    const from = this.route.snapshot.queryParamMap.get('from');
+    if (from) {
+      const unit = parseLearnFromSlug(from);
+      if (unit) this.learnContext.set(unit);
+    }
+
     const example = this.route.snapshot.queryParamMap.get('example');
-    if (example === 'bjt' || example === 'bc547') {
+    if (example === 'led') {
+      this.onLoadPreset('led');
+    } else if (example === 'ledFade' || example === 'fade') {
+      this.onLoadPreset('ledFade');
+    } else if (example === 'rc') {
+      this.onLoadPreset('rc');
+    } else if (example === 'bjt' || example === 'bc547') {
       this.onLoadPreset('bjt');
     } else if (example === 'relay') {
       this.onLoadPreset('relay');

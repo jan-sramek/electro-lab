@@ -1,0 +1,14 @@
+/learn
+/learn/basics/led-series
+/learn/basics/rc-charge
+/learn/basics/led-fade
+/learn/switching/bjt-switch
+/learn/switching/relay-flyback
+/learn/switching/nmos-switch
+/learn/switching/motor-lowside
+/learn/timing/ne555-astable
+/learn/input/pushbutton-led
+/learn/input/ldr-nightlight
+/learn/actuators/buzzer-button
+/learn/mcu/arduino-dio-led
+/learn/buses/i2c-oled-wiring

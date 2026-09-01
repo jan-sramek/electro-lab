@@ -1,3 +1,33 @@
+.learn-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 1rem;
+  background: #f0f7f4;
+  border: 1px solid #c5e6d8;
+  border-radius: 8px;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.learn-context-label strong {
+  color: #12263a;
+}
+
+.learn-context-back {
+  color: #0b6e4f;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.learn-context-back:hover {
+  text-decoration: underline;
+}
+
 .lab-intro h1 {
   margin: 0 0 0.35rem;
   font-size: 1.6rem;

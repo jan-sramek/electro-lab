@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://example.com/learn</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/basics/led-series</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/basics/rc-charge</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/basics/led-fade</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/switching/bjt-switch</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/switching/relay-flyback</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/switching/nmos-switch</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/switching/motor-lowside</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/timing/ne555-astable</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/input/pushbutton-led</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/input/ldr-nightlight</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/actuators/buzzer-button</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/mcu/arduino-dio-led</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://example.com/learn/buses/i2c-oled-wiring</loc><lastmod>2026-09-01</lastmod></url>
+</urlset>

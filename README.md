@@ -4,13 +4,15 @@ DIY electronics learning platform — **Learn** + **Lab** (circuit simulator).
 
 ## Architecture
 
-See [docs/product-architecture.md](docs/product-architecture.md).
+Docs live under [docs/README.md](docs/README.md) — start with [product overview](docs/product-overview.md), then ADRs and phase requirements.
 
 | Piece | Role |
 |-------|------|
-| `apps/web` | Angular product shell (`/lab`, `/learn`) |
-| `services/circuit-engine` | HTTP host for `/api/circuit/simulate` |
-| `src/ElectroLab.CircuitSim` | Pure DC circuit solver (MNA) |
+| `apps/web` | Angular app (`/lab`, `/learn`) |
+| `services/circuit-engine` | `/api/circuit/simulate` |
+| `src/ElectroLab.CircuitSim` | Circuit solver (MNA) |
+
+Lab v1 is feature-frozen. Next: Learn (Phase B) after analysis gates — see [docs/roadmap.md](docs/roadmap.md) and [docs/vision.md](docs/vision.md).
 
 ## Lab
 

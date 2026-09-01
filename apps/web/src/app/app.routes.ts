@@ -10,8 +10,15 @@ export const routes: Routes = [
   {
     path: 'learn',
     loadComponent: () =>
-      import('./features/learn/pages/learn-page/learn-page.component').then(
-        (m) => m.LearnPageComponent
+      import('./features/learn/pages/learn-hub-page/learn-hub-page.component').then(
+        (m) => m.LearnHubPageComponent
+      )
+  },
+  {
+    path: 'learn/:moduleSlug/:unitSlug',
+    loadComponent: () =>
+      import('./features/learn/pages/learn-unit-page/learn-unit-page.component').then(
+        (m) => m.LearnUnitPageComponent
       )
   },
   {

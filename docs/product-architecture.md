@@ -1,53 +1,48 @@
-# Electro Lab — Product Architecture
+# Electro Lab — product architecture
+
+Final product (brief): [product-overview.md](product-overview.md). More detail: [architecture.md](architecture.md). Module map: [modules.md](modules.md). Principles: [vision.md](vision.md). Index: [README.md](README.md).
 
 ## Surfaces
 
-- **Lab** (`/lab`) — schematic editor + circuit simulation
-- **Learn** (`/learn`) — guided projects, quizzes, progress (later)
-- **Account** (`/account`) — auth/profile (later)
+- **Lab** (`/lab`) — schematic editor and simulation (**v1 is done and frozen**)
+- **Learn** (`/learn`) — guided projects (next focus)
+- **Account** (`/account`) — sign-in / profile (later)
 
 ## Deployables
 
 | Name | Path | Role |
 |------|------|------|
-| Web | `apps/web` | Angular product shell |
-| CircuitEngine | `services/circuit-engine` | HTTP host for simulation (`/api/circuit/*`) |
-| LearningApi | `services/learning-api` | Catalog/auth/progress + i18n (`/api/learning/*`) |
-| Proxy | `deploy/proxy` | Routes `/` → web, `/api/circuit` → circuit-engine, `/api/learning` → learning-api |
-| Postgres | Compose `db` | Translations (and future Learn data) |
+| Web | `apps/web` | Angular app |
+| CircuitEngine | `services/circuit-engine` | `/api/circuit/*` |
+| LearningApi | `services/learning-api` | `/api/learning/*` (i18n today) |
+| Proxy | `deploy/proxy` | Routes web + APIs |
+| Postgres | Compose `db` | Translations (and later Learn data) |
 
 ## Libraries
 
 | Name | Path | Role |
 |------|------|------|
-| CircuitSim | `src/ElectroLab.CircuitSim` | Pure DC/transient/AC physics core (no HTTP) |
+| CircuitSim | `src/ElectroLab.CircuitSim` | DC / transient / AC solver (no HTTP) |
 
-## Transport (Lab ↔ CircuitEngine)
+## Lab ↔ CircuitEngine
 
-Simulation uses **HTTP POST** (`/api/circuit/simulate`) for DC, transient, and AC. No WebSocket in Phase A.
-Optional streaming (WebSocket/SSE) only if later transient/live modes need it.
+`POST /api/circuit/simulate` for DC, transient, and AC. No WebSocket in v1. Streaming only if we later need live transient playback and write an ADR for it.
 
 ## i18n
 
-- Strings live in Postgres `translations` (`locale`, `key`, `value`).
-- `GET /api/learning/i18n/{locale}` returns the dictionary.
-- Angular loads at startup (`I18nService`); English fallback is embedded so Lab works if the API is down.
-- First locale seeded: **en**. Add rows for other locales later with the same keys.
+Strings sit in Postgres (`locale`, `key`, `value`). The web app loads them at startup and keeps an English fallback so Lab still works if LearningApi is down. First locale: **en**.
 
-## Lab (shipped)
+## Lab (shipped, frozen)
 
-- DC operating point, fixed-step transient (`tStop`/`dt`), and single-frequency (or sweep-capable) **AC** analysis
-- Multi-trace scope with time scrub driving canvas/probe; probe tool for net V / branch I
-- Wire-current animation (KCL fill); status banner for errors / warnings / IC / probe
-- Duplicate / clipboard / JSON import-export; named local circuit tabs
-- Teaching pack: battery, R, C (optional `ic`), L (optional `ic`), LED/diode, switch (`openAt` / `closeAt`), SPST relay (coil + contacts), pulse, pot, ammeter/voltmeter, op-amp (VCVS with teaching rails), switch-like NPN BJT + named **BC547** catalog alias, teaching **NMOS** and **NE555**, AC source (sine in transient when `freq` > 0)
-- Example presets including LED series, **LED fade** (two-run capacitor IC carry-over), RC, pot, pulse, op-amp invert, AC RC LPF, BJT LED switch
-- Transient option `initFromDc` (Lab toolbar checkbox) to seed C/L state from a DC solve at t = 0
-- Lab polarity cues (`+`/`−`, A/K) and diagnostics for AC nonlinear opens, silent AC sources, switch+inductor spikes
+Editor with DC / transient / AC, scope scrubbing, probes, wire-current animation, local circuit tabs (including pin/close), teaching parts (including the Arduino-path set and I2C OLED), and the usual example presets.
 
-## Deferred (by design)
+**Don’t add Lab simulator features without** [adr/001-lab-v1-freeze.md](adr/001-lab-v1-freeze.md).
 
-- Learn catalog / quizzes and LearningApi auth/progress (i18n slice exists)
-- SPICE-level semiconductors (real op-amps, BJT/MOS) and AC bias linearization of nonlinear devices
-- Transformers; WebSocket / SSE streaming for live transient playback
-- Bode UI for AC sweeps (engine can list frequencies; Lab emphasizes a single `f` today)
+## Parked on purpose (by phase)
+
+- Learn catalog — Phase B ([requirements-learn-mvp.md](requirements-learn-mvp.md)); product map: [requirements.md](requirements.md)
+- Quizzes, server progress, Account — later phases ([roadmap.md](roadmap.md))
+- Real SPICE-level semiconductors
+- Transformers; WebSocket/SSE live playback
+- Full Bode UI (engine can sweep; Lab mostly uses one frequency)
+- Bit-level protocols / MCU emulation (we only teach wiring-level ideas, e.g. I2C OLED)

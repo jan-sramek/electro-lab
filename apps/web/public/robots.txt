@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /learn
+Disallow: /lab
+Disallow: /account
+
+Sitemap: https://example.com/sitemap.xml
