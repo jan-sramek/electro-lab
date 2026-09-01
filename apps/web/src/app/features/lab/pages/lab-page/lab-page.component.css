@@ -1,9 +1,8 @@
 .learn-context {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
   margin: 0 0 1rem;
   padding: 0.65rem 1rem;
   background: #f0f7f4;
@@ -12,6 +11,56 @@
   color: #334155;
   font-size: 0.95rem;
 }
+
+.learn-context > .learn-context-label,
+.learn-context > .learn-context-back:first-of-type {
+  align-self: flex-start;
+}
+
+.learn-context-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  width: 100%;
+}
+
+.learn-challenge {
+  width: 100%;
+  border-top: 1px solid #c5e6d8;
+  padding-top: 0.65rem;
+}
+
+.learn-challenge h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #12263a;
+}
+
+.learn-challenge ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+  line-height: 1.45;
+}
+
+.learn-challenge li.pass { color: #0b6e4f; }
+.learn-challenge li.fail { color: #c2410c; }
+
+.challenge-btn {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: #0b6e4f;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.challenge-btn:hover { background: #095c42; }
+
+.challenge-msg { margin: 0.5rem 0 0; font-size: 0.9rem; }
+.challenge-msg.ok { color: #0b6e4f; }
 
 .learn-context-label strong {
   color: #12263a;

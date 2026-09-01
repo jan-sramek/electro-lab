@@ -24,6 +24,8 @@ export class LabToolbarComponent {
   readonly canDuplicate = input(false);
   readonly busy = input(false);
   readonly selectedPreset = input<ExamplePresetId | null>(null);
+  /** Hide presets, import/export, and new when in Learn challenge mode. */
+  readonly challengeMode = input(false);
 
   readonly toolChange = output<EditorTool>();
   readonly analysisModeChange = output<AnalysisMode>();

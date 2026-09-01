@@ -2,6 +2,8 @@
  * Embedded English fallback — keep in sync with
  * services/learning-api/Seed/TranslationSeeder.cs English dictionary.
  */
+import { LEARN_ASSESSMENT_I18N } from '../../features/learn/data/learn-assessment-i18n';
+
 export const EN_FALLBACK: Record<string, string> = {
   'shell.brand': 'Electro Lab',
   'shell.nav.lab': 'Lab',
@@ -32,6 +34,8 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.intro': 'Build a schematic, wire pins, and run DC, transient, or AC analysis.',
   'lab.hint':
     'Drag parts from the palette onto the canvas (or click a part, then click to place). Wire pin-to-pin, then Run. When the circuit solves, green dashes on wires show current flowing. An LED is bright near 20 mA; above ~35 mA it burns out and becomes an open circuit (fire graphic) until you replace it — always use enough series resistance. Drag an empty area to box-select; drag any selected part to move the group. Ctrl/Cmd-click or Ctrl/Cmd-drag to add to the selection. Click a wire to select it, then Delete. Example circuits open in a new tab. Ctrl+D duplicate; Ctrl+C/V copy/paste. Wheel to zoom; Shift-drag to pan. Drag on the scope to scrub time.',
+  'lab.hint.challenge':
+    'Build the circuit described in Learn from an empty canvas. Place parts, wire pin-to-pin, pick the right analysis mode, Run, then Check my work.',
   'lab.hint.wire':
     'Wire mode: click a pin to start (blue preview follows the cursor), then click another pin — or click an existing wire to make a T-junction. In Select mode, drag a wire to reshape it; double-click a wire to reset auto-route. Click empty canvas to cancel.',
   'lab.hint.probe':
@@ -539,7 +543,9 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.i2cOled.openLab': 'Open in Lab',
 
   'account.title': 'Account',
-  'account.body': 'Sign-in and profile will live here. Coming soon.'
+  'account.body': 'Sign-in and profile will live here. Coming soon.',
+
+  ...LEARN_ASSESSMENT_I18N
 };
 
 /** Ordered key list for guardrail tests — keep in sync with TranslationSeeder. */

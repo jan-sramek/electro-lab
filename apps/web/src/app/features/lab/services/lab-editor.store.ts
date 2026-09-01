@@ -83,6 +83,8 @@ export class LabEditorStore {
   readonly slots = signal<CircuitSlot[]>([]);
   /** Last loaded example circuit shown in the toolbar select. */
   readonly activeExamplePreset = signal<ExamplePresetId | null>(null);
+  /** Learn path challenge — single isolated tab, empty canvas, no library side effects. */
+  readonly learnChallengeMode = signal(false);
   readonly revision = signal(0);
 
   readonly selectedId = computed(() => {
@@ -105,6 +107,51 @@ export class LabEditorStore {
     this.bump();
   }
 
+  beginLearnChallenge(opts: {
+    tabName: string;
+    analysisMode: AnalysisMode;
+    tStop?: number;
+    dt?: number;
+    acFreq?: number;
+    initFromDc?: boolean;
+  }): void {
+    const slotId = 'learn-challenge';
+    const doc = emptyDocument();
+    const sim: SlotSimState = {
+      analysisMode: opts.analysisMode,
+      tStop: opts.tStop ?? 0.005,
+      dt: opts.dt ?? 5e-5,
+      acFreq: opts.acFreq ?? 1000,
+      examplePreset: null,
+      initFromDc: !!opts.initFromDc
+    };
+    this.persistence.beginIsolatedSession({
+      id: slotId,
+      name: opts.tabName,
+      doc,
+      updatedAt: Date.now(),
+      pinned: true,
+      sim
+    });
+    this.learnChallengeMode.set(true);
+    this.history.clear();
+    this.doc.set(assignNets(doc));
+    this.activeSlotId.set(slotId);
+    this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
+    this.activeExamplePreset.set(null);
+    this.applySlotSim(sim);
+    this.syncHistoryFlags();
+    this.refreshSlots(slotId);
+    this.bump();
+  }
+
+  endLearnChallenge(): void {
+    if (!this.learnChallengeMode()) return;
+    this.persistence.endIsolatedSession();
+    this.learnChallengeMode.set(false);
+  }
+
   /** Persist current tab, then switch. */
   switchCircuitTab(id: string): void {
     if (id === this.activeSlotId()) return;
@@ -123,6 +170,7 @@ export class LabEditorStore {
   }
 
   addCircuitTab(): void {
+    if (this.learnChallengeMode()) return;
     this.persist();
     const lib = this.persistence.loadLibrary();
     const name = this.persistence.nextDefaultName(lib.slots);
@@ -145,6 +193,7 @@ export class LabEditorStore {
   }
 
   closeCircuitTab(id: string): void {
+    if (this.learnChallengeMode()) return;
     const lib = this.persistence.loadLibrary();
     const slot = lib.slots.find((s) => s.id === id);
     if (!slot || slot.pinned || lib.slots.length <= 1) return;
@@ -673,6 +722,7 @@ export class LabEditorStore {
   }
 
   newSchematic(): void {
+    if (this.learnChallengeMode()) return;
     if (typeof window !== 'undefined' && !window.confirm('Clear the current schematic?')) {
       return;
     }

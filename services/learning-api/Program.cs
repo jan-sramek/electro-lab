@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using ElectroLab.LearningApi.Data;
+using ElectroLab.LearningApi.Endpoints;
 using ElectroLab.LearningApi.Seed;
+using ElectroLab.LearningApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,9 +11,13 @@ var connectionString = builder.Configuration.GetConnectionString("LearningDb")
     ?? "Host=localhost;Port=5433;Database=electro_lab;Username=electro;Password=electro";
 
 builder.Services.AddDbContext<LearningDbContext>(o => o.UseNpgsql(connectionString));
+builder.Services.AddScoped<LearnCatalogService>();
+builder.Services.AddScoped<LearnProgressService>();
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
     o.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    o.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    o.SerializerOptions.Converters.Add(new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
 });
 builder.Services.AddCors(o =>
 {
@@ -24,8 +30,9 @@ app.UseCors();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<LearningDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    await db.Database.MigrateAsync();
     await TranslationSeeder.SeedEnglishAsync(db);
+    await LearnCatalogSeeder.SeedAsync(db);
 }
 
 app.MapGet("/api/learning/health", () => Results.Ok(new { status = "ok", service = "learning-api" }));
@@ -55,6 +62,8 @@ app.MapGet("/api/learning/i18n/{locale}", async (string locale, LearningDbContex
         Messages = rows.ToDictionary(r => r.Key, r => r.Value)
     });
 });
+
+app.MapLearnEndpoints();
 
 app.Run();
 

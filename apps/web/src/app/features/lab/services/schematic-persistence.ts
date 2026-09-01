@@ -56,6 +56,25 @@ export interface StoredCapIc {
 
 @Injectable()
 export class SchematicPersistence {
+  /** In-memory library for Learn challenges — never touches localStorage. */
+  private isolatedLibrary: CircuitLibrary | null = null;
+
+  isIsolated(): boolean {
+    return this.isolatedLibrary !== null;
+  }
+
+  beginIsolatedSession(slot: CircuitSlot): void {
+    this.isolatedLibrary = {
+      schemaVersion: 1,
+      activeId: slot.id,
+      slots: [{ ...slot, pinned: true }]
+    };
+  }
+
+  endIsolatedSession(): void {
+    this.isolatedLibrary = null;
+  }
+
   save(doc: SchematicDocument, activeId?: string | null, sim?: SlotSimState): void {
     try {
       const lib = this.loadLibrary();
@@ -122,6 +141,19 @@ export class SchematicPersistence {
   }
 
   loadLibrary(): CircuitLibrary {
+    if (this.isolatedLibrary) {
+      return {
+        schemaVersion: 1,
+        activeId: this.isolatedLibrary.activeId,
+        slots: this.isolatedLibrary.slots.map((s) => ({
+          ...s,
+          pinned: !!s.pinned,
+          doc: this.normalizeDoc(s.doc),
+          sim: this.normalizeSim(s.sim)
+        }))
+      };
+    }
+
     try {
       const raw = localStorage.getItem(SLOTS_KEY);
       if (raw) {
@@ -323,6 +355,10 @@ export class SchematicPersistence {
   }
 
   private writeLibrary(lib: CircuitLibrary): void {
+    if (this.isolatedLibrary) {
+      this.isolatedLibrary = lib;
+      return;
+    }
     localStorage.setItem(SLOTS_KEY, JSON.stringify(lib));
   }
 

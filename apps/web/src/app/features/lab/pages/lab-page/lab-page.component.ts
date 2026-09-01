@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, computed, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LabEditorStore, ExamplePresetId } from '../../services/lab-editor.store';
@@ -16,6 +16,11 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { LearnSeoService } from '../../../learn/services/learn-seo.service';
 import { parseLearnFromSlug } from '../../../learn/data/learn-catalog';
 import { learnUnitPath, LearnUnit } from '../../../learn/data/learn-catalog.model';
+import { LearnLabChallengeService } from '../../../learn/services/learn-lab-challenge.service';
+import { LearnUnitDetailResponse } from '../../../learn/api/learning-api.types';
+import { CriterionCheckResult } from '../../../learn/data/lab-challenge-checker';
+import { getLearnChallengeSpec, specCriteriaForCheck } from '../../../learn/data/learn-challenge-spec';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-lab-page',
@@ -36,19 +41,32 @@ import { learnUnitPath, LearnUnit } from '../../../learn/data/learn-catalog.mode
   templateUrl: './lab-page.component.html',
   styleUrl: './lab-page.component.css'
 })
-export class LabPageComponent implements OnInit {
+export class LabPageComponent implements OnInit, OnDestroy {
   readonly editor = inject(LabEditorStore);
   readonly sim = inject(CircuitSimulationFacade);
   private readonly route = inject(ActivatedRoute);
   private readonly meta = inject(Meta);
   private readonly learnSeo = inject(LearnSeoService);
+  private readonly learnChallenge = inject(LearnLabChallengeService);
+  private readonly i18n = inject(I18nService);
 
   /** Learn unit when opened via `?from=module/unit`. */
   readonly learnContext = signal<LearnUnit | null>(null);
+  readonly learnChallengeUnit = signal<LearnUnitDetailResponse | null>(null);
+  readonly challengeResults = signal<CriterionCheckResult[]>([]);
+  readonly challengePassed = signal(false);
+  readonly challengeMessage = signal<string | null>(null);
   readonly learnUnitPath = learnUnitPath;
+
+  readonly challengeCriteria = computed(() => {
+    const unit = this.learnChallengeUnit();
+    if (!unit) return [];
+    return specCriteriaForCheck(unit.exampleId, unit.labChallenge.criteria);
+  });
 
   /** Context hint under the canvas: tool mode first, then example preset, else generic. */
   hintKey(): string {
+    if (this.editor.learnChallengeMode()) return 'lab.hint.challenge';
     const tool = this.editor.tool();
     if (tool === 'wire') return 'lab.hint.wire';
     if (tool === 'probe') return 'lab.hint.probe';
@@ -60,13 +78,19 @@ export class LabPageComponent implements OnInit {
   ngOnInit(): void {
     this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
     this.learnSeo.clearLearnSeo();
-    this.editor.initFromStorage();
 
     const from = this.route.snapshot.queryParamMap.get('from');
-    if (from) {
+    const challenge = this.route.snapshot.queryParamMap.get('challenge');
+    if (from && challenge === '1') {
       const unit = parseLearnFromSlug(from);
-      if (unit) this.learnContext.set(unit);
+      if (unit) {
+        this.learnContext.set(unit);
+        void this.startLearnChallenge(unit.moduleSlug, unit.unitSlug);
+        return;
+      }
     }
+
+    this.editor.initFromStorage();
 
     const example = this.route.snapshot.queryParamMap.get('example');
     if (example === 'led') {
@@ -98,6 +122,10 @@ export class LabPageComponent implements OnInit {
     } else if (example === 'i2c' || example === 'i2cOled' || example === 'oled' || example === 'ssd1306') {
       this.onLoadPreset('i2cOled');
     }
+  }
+
+  ngOnDestroy(): void {
+    this.editor.endLearnChallenge();
   }
 
   onLoadPreset(id: ExamplePresetId): void {
@@ -181,6 +209,58 @@ export class LabPageComponent implements OnInit {
   onReplaceBurned(): void {
     const id = this.editor.selectedId();
     if (id) this.editor.replaceBurned(id);
+  }
+
+  async checkLearnChallenge(): Promise<void> {
+    const unit = this.learnChallengeUnit();
+    if (!unit) return;
+
+    const criteria = this.challengeCriteria();
+    const results = this.learnChallenge.evaluate(criteria, {
+      doc: this.editor.doc(),
+      result: this.sim.result(),
+      analysisMode: this.editor.analysisMode()
+    });
+    this.challengeResults.set(results);
+
+    const passed = await this.learnChallenge.submitResults(
+      unit.moduleSlug,
+      unit.unitSlug,
+      unit.labChallenge.criteria,
+      results
+    );
+    this.challengePassed.set(passed);
+    this.challengeMessage.set(passed ? 'lab.challenge.passed' : 'lab.challenge.failed');
+  }
+
+  learnChallengePath(): string[] | null {
+    const unit = this.learnChallengeUnit();
+    if (!unit) return null;
+    return ['/learn', unit.moduleSlug, unit.unitSlug];
+  }
+
+  criterionPassed(criterionId: number): boolean | null {
+    const row = this.challengeResults().find((r) => r.criterionId === criterionId);
+    return row ? row.passed : null;
+  }
+
+  private async startLearnChallenge(moduleSlug: string, unitSlug: string): Promise<void> {
+    const detail = await this.learnChallenge.loadChallengeUnit(moduleSlug, unitSlug);
+    if (!detail) {
+      this.editor.initFromStorage();
+      return;
+    }
+
+    this.learnChallengeUnit.set(detail);
+    const spec = getLearnChallengeSpec(detail.exampleId);
+    const tabNameKey = spec?.tabNameKey ?? 'learn.challenge.tab.default';
+    this.editor.beginLearnChallenge({
+      tabName: this.i18n.t(tabNameKey),
+      analysisMode: spec?.analysisMode ?? 'dcOp',
+      tStop: spec?.tStop,
+      dt: spec?.dt,
+      initFromDc: spec?.initFromDc
+    });
   }
 
   @HostListener('window:keydown', ['$event'])

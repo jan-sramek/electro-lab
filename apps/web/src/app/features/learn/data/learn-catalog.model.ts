@@ -18,7 +18,7 @@ export interface LearnUnit {
   stepCount: number;
 }
 
-export function learnUnitPath(unit: LearnUnit): string {
+export function learnUnitPath(unit: Pick<LearnUnit, 'moduleSlug' | 'unitSlug'>): string {
   return `/learn/${unit.moduleSlug}/${unit.unitSlug}`;
 }
 

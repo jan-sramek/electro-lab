@@ -8,6 +8,28 @@
       <a class="learn-context-back" [routerLink]="learnUnitPath(ctx)">
         {{ 'lab.backToLearnSteps' | t }}
       </a>
+
+      @if (learnChallengeUnit(); as challenge) {
+        <div class="learn-challenge">
+          <h2>{{ 'lab.challenge.heading' | t }}</h2>
+          <ul>
+            @for (c of challengeCriteria(); track c.id) {
+              <li [class.pass]="criterionPassed(c.id) === true" [class.fail]="criterionPassed(c.id) === false">
+                {{ c.labelKey | t }}
+              </li>
+            }
+          </ul>
+          <button type="button" class="challenge-btn" (click)="checkLearnChallenge()">
+            {{ 'lab.challenge.check' | t }}
+          </button>
+          @if (challengeMessage(); as msg) {
+            <p class="challenge-msg" [class.ok]="challengePassed()">{{ msg | t }}</p>
+          }
+          @if (challengePassed() && learnChallengePath(); as path) {
+            <a class="learn-context-back" [routerLink]="path">{{ 'lab.challenge.backToUnit' | t }}</a>
+          }
+        </div>
+      }
     </aside>
   }
 
@@ -29,6 +51,7 @@
     [canDuplicate]="editor.selectedIds().length > 0"
     [busy]="sim.busy()"
     [selectedPreset]="editor.activeExamplePreset()"
+    [challengeMode]="editor.learnChallengeMode()"
     (toolChange)="editor.setTool($event)"
     (analysisModeChange)="editor.setAnalysisMode($event)"
     (tStopChange)="editor.setTStop($event)"
@@ -56,6 +79,7 @@
         <app-circuit-tabs
           [slots]="editor.slots()"
           [activeId]="editor.activeSlotId()"
+          [challengeMode]="editor.learnChallengeMode()"
           (activate)="editor.switchCircuitTab($event)"
           (add)="editor.addCircuitTab()"
           (close)="editor.closeCircuitTab($event)"

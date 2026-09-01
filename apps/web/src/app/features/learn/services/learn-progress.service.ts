@@ -1,50 +1,78 @@
-import { Injectable } from '@angular/core';
-import { LearnUnit } from '../data/learn-catalog.model';
-
-const STORAGE_PREFIX = 'learn.progress.';
+import { Injectable, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { LearningApiClient } from '../api/learning-api.client';
+import { LearnUnitProgressDto } from '../api/learning-api.types';
+import { LearnCatalogService } from './learn-catalog.service';
 
 @Injectable({ providedIn: 'root' })
 export class LearnProgressService {
-  private storageKey(unit: LearnUnit): string {
-    return `${STORAGE_PREFIX}${unit.moduleSlug}/${unit.unitSlug}`;
-  }
+  private readonly api = inject(LearningApiClient);
+  private readonly catalog = inject(LearnCatalogService);
 
-  isStepDone(unit: LearnUnit, step: number): boolean {
-    if (typeof localStorage === 'undefined') return false;
+  private readonly progressByKey = signal<Record<string, LearnUnitProgressDto>>({});
+
+  async sync(): Promise<void> {
     try {
-      const raw = localStorage.getItem(this.storageKey(unit));
-      if (!raw) return false;
-      const done: number[] = JSON.parse(raw);
-      return Array.isArray(done) && done.includes(step);
+      const snapshot = await firstValueFrom(this.api.getProgress());
+      const map: Record<string, LearnUnitProgressDto> = {};
+      for (const row of snapshot.units) {
+        map[this.key(row.moduleSlug, row.unitSlug)] = row;
+      }
+      this.progressByKey.set(map);
+      this.catalog.apiOnline.set(true);
     } catch {
-      return false;
+      if (!this.catalog.apiOnline()) return;
+      // API was up but progress fetch failed — keep local view
     }
   }
 
-  toggleStep(unit: LearnUnit, step: number, done: boolean): void {
-    if (typeof localStorage === 'undefined') return;
+  progressFor(moduleSlug: string, unitSlug: string): LearnUnitProgressDto {
+    return (
+      this.progressByKey()[this.key(moduleSlug, unitSlug)] ?? {
+        moduleSlug,
+        unitSlug,
+        readComplete: false,
+        quizPassed: false,
+        labPassed: false,
+        complete: false
+      }
+    );
+  }
+
+  progressSnapshot(): Record<string, LearnUnitProgressDto> {
+    return this.progressByKey();
+  }
+
+  async markRead(moduleSlug: string, unitSlug: string, complete: boolean): Promise<LearnUnitProgressDto> {
+    const optimistic: LearnUnitProgressDto = {
+      ...this.progressFor(moduleSlug, unitSlug),
+      readComplete: complete
+    };
+    this.upsert(optimistic);
+
+    if (!this.catalog.apiOnline()) return optimistic;
+
     try {
-      const key = this.storageKey(unit);
-      const current = new Set<number>(this.readSteps(key));
-      if (done) current.add(step);
-      else current.delete(step);
-      localStorage.setItem(key, JSON.stringify([...current].sort((a, b) => a - b)));
+      const saved = await firstValueFrom(this.api.markRead(moduleSlug, unitSlug, complete));
+      this.upsert(saved);
+      return saved;
     } catch {
-      // localStorage blocked — progress simply won't persist
+      return optimistic;
     }
   }
 
-  hasAnyStepDone(unit: LearnUnit): boolean {
-    for (let step = 1; step <= unit.stepCount; step++) {
-      if (this.isStepDone(unit, step)) return true;
-    }
-    return false;
+  applyProgress(row: LearnUnitProgressDto): void {
+    this.upsert(row);
   }
 
-  private readSteps(key: string): number[] {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === 'number') : [];
+  private upsert(row: LearnUnitProgressDto): void {
+    this.progressByKey.update((prev) => ({
+      ...prev,
+      [this.key(row.moduleSlug, row.unitSlug)]: row
+    }));
+  }
+
+  private key(moduleSlug: string, unitSlug: string): string {
+    return `${moduleSlug}/${unitSlug}`;
   }
 }

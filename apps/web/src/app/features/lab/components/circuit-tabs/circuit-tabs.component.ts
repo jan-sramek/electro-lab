@@ -13,6 +13,8 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 export class CircuitTabsComponent implements AfterViewChecked {
   readonly slots = input.required<CircuitSlot[]>();
   readonly activeId = input<string | null>(null);
+  /** Single pinned tab — hide add, close, and tab menu. */
+  readonly challengeMode = input(false);
 
   readonly activate = output<string>();
   readonly add = output<void>();
@@ -57,6 +59,11 @@ export class CircuitTabsComponent implements AfterViewChecked {
   onSelect(id: string): void {
     if (this.editingId()) return;
     if (id !== this.activeId()) this.activate.emit(id);
+  }
+
+  onTabDblClick(ev: MouseEvent, slot: CircuitSlot): void {
+    if (this.challengeMode()) return;
+    this.startRename(ev, slot);
   }
 
   onClose(ev: MouseEvent, id: string): void {

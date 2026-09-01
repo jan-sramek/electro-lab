@@ -118,6 +118,7 @@
     <button type="button" class="danger" (click)="remove.emit()" [disabled]="!canDelete()">
       {{ 'lab.toolbar.delete' | t }}
     </button>
+    @if (!challengeMode()) {
     <label class="preset-select">
       <span class="sr-only">{{ 'lab.toolbar.presets' | t }}</span>
       <select [ngModel]="selectedPreset() ?? ''" (ngModelChange)="onPresetModelChange($event)">
@@ -148,6 +149,7 @@
       <input type="file" accept="application/json,.json" (change)="onImportFile($event)" />
     </label>
     <button type="button" (click)="newSchematic.emit()">{{ 'lab.toolbar.new' | t }}</button>
+    }
     <button type="button" class="primary run-btn" (click)="run.emit()" [disabled]="busy()">
       <span class="run-slot">
         <span [class.on]="!busy()">{{ 'lab.toolbar.run' | t }}</span>

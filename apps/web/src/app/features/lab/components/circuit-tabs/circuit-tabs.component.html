@@ -13,8 +13,8 @@
         [class.pinned]="!!s.pinned"
         [attr.aria-selected]="isActive(s.id)"
         (click)="onSelect(s.id)"
-        (dblclick)="startRename($event, s)"
-        (contextmenu)="onTabContextMenu($event, s)"
+        (dblclick)="onTabDblClick($event, s)"
+        (contextmenu)="challengeMode() ? $event.preventDefault() : onTabContextMenu($event, s)"
       >
         @if (s.pinned) {
           <svg class="pin-mark" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
@@ -39,7 +39,7 @@
         } @else {
           <span class="name">{{ s.name }}</span>
         }
-        @if (!s.pinned) {
+        @if (!challengeMode() && !s.pinned) {
           <button
             type="button"
             class="close"
@@ -52,6 +52,7 @@
         }
       </div>
     }
+    @if (!challengeMode()) {
     <button
       type="button"
       class="add"
@@ -61,8 +62,10 @@
     >
       +
     </button>
+    }
   </div>
 
+  @if (!challengeMode()) {
   <div class="tabs-actions">
     <button
       type="button"
@@ -106,4 +109,5 @@
       </div>
     }
   </div>
+  }
 </div>
