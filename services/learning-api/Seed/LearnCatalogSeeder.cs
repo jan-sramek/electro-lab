@@ -209,12 +209,27 @@ public static class LearnCatalogSeeder
 
     private static readonly UnitDef[] UnitDefs =
     [
-        new("basics", "led-series", "led", "learn.project.led", 1,
+        new("basics", "fundamentals-loop", "led", "learn.project.fundamentalsLoop", 1,
+            StandardLessons("learn.project.fundamentalsLoop"), StandardQuiz("learn.project.fundamentalsLoop"),
+            LedLab("learn.project.fundamentalsLoop")),
+        new("basics", "ohm-explore", "led", "learn.project.ohmExplore", 2,
+            StandardLessons("learn.project.ohmExplore"), StandardQuiz("learn.project.ohmExplore"),
+            LedLab("learn.project.ohmExplore")),
+        new("basics", "led-series", "led", "learn.project.led", 3,
             StandardLessons("learn.project.led"), StandardQuiz("learn.project.led"), LedLab("learn.project.led")),
-        new("basics", "rc-charge", "rc", "learn.project.rc", 2,
+        new("basics", "led-burn-limit", "led", "learn.project.ledBurnLimit", 4,
+            StandardLessons("learn.project.ledBurnLimit"), StandardQuiz("learn.project.ledBurnLimit"),
+            LedLab("learn.project.ledBurnLimit")),
+        new("basics", "rc-charge", "rc", "learn.project.rc", 5,
             StandardLessons("learn.project.rc"), StandardQuiz("learn.project.rc"), TranLab("learn.project.rc")),
-        new("basics", "led-fade", "ledFade", "learn.project.ledFade", 3,
+        new("basics", "time-constant-estimate", "rc", "learn.project.timeConstant", 6,
+            StandardLessons("learn.project.timeConstant"), StandardQuiz("learn.project.timeConstant"),
+            TranLab("learn.project.timeConstant")),
+        new("basics", "led-fade", "ledFade", "learn.project.ledFade", 7,
             StandardLessons("learn.project.ledFade"), StandardQuiz("learn.project.ledFade"), TranLab("learn.project.ledFade")),
+        new("basics", "pulse-rc", "pulse", "learn.project.pulseRc", 8,
+            StandardLessons("learn.project.pulseRc"), StandardQuiz("learn.project.pulseRc"),
+            TranLab("learn.project.pulseRc")),
 
         new("power", "half-wave-rectifier", "halfWave", "learn.project.halfWave", 1,
             StandardLessons("learn.project.halfWave"), StandardQuiz("learn.project.halfWave"), TranLab("learn.project.halfWave")),
@@ -275,37 +290,43 @@ public static class LearnCatalogSeeder
                 new("learn.project.rcLowPass.challenge.c1.label", "sim_ok", new { }),
                 new("learn.project.rcLowPass.challenge.c2.label", "analysis_mode", new { mode = "ac" })
             ]),
-        new("filters", "rc-high-pass", "rcHighPass", "learn.project.rcHighPass", 2,
+        new("filters", "ac-rc-lpf", "ac", "learn.project.acRcLpf", 2,
+            StandardLessons("learn.project.acRcLpf"), StandardQuiz("learn.project.acRcLpf"),
+            [
+                new("learn.project.acRcLpf.challenge.c1.label", "sim_ok", new { }),
+                new("learn.project.acRcLpf.challenge.c2.label", "analysis_mode", new { mode = "ac" })
+            ]),
+        new("filters", "rc-high-pass", "rcHighPass", "learn.project.rcHighPass", 3,
             StandardLessons("learn.project.rcHighPass"), StandardQuiz("learn.project.rcHighPass"),
             [
                 new("learn.project.rcHighPass.challenge.c1.label", "sim_ok", new { }),
                 new("learn.project.rcHighPass.challenge.c2.label", "analysis_mode", new { mode = "ac" })
             ]),
-        new("filters", "rlc-series", "rlcSeries", "learn.project.rlcSeries", 3,
+        new("filters", "rlc-series", "rlcSeries", "learn.project.rlcSeries", 4,
             StandardLessons("learn.project.rlcSeries"), StandardQuiz("learn.project.rlcSeries"),
             [
                 new("learn.project.rlcSeries.challenge.c1.label", "sim_ok", new { }),
                 new("learn.project.rlcSeries.challenge.c2.label", "analysis_mode", new { mode = "ac" })
             ]),
-        new("filters", "band-pass", "bandPass", "learn.project.bandPass", 4,
+        new("filters", "band-pass", "bandPass", "learn.project.bandPass", 5,
             StandardLessons("learn.project.bandPass"), StandardQuiz("learn.project.bandPass"),
             [
                 new("learn.project.bandPass.challenge.c1.label", "sim_ok", new { }),
                 new("learn.project.bandPass.challenge.c2.label", "analysis_mode", new { mode = "ac" })
             ]),
-        new("filters", "notch-filter", "notchFilter", "learn.project.notchFilter", 5,
+        new("filters", "notch-filter", "notchFilter", "learn.project.notchFilter", 6,
             StandardLessons("learn.project.notchFilter"), StandardQuiz("learn.project.notchFilter"),
             [
                 new("learn.project.notchFilter.challenge.c1.label", "sim_ok", new { }),
                 new("learn.project.notchFilter.challenge.c2.label", "analysis_mode", new { mode = "ac" })
             ]),
-        new("filters", "voltage-divider", "voltageDivider", "learn.project.voltageDivider", 6,
+        new("filters", "voltage-divider", "voltageDivider", "learn.project.voltageDivider", 7,
             StandardLessons("learn.project.voltageDivider"), StandardQuiz("learn.project.voltageDivider"),
             DcSimOk("learn.project.voltageDivider")),
-        new("filters", "pot-divider", "pot", "learn.project.potDivider", 7,
+        new("filters", "pot-divider", "pot", "learn.project.potDivider", 8,
             StandardLessons("learn.project.potDivider"), StandardQuiz("learn.project.potDivider"),
             DcSimOk("learn.project.potDivider")),
-        new("filters", "measure-freq-amp", "measureAc", "learn.project.measureAc", 8,
+        new("filters", "measure-freq-amp", "measureAc", "learn.project.measureAc", 9,
             StandardLessons("learn.project.measureAc"), StandardQuiz("learn.project.measureAc"),
             [
                 new("learn.project.measureAc.challenge.c1.label", "sim_ok", new { }),
@@ -393,8 +414,20 @@ public static class LearnCatalogSeeder
         new("switching", "motor-lowside", "motor", "learn.project.motor", 4,
             StandardLessons("learn.project.motor"), StandardQuiz("learn.project.motor"),
             SwitchLab("learn.project.motor", "S1")),
+        new("switching", "bjt-vs-mos-compare", "nmos", "learn.project.bjtVsMos", 5,
+            StandardLessons("learn.project.bjtVsMos"), StandardQuiz("learn.project.bjtVsMos"),
+            SwitchLab("learn.project.bjtVsMos", "S1")),
+        new("switching", "inductive-why-diode", "relay", "learn.project.inductiveWhyDiode", 6,
+            StandardLessons("learn.project.inductiveWhyDiode"), StandardQuiz("learn.project.inductiveWhyDiode"),
+            SwitchLab("learn.project.inductiveWhyDiode", "S1")),
         new("timing", "ne555-astable", "ne555", "learn.project.ne555", 1,
             StandardLessons("learn.project.ne555"), StandardQuiz("learn.project.ne555"), TranLab("learn.project.ne555")),
+        new("timing", "ne555-play", "christmasTree", "learn.project.ne555Play", 2,
+            StandardLessons("learn.project.ne555Play"), StandardQuiz("learn.project.ne555Play"),
+            TranLab("learn.project.ne555Play")),
+        new("timing", "ne555-pot-blink", "ne555Pot", "learn.project.ne555Pot", 3,
+            StandardLessons("learn.project.ne555Pot"), StandardQuiz("learn.project.ne555Pot"),
+            TranLab("learn.project.ne555Pot")),
         new("input", "pushbutton-led", "pushbutton", "learn.project.pushbutton", 1,
             StandardLessons("learn.project.pushbutton"), StandardQuiz("learn.project.pushbutton"),
             [new("learn.project.pushbutton.challenge.c1.label", "sim_ok", new { }),
@@ -406,9 +439,15 @@ public static class LearnCatalogSeeder
             SwitchLab("learn.project.buzzer", "S1")),
         new("mcu", "arduino-dio-led", "arduino", "learn.project.arduino", 1,
             StandardLessons("learn.project.arduino"), StandardQuiz("learn.project.arduino"), LedLab("learn.project.arduino")),
+        new("mcu", "pin-input-pulldown", "arduino", "learn.project.pinInput", 2,
+            StandardLessons("learn.project.pinInput"), StandardQuiz("learn.project.pinInput"),
+            LedLab("learn.project.pinInput")),
         new("buses", "i2c-oled-wiring", "i2cOled", "learn.project.i2cOled", 1,
             StandardLessons("learn.project.i2cOled"), StandardQuiz("learn.project.i2cOled"),
             [new("learn.project.i2cOled.challenge.c1.label", "sim_ok", new { }),
-             new("learn.project.i2cOled.challenge.c2.label", "no_circuit_errors", new { })])
+             new("learn.project.i2cOled.challenge.c2.label", "no_circuit_errors", new { })]),
+        new("buses", "i2c-address-idea", "i2cOled", "learn.project.i2cAddress", 2,
+            StandardLessons("learn.project.i2cAddress"), StandardQuiz("learn.project.i2cAddress"),
+            DcSimOk("learn.project.i2cAddress"))
     ];
 }

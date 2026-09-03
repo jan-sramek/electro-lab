@@ -83,6 +83,8 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.challenge.tab.opampComparator': 'Comparator',
   'learn.challenge.tab.opampNonInv': 'Non-inverting amplifier',
   'learn.challenge.tab.opampFollower': 'Voltage follower',
+  'learn.challenge.tab.christmasTree': 'NE555 Christmas tree',
+  'learn.challenge.tab.ne555Pot': 'NE555 + pot blink',
 
   'learn.challenge.check.sim_ok': 'Simulation completes without errors.',
   'learn.challenge.check.no_circuit_errors': 'Wiring passes circuit checks.',
@@ -158,7 +160,19 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...coilProtectAssessment(),
   ...inductiveLoadAssessment(),
   ...estopRelayAssessment(),
-  ...industrial24vAssessment()
+  ...industrial24vAssessment(),
+  ...fundamentalsLoopAssessment(),
+  ...ohmExploreAssessment(),
+  ...ledBurnLimitAssessment(),
+  ...timeConstantAssessment(),
+  ...pulseRcAssessment(),
+  ...acRcLpfAssessment(),
+  ...ne555PlayAssessment(),
+  ...ne555PotAssessment(),
+  ...pinInputAssessment(),
+  ...i2cAddressAssessment(),
+  ...bjtVsMosAssessment(),
+  ...inductiveWhyDiodeAssessment()
 };
 
 function lessonKeys(prefix: string, l1Title: string, l1Body: string, l2Title: string, l2Body: string) {
@@ -1291,5 +1305,257 @@ function industrial24vAssessment() {
       ["LED series R is larger because…", "Higher voltage would over-current a small R", "LEDs need 24 V across them", "I²C requires it", "Ohm’s law on the load."]
     ),
     ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+
+function fundamentalsLoopAssessment() {
+  const p = 'learn.project.fundamentalsLoop';
+  return {
+    ...lessonKeys(
+      p,
+      'Closed loop',
+      'Current only flows when there is a complete path from the supply through the load and back.',
+      'Ground is a return',
+      'In Lab, ground is the shared return reference — every teaching circuit needs it.'
+    ),
+    ...quizKeys(
+      p,
+      ['A circuit needs…', 'A closed path for current', 'Only a battery', 'Only an LED', 'Supply and return must connect through the load.'],
+      ['Ground in these labs is mainly…', 'Decoration', 'The return reference', 'A second battery', 'It closes the loop back to the supply.'],
+      ['If the return wire is missing…', 'Current still flows normally', 'Voltage doubles', 'Nothing useful lights', 'An open loop stops current.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+  };
+}
+
+
+function ohmExploreAssessment() {
+  const p = 'learn.project.ohmExplore';
+  return {
+    ...lessonKeys(
+      p,
+      'I ≈ V / R (teaching)',
+      'For a fixed supply and LED drop, series R is the knob that sets current.',
+      'Probe, don’t guess',
+      'Use the ammeter or LED current label after each change.'
+    ),
+    ...quizKeys(
+      p,
+      ['If R doubles (same V), current roughly…', 'Halves', 'Doubles', 'Stays identical', 'Ohm’s law: larger R → smaller I.'],
+      ['You want less LED current. You usually…', 'Lower series R', 'Raise series R', 'Remove ground', 'More resistance limits current.'],
+      ['Best habit after changing R…', 'Skip Run', 'Delete the LED', 'Run and read current', 'Always re-simulate and probe.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+  };
+}
+
+
+function ledBurnLimitAssessment() {
+  const p = 'learn.project.ledBurnLimit';
+  return {
+    ...lessonKeys(
+      p,
+      'Current limit',
+      'Teaching LEDs burn when average current stays above ~35 mA — a stand-in for real overcurrent damage.',
+      'Replace and recover',
+      'Burnout is sticky until you replace the part and fix the overload (usually raise R).'
+    ),
+    ...quizKeys(
+      p,
+      ['Burnout here means…', 'Too much current for too long', 'Wrong wire color', 'AC mode only', 'Overcurrent trips the teaching model.'],
+      ['After a burn you should…', 'Ignore it', 'Replace the LED and raise R', 'Delete ground', 'Recover the part and reduce current.'],
+      ['Safer LED current in these labs is often…', 'Hundreds of amps', 'Zero always', 'Around 10–20 mA', 'Typical indicator current range.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+  };
+}
+
+
+function timeConstantAssessment() {
+  const p = 'learn.project.timeConstant';
+  return {
+    ...lessonKeys(
+      p,
+      'τ ≈ R×C',
+      'One time constant is the characteristic rise/fall scale of an RC network.',
+      'By eye on the scope',
+      'You do not need a calculator for intuition — stretch R or C and the curve follows.'
+    ),
+    ...quizKeys(
+      p,
+      ['τ is roughly…', 'R × C', 'R / C', 'C only', 'Product of resistance and capacitance.'],
+      ['To stretch the rise, you can…', 'Increase R or C', 'Only decrease V', 'Remove C', 'Larger τ slows the curve.'],
+      ['Which mode shows τ?', 'DC only', 'Import JSON', 'Transient', 'Watch voltage vs time.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use Transient analysis.')
+  };
+}
+
+
+function pulseRcAssessment() {
+  const p = 'learn.project.pulseRc';
+  return {
+    ...lessonKeys(
+      p,
+      'Edges meet RC',
+      'A fast pulse through R into C cannot jump instantly — the node rises and falls with τ.',
+      'Pulse parameters',
+      'Delay, width, and levels set the stimulus; R and C set how faithfully the node follows.'
+    ),
+    ...quizKeys(
+      p,
+      ['RC on a pulse mainly…', 'Rounds the edges', 'Creates RF permanently', 'Removes ground', 'τ filters sharp transitions.'],
+      ['Best analysis here…', 'DC only', 'Transient', 'Delete wires', 'Time-domain edges need Transient.'],
+      ['Larger C with same R…', 'Sharpens the edge', 'Does nothing', 'Slows the edge more', 'Larger τ → slower response.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use Transient analysis.')
+  };
+}
+
+
+function acRcLpfAssessment() {
+  const p = 'learn.project.acRcLpf';
+  return {
+    ...lessonKeys(
+      p,
+      'Low-pass idea',
+      'An RC low-pass passes slower changes and attenuates fast ones.',
+      'AC vs Transient',
+      'AC mode shows steady-state response at one frequency — great for intuition, not a full Bode plot yet.'
+    ),
+    ...quizKeys(
+      p,
+      ['A low-pass attenuates…', 'Higher frequencies more', 'Only DC forever', 'Ground only', 'Fast signals see more attenuation.'],
+      ['AC analysis here means…', 'Deleting C', 'Single-frequency response', 'Only burnout', 'Probe magnitude at the chosen Hz.'],
+      ['Raising frequency on an LPF usually…', 'Raises it forever', 'Removes R', 'Lowers output magnitude', 'Above cutoff, attenuation grows.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use AC analysis.')
+  };
+}
+
+
+function ne555PlayAssessment() {
+  const p = 'learn.project.ne555Play';
+  return {
+    ...lessonKeys(
+      p,
+      'One timer, many loads',
+      'The 555 still sets the period; each LED branch is just another load on the output.',
+      'Current budget',
+      'More LEDs share the output — keep series resistors sensible so branches stay healthy.'
+    ),
+    ...quizKeys(
+      p,
+      ['Blink rate is set mainly by…', 'RA, RB, and CT', 'LED color only', 'Wire thickness', 'Astable timing network.'],
+      ['Best mode to see blinking…', 'Import only', 'Transient', 'DC forever', 'Time animation needs Transient.'],
+      ['More LED branches usually means…', 'Zero current always', 'No ground needed', 'More output loading', 'Each branch draws current when on.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use Transient analysis.')
+  };
+}
+
+
+function ne555PotAssessment() {
+  const p = 'learn.project.ne555Pot';
+  return {
+    ...lessonKeys(
+      p,
+      'Pot as timing R',
+      'A potentiometer can stand in for part of the RA/RB network so you can sweep period live.',
+      'Teaching model',
+      'This is still an astable 555 — the pot is just a convenient knob on τ.'
+    ),
+    ...quizKeys(
+      p,
+      ['The pot here mainly adjusts…', 'Blink period', 'Battery chemistry', 'Wire color', 'Timing resistance changes period.'],
+      ['Analysis mode for blinking…', 'SEO only', 'Transient', 'DC lock forever', 'Need time to see flashes.'],
+      ['Turning the pot changes…', 'Ground symbol', 'I2C address', 'Effective timing R', 'R in the RC timing path.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use Transient analysis.')
+  };
+}
+
+
+function pinInputAssessment() {
+  const p = 'learn.project.pinInput';
+  return {
+    ...lessonKeys(
+      p,
+      'Outputs vs inputs',
+      'A digital output actively drives HIGH/LOW. An input only senses — it needs a defined voltage.',
+      'Floating is bad',
+      'An undriven input can read randomly; pull-ups/pull-downs fix that habit early.'
+    ),
+    ...quizKeys(
+      p,
+      ['A floating input is…', 'Undefined / noisy', 'Always safe HIGH', 'A battery', 'No defined drive → unreliable level.'],
+      ['Pull-down resistor purpose…', 'Increase RF forever', 'Define LOW when switch open', 'Burn LEDs', 'Holds the node at a known level.'],
+      ['Arduino LED sample pin is acting as…', 'An I2C clock only', 'A fuse', 'An output driver', 'It sources/sinks the LED path.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+  };
+}
+
+
+function i2cAddressAssessment() {
+  const p = 'learn.project.i2cAddress';
+  return {
+    ...lessonKeys(
+      p,
+      'Shared wires',
+      'I²C shares SDA/SCL; the address selects which chip should listen.',
+      '0x3C vs 0x3D',
+      'Many SSD1306 modules use 0x3C; some straps select 0x3D — same idea, different ID.'
+    ),
+    ...quizKeys(
+      p,
+      ['I²C address selects…', 'Which device talks/listens', 'Wire thickness', 'LED color', 'Multiple chips share the bus.'],
+      ['Pull-ups on SDA/SCL…', 'Are optional decoration', 'Are required for open-drain I²C', 'Replace ground', 'Idle lines are pulled high.'],
+      ['Two OLEDs on one bus need…', 'Identical shorts', 'No VCC', 'Different addresses', 'Unique IDs avoid collisions.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Wiring passes circuit checks.')
+  };
+}
+
+
+function bjtVsMosAssessment() {
+  const p = 'learn.project.bjtVsMos';
+  return {
+    ...lessonKeys(
+      p,
+      'BJT mental model',
+      'A small base current enables a larger collector current — current controlled switch.',
+      'MOSFET mental model',
+      'Gate voltage turns the channel on — essentially no DC gate current in the teaching model.'
+    ),
+    ...quizKeys(
+      p,
+      ['BJT switch is mainly…', 'Current-controlled at the base', 'Optical only', 'I2C addressed', 'Base current enables collector path.'],
+      ['NMOS teaching switch cares about…', 'Base μA only', 'Gate voltage vs source', 'SSD1306 address', 'Vgs turns the channel on.'],
+      ['Gate resistor mainly…', 'Stores charge like a huge C', 'Removes ground', 'Limits gate charge spikes / softens drive', 'Series R on the gate node.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Switch is closed and load conducts.')
+  };
+}
+
+
+function inductiveWhyDiodeAssessment() {
+  const p = 'learn.project.inductiveWhyDiode';
+  return {
+    ...lessonKeys(
+      p,
+      'Coils fight change',
+      'Inductive current wants to keep flowing when you open the switch — voltage spikes without a path.',
+      'Diode path',
+      'A flyback diode gives that current a safe loop around the coil instead of arcing the switch.'
+    ),
+    ...quizKeys(
+      p,
+      ['Flyback diode protects against…', 'Inductive voltage kick', 'LED color drift', 'SEO issues', 'Coil current needs a freewheel path.'],
+      ['Diode orientation…', 'Anywhere random', 'Cathode toward coil+', 'Series with battery only', 'Classic anti-parallel across the coil.'],
+      ['Without a diode, opening the switch can…', 'Improve I2C', 'Charge the LED forever', 'Spike voltage on the switch node', 'Energy in the coil has nowhere safe to go.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Switch closed and load conducts.')
   };
 }

@@ -2,6 +2,7 @@ import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AnalysisMode, EditorTool } from '../../data/schematic.model';
 import { ExamplePresetId, isExamplePresetId } from '../../services/lab-editor.store';
+import { LAB_PRESET_GROUPS, presetOptionLabelKey } from '../../data/preset-groups';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
@@ -12,6 +13,9 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
   styleUrl: './toolbar.component.css'
 })
 export class LabToolbarComponent {
+  readonly presetGroups = LAB_PRESET_GROUPS;
+  readonly presetLabelKey = presetOptionLabelKey;
+
   readonly tool = input.required<EditorTool>();
   readonly analysisMode = input.required<AnalysisMode>();
   readonly tStop = input(0.005);

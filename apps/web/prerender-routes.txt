@@ -1,7 +1,12 @@
 /learn
+/learn/basics/fundamentals-loop
+/learn/basics/ohm-explore
 /learn/basics/led-series
+/learn/basics/led-burn-limit
 /learn/basics/rc-charge
+/learn/basics/time-constant-estimate
 /learn/basics/led-fade
+/learn/basics/pulse-rc
 /learn/power/half-wave-rectifier
 /learn/power/bridge-rectifier
 /learn/power/filter-capacitor
@@ -22,6 +27,7 @@
 /learn/opamps/opamp-differentiator
 /learn/opamps/opamp-active-filter
 /learn/filters/rc-low-pass
+/learn/filters/ac-rc-lpf
 /learn/filters/rc-high-pass
 /learn/filters/rlc-series
 /learn/filters/band-pass
@@ -54,9 +60,15 @@
 /learn/switching/relay-flyback
 /learn/switching/nmos-switch
 /learn/switching/motor-lowside
+/learn/switching/bjt-vs-mos-compare
+/learn/switching/inductive-why-diode
 /learn/timing/ne555-astable
+/learn/timing/ne555-play
+/learn/timing/ne555-pot-blink
 /learn/input/pushbutton-led
 /learn/input/ldr-nightlight
 /learn/actuators/buzzer-button
 /learn/mcu/arduino-dio-led
+/learn/mcu/pin-input-pulldown
 /learn/buses/i2c-oled-wiring
+/learn/buses/i2c-address-idea

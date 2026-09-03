@@ -129,7 +129,7 @@ export type ExamplePresetId =
   | 'estopRelay'
   | 'industrial24v';
 
-const EXAMPLE_PRESET_IDS: readonly ExamplePresetId[] = [
+export const EXAMPLE_PRESET_IDS: readonly ExamplePresetId[] = [
   'led',
   'ledFade',
   'rc',

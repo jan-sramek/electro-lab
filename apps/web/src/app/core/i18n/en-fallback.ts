@@ -116,6 +116,17 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.duplicate': 'Duplicate',
   'lab.toolbar.delete': 'Delete',
   'lab.toolbar.presets': 'Open example…',
+  'lab.toolbar.group.basics': 'Basics & RC',
+  'lab.toolbar.group.power': 'Power supplies',
+  'lab.toolbar.group.opamps': 'Op-amps',
+  'lab.toolbar.group.filters': 'Filters & AC',
+  'lab.toolbar.group.switching': 'Transistors & relays',
+  'lab.toolbar.group.motors': 'Motors',
+  'lab.toolbar.group.timing': 'Timing (555)',
+  'lab.toolbar.group.input': 'Input & sensors',
+  'lab.toolbar.group.actuators': 'Actuators',
+  'lab.toolbar.group.mcu': 'MCU & buses',
+  'lab.toolbar.group.industrial': 'Industrial',
   'lab.toolbar.ledPreset': 'LED series (DC)',
   'lab.toolbar.ledFadePreset': 'LED fade (capacitor)',
   'lab.toolbar.rcPreset': 'RC charge (transient)',
@@ -1812,6 +1823,116 @@ export const EN_FALLBACK: Record<string, string> = {
     '24 V control (DC)',
   'learn.challenge.tab.industrial24v':
     'Basic 24 V control',
+
+
+  // --- overnight soon units ---
+  'learn.project.fundamentalsLoop.title': 'The simple loop',
+  'learn.project.fundamentalsLoop.summary':
+    'Battery, resistor, LED, and ground — the smallest complete circuit that teaches current and return path.',
+  'learn.project.fundamentalsLoop.step1': 'Open the Lab LED example and Run DC.',
+  'learn.project.fundamentalsLoop.step2': 'Trace the loop: battery + → resistor → LED → ground → battery −.',
+  'learn.project.fundamentalsLoop.step3': 'Remove the mental “mystery” — current needs a closed path.',
+  'learn.project.fundamentalsLoop.step4': 'Probe a node or the LED to see voltage/current labels.',
+  'learn.project.fundamentalsLoop.openLab': 'Open in Lab',
+
+  'learn.project.ohmExplore.title': 'Ohm’s law by feel',
+  'learn.project.ohmExplore.summary':
+    'Change series resistance and watch LED current move — Ohm’s law without the spreadsheet.',
+  'learn.project.ohmExplore.step1': 'Open the LED example and note the LED current after Run DC.',
+  'learn.project.ohmExplore.step2': 'Lower R1 — current rises; raise R1 — current falls.',
+  'learn.project.ohmExplore.step3': 'Keep the LED bright but not overloaded (~10–20 mA teaching range).',
+  'learn.project.ohmExplore.step4': 'Write down one R and I pair so the “more R → less I” rule sticks.',
+  'learn.project.ohmExplore.openLab': 'Open in Lab',
+
+  'learn.project.ledBurnLimit.title': 'When an LED burns out',
+  'learn.project.ledBurnLimit.summary':
+    'Push current too high on purpose, see Lab burnout, then Replace the LED and restore a safe resistor.',
+  'learn.project.ledBurnLimit.step1': 'Open the LED example and Run DC with a normal R1 (~220 Ω).',
+  'learn.project.ledBurnLimit.step2': 'Lower R1 until the LED burns (teaching limit ~35 mA).',
+  'learn.project.ledBurnLimit.step3': 'Use Replace LED, then raise R1 back to a safe value.',
+  'learn.project.ledBurnLimit.step4': 'Run again — current should be healthy and the LED intact.',
+  'learn.project.ledBurnLimit.openLab': 'Open in Lab',
+
+  'learn.project.timeConstant.title': 'Estimate τ on the scope',
+  'learn.project.timeConstant.summary':
+    'Use Transient on the RC example and judge time constant by eye — where the curve reaches ~63% of the final rise.',
+  'learn.project.timeConstant.step1': 'Open RC charge and Run Transient.',
+  'learn.project.timeConstant.step2': 'Probe capacitor voltage and scrub the scope.',
+  'learn.project.timeConstant.step3': 'Mentally mark ~63% of the final voltage — that time is about one τ.',
+  'learn.project.timeConstant.step4': 'Change R or C and confirm τ stretches or shrinks.',
+  'learn.project.timeConstant.openLab': 'Open in Lab',
+
+  'learn.project.pulseRc.title': 'Pulse edges into RC',
+  'learn.project.pulseRc.summary':
+    'Drive an RC with a pulse source and watch edges get rounded — the bridge between digital edges and analog timing.',
+  'learn.project.pulseRc.step1': 'Open the Pulse RC example and Run Transient.',
+  'learn.project.pulseRc.step2': 'Probe the capacitor node — edges should soften vs the pulse.',
+  'learn.project.pulseRc.step3': 'Change R or C and compare edge speed.',
+  'learn.project.pulseRc.step4': 'Try a wider pulse width and see the capacitor approach the high level.',
+  'learn.project.pulseRc.openLab': 'Open in Lab',
+
+  'learn.project.acRcLpf.title': 'AC feel of a low-pass',
+  'learn.project.acRcLpf.summary':
+    'Use AC analysis on an RC low-pass — magnitude drops as frequency rises past the teaching cutoff.',
+  'learn.project.acRcLpf.step1': 'Open the AC RC example and select AC analysis.',
+  'learn.project.acRcLpf.step2': 'Run at a low frequency, then raise frequency and compare magnitude.',
+  'learn.project.acRcLpf.step3': 'Identify that high frequencies are attenuated more.',
+  'learn.project.acRcLpf.step4': 'Relate the feel back to the Transient RC charge story.',
+  'learn.project.acRcLpf.openLab': 'Open in Lab',
+
+  'learn.project.ne555Play.title': 'NE555 Christmas tree',
+  'learn.project.ne555Play.summary':
+    'Same astable 555 idea with many LEDs — practice seeing multiple loads blink together.',
+  'learn.project.ne555Play.step1': 'Open the Christmas tree example and Run Transient.',
+  'learn.project.ne555Play.step2': 'Watch several LEDs blink with the 555 output.',
+  'learn.project.ne555Play.step3': 'Change RA/RB or CT and see the blink rate shift.',
+  'learn.project.ne555Play.step4': 'Compare with the single-LED astable — same timer, richer load.',
+  'learn.project.ne555Play.openLab': 'Open in Lab',
+
+  'learn.project.ne555Pot.title': 'NE555 blink with a pot',
+  'learn.project.ne555Pot.summary':
+    'Tune blink rate with a potentiometer on the 555 timing network — same astable, live control.',
+  'learn.project.ne555Pot.step1': 'Open the NE555 + pot example and Run Transient.',
+  'learn.project.ne555Pot.step2': 'Move the potentiometer slider and watch period change.',
+  'learn.project.ne555Pot.step3': 'Leave it mid-range and confirm stable blinking.',
+  'learn.project.ne555Pot.step4': 'Relate pot position to effective timing resistance.',
+  'learn.project.ne555Pot.openLab': 'Open in Lab',
+
+  'learn.project.pinInput.title': 'Defined inputs vs floating',
+  'learn.project.pinInput.summary':
+    'MCU pins need defined levels — contrast a driven output LED with the idea of a floating input.',
+  'learn.project.pinInput.step1': 'Open the Arduino LED example and Run DC with the pin driving the LED.',
+  'learn.project.pinInput.step2': 'Think of the same pin as an input — without a pull, it can float.',
+  'learn.project.pinInput.step3': 'Compare with the pull-up/pull-down Lab example if you have it open in another tab.',
+  'learn.project.pinInput.step4': 'Remember: outputs drive; inputs should be defined.',
+  'learn.project.pinInput.openLab': 'Open in Lab',
+
+  'learn.project.i2cAddress.title': 'I²C address idea (0x3C)',
+  'learn.project.i2cAddress.summary':
+    'Same OLED wiring — focus on why devices need an address on a shared bus.',
+  'learn.project.i2cAddress.step1': 'Open the I2C OLED sample and confirm pull-ups on SDA/SCL.',
+  'learn.project.i2cAddress.step2': 'Find the teaching address (often 0x3C) in the part/inspector notes.',
+  'learn.project.i2cAddress.step3': 'Imagine a second device — each needs a unique address on the bus.',
+  'learn.project.i2cAddress.step4': 'Run DC to confirm the wiring still solves cleanly.',
+  'learn.project.i2cAddress.openLab': 'Open in Lab',
+
+  'learn.project.bjtVsMos.title': 'BJT vs MOSFET switch',
+  'learn.project.bjtVsMos.summary':
+    'Compare current-driven BJT switching with voltage-driven NMOS switching using the Lab examples.',
+  'learn.project.bjtVsMos.step1': 'Open the NMOS LED switch and Run with the gate driven.',
+  'learn.project.bjtVsMos.step2': 'Open the BC547 example in another tab and compare base current vs gate voltage thinking.',
+  'learn.project.bjtVsMos.step3': 'Note series base resistor vs gate resistor roles.',
+  'learn.project.bjtVsMos.step4': 'Remember: teaching models are switches — not full SPICE devices.',
+  'learn.project.bjtVsMos.openLab': 'Open in Lab',
+
+  'learn.project.inductiveWhyDiode.title': 'Why the flyback diode?',
+  'learn.project.inductiveWhyDiode.summary':
+    'Focus on the diode across a relay coil — what inductive kick is and how the diode protects the switch.',
+  'learn.project.inductiveWhyDiode.step1': 'Open the relay + flyback example and Run with S1 closed.',
+  'learn.project.inductiveWhyDiode.step2': 'Select the flyback diode and confirm cathode toward coil+.',
+  'learn.project.inductiveWhyDiode.step3': 'Open S1 and think about coil current needing a path when the switch opens.',
+  'learn.project.inductiveWhyDiode.step4': 'Compare with the motor + diode sample — same idea on a spinning load.',
+  'learn.project.inductiveWhyDiode.openLab': 'Open in Lab',
 
   ...LEARN_ASSESSMENT_I18N
 };

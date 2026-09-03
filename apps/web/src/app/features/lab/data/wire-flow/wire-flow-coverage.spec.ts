@@ -67,6 +67,28 @@ describe('wire flow coverage on presets', () => {
     expect(missing).withContext(missing.join(', ')).toEqual([]);
   });
 
+  it('LED fade discharge — C↔LED loop animates; battery/switch idle', () => {
+    const doc = createLedFadePreset();
+    const Iled = 0.008;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id === 'JT') return null;
+      if (id === 'V1' || id === 'S1') return 0;
+      if (id === 'C1') return -Iled;
+      if (id === 'D1' || id === 'R1') return Iled;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W4', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} supply/earth idle while switch open`)
+        .toBeLessThan(1e-6);
+    }
+    for (const id of ['W3', 'W5', 'W6', 'W7']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} discharge loop`)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
   it('NE555 astable — timing-only currents still animate ground return', () => {
     const doc = assignNets(createNe555AstablePreset());
     const Ict = 0.0003;

@@ -220,7 +220,10 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     dt: 5e-5,
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
-      { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'capacitor', 'ground'] }) },
+      {
+        type: 'has_models',
+        paramsJson: JSON.stringify({ models: ['pulse_source', 'resistor', 'capacitor', 'ground'] })
+      },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' }
     ]
@@ -343,7 +346,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     ]
   },
   christmasTree: {
-    tabNameKey: 'learn.challenge.tab.ne555',
+    tabNameKey: 'learn.challenge.tab.christmasTree',
     analysisMode: 'tran',
     tStop: 0.1,
     dt: 5e-5,

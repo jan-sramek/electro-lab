@@ -21,10 +21,31 @@ export const LEARN_MODULES: readonly LearnModuleDef[] = [
 
 export const LEARN_UNITS: readonly LearnUnit[] = [
   {
+    unitSlug: 'fundamentals-loop',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.fundamentalsLoop',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ohm-explore',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.ohmExplore',
+    stepCount: 4
+  },
+  {
     unitSlug: 'led-series',
     moduleSlug: 'basics',
     exampleId: 'led',
     i18nKeyPrefix: 'learn.project.led',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'led-burn-limit',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.ledBurnLimit',
     stepCount: 4
   },
   {
@@ -35,10 +56,24 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'time-constant-estimate',
+    moduleSlug: 'basics',
+    exampleId: 'rc',
+    i18nKeyPrefix: 'learn.project.timeConstant',
+    stepCount: 4
+  },
+  {
     unitSlug: 'led-fade',
     moduleSlug: 'basics',
     exampleId: 'ledFade',
     i18nKeyPrefix: 'learn.project.ledFade',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'pulse-rc',
+    moduleSlug: 'basics',
+    exampleId: 'pulse',
+    i18nKeyPrefix: 'learn.project.pulseRc',
     stepCount: 4
   },
   {
@@ -179,6 +214,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'filters',
     exampleId: 'rcLowPass',
     i18nKeyPrefix: 'learn.project.rcLowPass',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ac-rc-lpf',
+    moduleSlug: 'filters',
+    exampleId: 'ac',
+    i18nKeyPrefix: 'learn.project.acRcLpf',
     stepCount: 4
   },
   {
@@ -406,10 +448,38 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'bjt-vs-mos-compare',
+    moduleSlug: 'switching',
+    exampleId: 'nmos',
+    i18nKeyPrefix: 'learn.project.bjtVsMos',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'inductive-why-diode',
+    moduleSlug: 'switching',
+    exampleId: 'relay',
+    i18nKeyPrefix: 'learn.project.inductiveWhyDiode',
+    stepCount: 4
+  },
+  {
     unitSlug: 'ne555-astable',
     moduleSlug: 'timing',
     exampleId: 'ne555',
     i18nKeyPrefix: 'learn.project.ne555',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ne555-play',
+    moduleSlug: 'timing',
+    exampleId: 'christmasTree',
+    i18nKeyPrefix: 'learn.project.ne555Play',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ne555-pot-blink',
+    moduleSlug: 'timing',
+    exampleId: 'ne555Pot',
+    i18nKeyPrefix: 'learn.project.ne555Pot',
     stepCount: 4
   },
   {
@@ -441,10 +511,24 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'pin-input-pulldown',
+    moduleSlug: 'mcu',
+    exampleId: 'arduino',
+    i18nKeyPrefix: 'learn.project.pinInput',
+    stepCount: 4
+  },
+  {
     unitSlug: 'i2c-oled-wiring',
     moduleSlug: 'buses',
     exampleId: 'i2cOled',
     i18nKeyPrefix: 'learn.project.i2cOled',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'i2c-address-idea',
+    moduleSlug: 'buses',
+    exampleId: 'i2cOled',
+    i18nKeyPrefix: 'learn.project.i2cAddress',
     stepCount: 4
   }
 ];

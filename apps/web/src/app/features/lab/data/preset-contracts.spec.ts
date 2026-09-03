@@ -1,4 +1,4 @@
-import { compileNetlist, orthogonalPolyline, pinWorldPos } from './schematic.model';
+import { compileNetlist, orthogonalPolyline, pinWorldPos, assignNets } from './schematic.model';
 import { createLedPreset } from './presets/led-series.preset';
 import { createLedFadePreset } from './presets/led-fade.preset';
 import { createRcStepPreset } from './presets/rc-step.preset';
@@ -56,11 +56,12 @@ import { createIndustrial24vPreset } from './presets/industrial-24v.preset';
 import { diagnoseSchematic } from './circuit-diagnostics';
 import { SchematicDocument } from './schematic.model';
 
-/** Long horizontal segments that share the same y and overlap in x (supply/return collision). */
+/** Long horizontal segments that share the same y and overlap in x on *different* nets. */
 function overlappingHorizontalRails(docs: SchematicDocument[]): string[] {
   const hits: string[] = [];
-  for (const doc of docs) {
-    const segs: { y: number; x1: number; x2: number; id: string }[] = [];
+  for (const raw of docs) {
+    const doc = assignNets(raw);
+    const segs: { y: number; x1: number; x2: number; id: string; net: string }[] = [];
     for (const w of doc.wires) {
       const ca = doc.components.find((c) => c.id === w.a.componentId);
       const cb = doc.components.find((c) => c.id === w.b.componentId);
@@ -68,6 +69,7 @@ function overlappingHorizontalRails(docs: SchematicDocument[]): string[] {
       const a = pinWorldPos(ca, w.a.pin);
       const b = pinWorldPos(cb, w.b.pin);
       if (!a || !b) continue;
+      const net = ca.pins[w.a.pin]?.net ?? cb.pins[w.b.pin]?.net ?? '';
       // Layout check uses plain HV/VH elbows (not pin-exit stubs).
       const pts = orthogonalPolyline(a.x, a.y, b.x, b.y);
       for (let i = 0; i < pts.length - 1; i++) {
@@ -78,7 +80,8 @@ function overlappingHorizontalRails(docs: SchematicDocument[]): string[] {
           y: p.y,
           x1: Math.min(p.x, q.x),
           x2: Math.max(p.x, q.x),
-          id: w.id
+          id: w.id,
+          net
         });
       }
     }
@@ -87,9 +90,10 @@ function overlappingHorizontalRails(docs: SchematicDocument[]): string[] {
         const A = segs[i]!;
         const B = segs[j]!;
         if (Math.abs(A.y - B.y) > 0.5) continue;
+        if (A.net && B.net && A.net === B.net) continue;
         const overlap = Math.min(A.x2, B.x2) - Math.max(A.x1, B.x1);
         // Ignore short shared stubs at a pin; flag long coincident rails.
-        if (overlap > 15) hits.push(`${A.id} ∩ ${B.id} @ y=${A.y}`);
+        if (overlap > 15) hits.push(`${A.id} ∩ ${B.id} @ y=${A.y} (${A.net}/${B.net})`);
       }
     }
   }
@@ -318,6 +322,62 @@ describe('Lab preset contracts', () => {
     for (const [name, doc] of presets) {
       const hits = overlappingHorizontalRails([doc]);
       expect(hits).withContext(`${name}: ${hits.join('; ')}`).toEqual([]);
+    }
+  });
+
+  it('all example presets compile and diagnose without errors in default mode', () => {
+    const presets: [string, SchematicDocument, 'dcOp' | 'tran' | 'ac'][] = [
+      ['led', createLedPreset(), 'dcOp'],
+      ['ledFade', createLedFadePreset(), 'tran'],
+      ['rc', createRcStepPreset(), 'tran'],
+      ['pot', createPotDividerPreset(), 'dcOp'],
+      ['pulse', createPulseRcPreset(), 'tran'],
+      ['opamp', createOpAmpBufferPreset(), 'dcOp'],
+      ['opampFollower', createOpAmpFollowerPreset(), 'dcOp'],
+      ['opampNonInv', createOpAmpNonInvPreset(), 'dcOp'],
+      ['opampComparator', createOpAmpComparatorPreset(), 'dcOp'],
+      ['opampSchmitt', createOpAmpSchmittPreset(), 'dcOp'],
+      ['opampSumming', createOpAmpSummingPreset(), 'dcOp'],
+      ['opampIntegrator', createOpAmpIntegratorPreset(), 'tran'],
+      ['opampDifferentiator', createOpAmpDifferentiatorPreset(), 'tran'],
+      ['opampActiveFilter', createOpAmpActiveFilterPreset(), 'ac'],
+      ['ac', createAcRcPreset(), 'ac'],
+      ['bjt', createBjtSwitchPreset(), 'dcOp'],
+      ['relay', createRelayDiodePreset(), 'dcOp'],
+      ['nmos', createNmosSwitchPreset(), 'dcOp'],
+      ['ne555', createNe555AstablePreset(), 'tran'],
+      ['ne555Pot', createNe555PotBlinkPreset(), 'tran'],
+      ['christmasTree', createNe555ChristmasTreePreset(), 'tran'],
+      ['pushbutton', createPushbuttonLedPreset(), 'dcOp'],
+      ['ldr', createLdrNightLightPreset(), 'dcOp'],
+      ['buzzer', createBuzzerButtonPreset(), 'dcOp'],
+      ['motor', createMotorNmosPreset(), 'dcOp'],
+      ['arduino', createArduinoLedPreset(), 'dcOp'],
+      ['i2cOled', createI2cOledPreset(), 'dcOp'],
+      ['rcLowPass', createRcLowPassPreset(), 'ac'],
+      ['rcHighPass', createRcHighPassPreset(), 'ac'],
+      ['rlcSeries', createRlcSeriesPreset(), 'ac'],
+      ['bandPass', createBandPassPreset(), 'ac'],
+      ['notchFilter', createNotchFilterPreset(), 'ac'],
+      ['voltageDivider', createVoltageDividerPreset(), 'dcOp'],
+      ['measureAc', createMeasureAcPreset(), 'ac'],
+      ['motorPwm', createMotorPwmPreset(), 'tran'],
+      ['hBridge', createHBridgePreset(), 'dcOp'],
+      ['motorDirection', createMotorDirectionPreset(), 'dcOp'],
+      ['pullUpDown', createPullUpDownPreset(), 'dcOp'],
+      ['debounce', createDebouncePreset(), 'dcOp'],
+      ['ntcDivider', createNtcDividerPreset(), 'dcOp'],
+      ['pwmFilter', createPwmFilterPreset(), 'tran'],
+      ['relayBjt', createRelayBjtPreset(), 'dcOp'],
+      ['estopRelay', createEstopRelayPreset(), 'dcOp'],
+      ['industrial24v', createIndustrial24vPreset(), 'dcOp']
+    ];
+    for (const [name, doc, mode] of presets) {
+      expect(() => compileNetlist(doc)).withContext(name).not.toThrow();
+      const errs = diagnoseSchematic(doc, mode).filter((d) => d.severity === 'error');
+      expect(errs.map((e) => e.code))
+        .withContext(`${name}: ${errs.map((e) => e.code).join(', ')}`)
+        .toEqual([]);
     }
   });
 
