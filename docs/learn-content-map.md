@@ -67,7 +67,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `fundamentals-loop` | Battery, resistor, current, ground | ready (`led`) | **mvp** |
 | `ohm-explore` | Change R, see I (probe) | ready (`led`) | **mvp** |
-| `series-parallel-intro` | Series vs parallel intuition | gap | later |
+| `series-parallel-intro` | Series vs parallel intuition | ready (`seriesParallel`) | **mvp** |
 
 **Quiz A (later):** Identify which change raises current; pick a safe ballpark resistor for an LED given Vf (teaching numbers).
 
@@ -79,7 +79,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `led-series` | LED + series R | ready (`led`) | **mvp** *(add if missing)* |
 | `diode-direction` | Diode orientation / blocking | ready (`diodeDirection`) | **mvp** |
-| `led-burn-limit` | What “too much current” means in Lab | ready (`led`) | soon |
+| `led-burn-limit` | What “too much current” means in Lab | ready (`led`) | **mvp** |
 
 **Quiz B (later):** Pick polarity; choose “more R / less R” for brighter vs safer.
 
@@ -134,7 +134,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `bjt-switch` | NPN/BC547 as switch | ready (`bjt`) | **mvp** |
 | `nmos-switch` | MOSFET as switch | ready (`nmos`) | **mvp** |
-| `bjt-vs-mos-compare` | When which mental model | ready (both) | soon |
+| `bjt-vs-mos-compare` | When which mental model | ready (both) | **mvp** |
 
 **Quiz E (later):** Base/gate open vs driven; role of series base resistor.
 
@@ -146,7 +146,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `relay-flyback` | Relay + flyback | ready (`relay`) | **mvp** |
 | `motor-lowside` | Motor + NMOS + diode | ready (`motor`) | **mvp** |
-| `inductive-why-diode` | Concept focus (can reuse motor/relay) | ready | soon |
+| `inductive-why-diode` | Concept focus (can reuse motor/relay) | ready | **mvp** |
 
 **Quiz F (later):** Diode orientation; what the diode is for.
 
@@ -207,7 +207,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `arduino-dio-led` | digitalWrite mental model | ready (`arduino`) | **mvp** |
-| `pin-input-pulldown` | Floating vs defined input | ready (`arduino`) | soon |
+| `pin-input-pulldown` | Floating vs defined input | ready (`arduino`) | **mvp** |
 
 **Quiz K (later):** Output HIGH vs INPUT; 5 V vs 3.3 V vHigh.
 
@@ -218,7 +218,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `i2c-oled-wiring` | SSD1306 + pull-ups | ready (`i2cOled`) | **mvp** |
-| `i2c-address-idea` | 0x3C vs 0x3D | ready (`i2cOled`) | soon |
+| `i2c-address-idea` | 0x3C vs 0x3D | ready (`i2cOled`) | **mvp** |
 | `i2c-multi-slave` | Two devices idea | gap | later |
 | `spi-vs-i2c` | Comparison (mostly text) | gap | later |
 

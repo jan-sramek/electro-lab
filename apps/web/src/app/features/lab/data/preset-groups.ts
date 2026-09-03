@@ -10,7 +10,7 @@ export interface LabPresetGroup {
 export const LAB_PRESET_GROUPS: readonly LabPresetGroup[] = [
   {
     labelKey: 'lab.toolbar.group.basics',
-    ids: ['led', 'ledFade', 'rc', 'pot', 'pulse', 'diodeDirection', 'voltageDivider']
+    ids: ['led', 'ledFade', 'rc', 'pot', 'pulse', 'diodeDirection', 'seriesParallel', 'voltageDivider']
   },
   {
     labelKey: 'lab.toolbar.group.power',

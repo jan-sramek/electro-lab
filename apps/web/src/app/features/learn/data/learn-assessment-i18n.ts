@@ -47,6 +47,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.challenge.tab.pot': 'Pot divider',
   'learn.challenge.tab.pulse': 'Pulse RC',
   'learn.challenge.tab.diodeDirection': 'Diode direction',
+  'learn.challenge.tab.seriesParallel': 'Series vs parallel',
   'learn.challenge.tab.opamp': 'Op-amp',
   'learn.challenge.tab.ac': 'AC analysis',
   'learn.challenge.tab.halfWave': 'Half-wave rectifier',
@@ -166,6 +167,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...ohmExploreAssessment(),
   ...ledBurnLimitAssessment(),
   ...diodeDirectionAssessment(),
+  ...seriesParallelAssessment(),
   ...timeConstantAssessment(),
   ...pulseRcAssessment(),
   ...acRcLpfAssessment(),
@@ -1408,6 +1410,44 @@ function diodeDirectionAssessment() {
       ]
     ),
     ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+  };
+}
+
+function seriesParallelAssessment() {
+  const p = 'learn.project.seriesParallel';
+  return {
+    ...lessonKeys(
+      p,
+      'Parallel shares voltage',
+      'Both LED branches see the same supply voltage. Each branch has its own current set by its series R.',
+      'Currents add',
+      'Total supply current is roughly the sum of the branch currents — more branches, more load on the battery.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'In this parallel sample, both LEDs see…',
+        'Approximately the same supply voltage',
+        'Half the voltage always',
+        'Zero voltage',
+        'Parallel branches share the rail voltage.'
+      ],
+      [
+        'If you open one branch…',
+        'The other branch also always dies',
+        'The other branch can still light',
+        'Ground vanishes',
+        'Independent paths — one open does not kill the other.'
+      ],
+      [
+        'Total battery current roughly…',
+        'Equals the smaller branch only',
+        'Is always zero',
+        'Adds the branch currents',
+        'Parallel loads stack current at the supply.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'At least one LED conducts above ~1 mA.')
   };
 }
 

@@ -3,6 +3,7 @@
 /learn/basics/ohm-explore
 /learn/basics/led-series
 /learn/basics/diode-direction
+/learn/basics/series-parallel-intro
 /learn/basics/led-burn-limit
 /learn/basics/rc-charge
 /learn/basics/time-constant-estimate

@@ -1835,9 +1835,21 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.diodeDirection.step4': 'Put it back forward and confirm current returns.',
   'learn.project.diodeDirection.openLab': 'Open in Lab',
 
+  'learn.project.seriesParallel.title': 'Series vs parallel intuition',
+  'learn.project.seriesParallel.summary':
+    'Two LED branches in parallel — same voltage on each path, currents add at the supply.',
+  'learn.project.seriesParallel.step1': 'Open the parallel branches example and Run DC — both LEDs should light.',
+  'learn.project.seriesParallel.step2': 'Probe each LED current — they should be similar with equal R.',
+  'learn.project.seriesParallel.step3': 'Raise R2 a lot — D2 dims while D1 stays bright (independent branches).',
+  'learn.project.seriesParallel.step4': 'Open S1 — both go dark. Parallel loads still need the shared switch path.',
+  'learn.project.seriesParallel.openLab': 'Open in Lab',
+
   'lab.toolbar.diodeDirectionPreset': 'Diode direction (DC)',
+  'lab.toolbar.seriesParallelPreset': 'Series vs parallel (DC)',
   'lab.hint.diodeDirection':
     'Diode direction: Run DC — LED on when D1 is forward. Reverse the diode and it blocks.',
+  'lab.hint.seriesParallel':
+    'Parallel LEDs: Run DC — both branches light. Change one R; only that branch dims.',
 
   'learn.project.fundamentalsLoop.title': 'The simple loop',
   'learn.project.fundamentalsLoop.summary':

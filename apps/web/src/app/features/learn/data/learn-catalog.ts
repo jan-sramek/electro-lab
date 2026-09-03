@@ -49,6 +49,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'series-parallel-intro',
+    moduleSlug: 'basics',
+    exampleId: 'seriesParallel',
+    i18nKeyPrefix: 'learn.project.seriesParallel',
+    stepCount: 4
+  },
+  {
     unitSlug: 'led-burn-limit',
     moduleSlug: 'basics',
     exampleId: 'led',
