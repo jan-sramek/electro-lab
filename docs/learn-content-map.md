@@ -196,7 +196,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `buzzer-button` | Simple “sounding” load | ready (`buzzer`) | **mvp** |
-| `motor-control` | Same as F motor unit or alias | ready (`motor`) | **mvp** |
+| `motor-control` | H-bridge direction + PWM speed on `motor` | ready (`motor`) | **mvp** |
 
 **Quiz J (later):** Why series R / switch rating matters (teaching).
 

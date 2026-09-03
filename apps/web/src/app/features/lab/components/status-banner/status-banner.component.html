@@ -2,13 +2,29 @@
   @if (error(); as err) {
     <p class="item error" role="alert">
       <span class="kind">{{ 'lab.status.error' | t }}</span>
-      <span class="text">{{ err }}</span>
+      <span class="text">
+        @for (seg of segments(err); track $index) {
+          @if (seg.partId; as id) {
+            <button type="button" class="id-link" (click)="onSelectPart(id, $event)">{{ seg.text }}</button>
+          } @else {
+            <span>{{ seg.text }}</span>
+          }
+        }
+      </span>
     </p>
   }
   @for (w of warnings(); track w) {
     <p class="item warn">
       <span class="kind">{{ 'lab.status.warning' | t }}</span>
-      <span class="text">{{ w }}</span>
+      <span class="text">
+        @for (seg of segments(w); track $index) {
+          @if (seg.partId; as id) {
+            <button type="button" class="id-link" (click)="onSelectPart(id, $event)">{{ seg.text }}</button>
+          } @else {
+            <span>{{ seg.text }}</span>
+          }
+        }
+      </span>
     </p>
   }
   @if (info(); as i) {

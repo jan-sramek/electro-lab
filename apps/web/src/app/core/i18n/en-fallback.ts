@@ -1854,6 +1854,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.seriesLeds.step4': 'Compare with Parallel LED branches — currents add there, not here.',
   'learn.project.seriesLeds.openLab': 'Open in Lab',
 
+  'learn.project.motorControl.title': 'DC motor as an actuator',
+  'learn.project.motorControl.summary':
+    'Drive a teaching DC motor with an NMOS low-side switch — actuator thinking, not just “another switch circuit”.',
+  'learn.project.motorControl.step1': 'Open the NMOS + motor example and Run DC with the gate driven.',
+  'learn.project.motorControl.step2': 'Open the gate switch — motor current should fall to zero.',
+  'learn.project.motorControl.step3': 'Confirm the flyback diode across the motor stays in place.',
+  'learn.project.motorControl.step4': 'Compare with the buzzer sample — same switch-a-load idea, different actuator.',
+  'learn.project.motorControl.openLab': 'Open in Lab',
+
   'learn.project.motorSpeed.title': 'Motor speed via PWM',
   'learn.project.motorSpeed.summary':
     'Same PWM motor drive — focus on duty cycle as the speed knob.',

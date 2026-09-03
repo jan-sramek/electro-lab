@@ -395,6 +395,11 @@ export class LabPageComponent implements OnInit, OnDestroy {
     this.sim.runLive();
   }
 
+  onStatusSelectPart(id: string): void {
+    this.editor.setTool('select');
+    this.editor.setSelection([id], false);
+  }
+
   onInspectorMomentary(ev: { key: string; pressed: boolean }): void {
     const c = this.editor.selected();
     if (!c || c.modelKey !== 'pushbutton' || ev.key !== 'closed') return;

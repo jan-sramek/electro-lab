@@ -98,3 +98,23 @@
 .item.probe .kind {
   color: #1d4ed8;
 }
+
+.id-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.id-link:hover,
+.id-link:focus-visible {
+  filter: brightness(0.85);
+  outline: none;
+}

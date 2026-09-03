@@ -114,6 +114,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...pushbuttonAssessment(),
   ...ldrAssessment(),
   ...buzzerAssessment(),
+  ...motorControlAssessment(),
   ...arduinoAssessment(),
   ...i2cOledAssessment(),
   ...halfWaveAssessment(),
@@ -449,6 +450,44 @@ function buzzerAssessment() {
       ['Use which analysis?', 'DC', 'Transient only', 'AC sweep', 'Steady on/off is DC.']
     ),
     ...challengeKeys(p, 'DC run clean.', 'S1 closed to drive the buzzer path.')
+  };
+}
+
+function motorControlAssessment() {
+  const p = 'learn.project.motorControl';
+  return {
+    ...lessonKeys(
+      p,
+      'Motor as an actuator',
+      'A DC motor is a load you drive — here an NMOS low-side switch turns it on when the gate is driven.',
+      'Protect the switch',
+      'Keep the flyback diode across the motor. Opening the path without it risks inductive kick in real hardware (and in Lab teaching spikes).'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'This sample treats the motor mainly as…',
+        'An actuator load to switch',
+        'An I2C sensor',
+        'A crystal oscillator',
+        'You drive current through the motor winding.'
+      ],
+      [
+        'With the gate switch open, the motor should…',
+        'Keep spinning from nowhere',
+        'Stop (no drive current)',
+        'Become a battery',
+        'Open path → no motor current.'
+      ],
+      [
+        'The flyback diode is there to…',
+        'Decorate the schematic',
+        'Raise Vf of the LED',
+        'Give inductive current a safe path at turn-off',
+        'Protects the switching device.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Switch closed so the motor path conducts.')
   };
 }
 

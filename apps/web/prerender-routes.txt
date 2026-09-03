@@ -72,6 +72,7 @@
 /learn/input/pushbutton-led
 /learn/input/ldr-nightlight
 /learn/actuators/buzzer-button
+/learn/actuators/motor-control
 /learn/mcu/arduino-dio-led
 /learn/mcu/pin-input-pulldown
 /learn/buses/i2c-oled-wiring

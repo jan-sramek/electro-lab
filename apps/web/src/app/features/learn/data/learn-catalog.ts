@@ -532,6 +532,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'motor-control',
+    moduleSlug: 'actuators',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motorControl',
+    stepCount: 4
+  },
+  {
     unitSlug: 'arduino-dio-led',
     moduleSlug: 'mcu',
     exampleId: 'arduino',

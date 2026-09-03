@@ -94,6 +94,8 @@
             [warnings]="sim.warnings()"
             [probe]="sim.probeSummary()"
             [info]="sim.capIcStatus()"
+            [highlightIds]="sim.highlightedIds()"
+            (selectPart)="onStatusSelectPart($event)"
           />
         </div>
         <app-schematic-canvas
