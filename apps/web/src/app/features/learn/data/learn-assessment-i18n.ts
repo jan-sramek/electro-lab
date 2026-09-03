@@ -170,6 +170,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...ledBurnLimitAssessment(),
   ...diodeDirectionAssessment(),
   ...seriesParallelAssessment(),
+  ...seriesLedsAssessment(),
   ...timeConstantAssessment(),
   ...pulseRcAssessment(),
   ...acRcLpfAssessment(),
@@ -1488,6 +1489,44 @@ function seriesParallelAssessment() {
       ]
     ),
     ...challengeKeys(p, 'Simulation completes without errors.', 'At least one LED conducts above ~1 mA.')
+  };
+}
+
+function seriesLedsAssessment() {
+  const p = 'learn.project.seriesLeds';
+  return {
+    ...lessonKeys(
+      p,
+      'Same current',
+      'In series, one current flows through R and both LEDs. There is no independent branch current.',
+      'Voltages add',
+      'Each LED drops ~Vf. Two series LEDs need more supply headroom than one — that is why this sample uses 9 V.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'Series LEDs share…',
+        'The same current',
+        'Independent currents always',
+        'No resistor ever',
+        'One loop current through every series part.'
+      ],
+      [
+        'Compared with parallel branches…',
+        'Series needs more total voltage for the same Vf stack',
+        'Series always uses less voltage',
+        'Ground is optional',
+        'Vf drops add along the string.'
+      ],
+      [
+        'If one series LED opens…',
+        'The other still lights alone',
+        'Nothing changes',
+        'The whole string goes dark',
+        'An open breaks the single loop.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
   };
 }
 

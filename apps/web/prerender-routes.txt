@@ -4,6 +4,7 @@
 /learn/basics/led-series
 /learn/basics/diode-direction
 /learn/basics/series-parallel-intro
+/learn/basics/series-leds
 /learn/basics/led-burn-limit
 /learn/basics/rc-charge
 /learn/basics/time-constant-estimate

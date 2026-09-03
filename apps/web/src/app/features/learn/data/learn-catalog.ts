@@ -56,6 +56,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'series-leds',
+    moduleSlug: 'basics',
+    exampleId: 'seriesLeds',
+    i18nKeyPrefix: 'learn.project.seriesLeds',
+    stepCount: 4
+  },
+  {
     unitSlug: 'led-burn-limit',
     moduleSlug: 'basics',
     exampleId: 'led',

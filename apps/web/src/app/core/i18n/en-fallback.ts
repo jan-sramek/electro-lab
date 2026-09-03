@@ -1845,6 +1845,15 @@ export const EN_FALLBACK: Record<string, string> = {
     'Open the Series LEDs sample too — same current through both LEDs, unlike parallel branches.',
   'learn.project.seriesParallel.openLab': 'Open in Lab',
 
+  'learn.project.seriesLeds.title': 'Series LEDs',
+  'learn.project.seriesLeds.summary':
+    'Two LEDs in series share one current — contrast with the parallel branches sample.',
+  'learn.project.seriesLeds.step1': 'Open the Series LEDs example and Run DC — both LEDs should light.',
+  'learn.project.seriesLeds.step2': 'Probe D1 and D2 currents — they should match (same loop).',
+  'learn.project.seriesLeds.step3': 'Lower the supply toward 5 V — the string may starve (Vf stack).',
+  'learn.project.seriesLeds.step4': 'Compare with Parallel LED branches — currents add there, not here.',
+  'learn.project.seriesLeds.openLab': 'Open in Lab',
+
   'learn.project.motorSpeed.title': 'Motor speed via PWM',
   'learn.project.motorSpeed.summary':
     'Same PWM motor drive — focus on duty cycle as the speed knob.',
