@@ -99,6 +99,30 @@ export class LabPageComponent implements OnInit, OnDestroy {
       this.onLoadPreset('ledFade');
     } else if (example === 'rc') {
       this.onLoadPreset('rc');
+    } else if (example === 'pot') {
+      this.onLoadPreset('pot');
+    } else if (example === 'pulse') {
+      this.onLoadPreset('pulse');
+    } else if (example === 'opampFollower' || example === 'follower' || example === 'buffer') {
+      this.onLoadPreset('opampFollower');
+    } else if (example === 'opamp' || example === 'opampInvert' || example === 'invert') {
+      this.onLoadPreset('opamp');
+    } else if (example === 'opampNonInv' || example === 'noninv' || example === 'nonInvert') {
+      this.onLoadPreset('opampNonInv');
+    } else if (example === 'opampComparator' || example === 'comparator') {
+      this.onLoadPreset('opampComparator');
+    } else if (example === 'opampSchmitt' || example === 'schmitt') {
+      this.onLoadPreset('opampSchmitt');
+    } else if (example === 'opampSumming' || example === 'summing') {
+      this.onLoadPreset('opampSumming');
+    } else if (example === 'opampIntegrator' || example === 'integrator') {
+      this.onLoadPreset('opampIntegrator');
+    } else if (example === 'opampDifferentiator' || example === 'differentiator') {
+      this.onLoadPreset('opampDifferentiator');
+    } else if (example === 'opampActiveFilter' || example === 'activeFilter') {
+      this.onLoadPreset('opampActiveFilter');
+    } else if (example === 'ac') {
+      this.onLoadPreset('ac');
     } else if (example === 'bjt' || example === 'bc547') {
       this.onLoadPreset('bjt');
     } else if (example === 'relay') {
@@ -107,6 +131,8 @@ export class LabPageComponent implements OnInit, OnDestroy {
       this.onLoadPreset('nmos');
     } else if (example === 'ne555' || example === '555') {
       this.onLoadPreset('ne555');
+    } else if (example === 'ne555Pot' || example === '555pot' || example === 'potBlink') {
+      this.onLoadPreset('ne555Pot');
     } else if (example === 'christmas' || example === 'christmasTree' || example === 'tree') {
       this.onLoadPreset('christmasTree');
     } else if (example === 'pushbutton' || example === 'button') {
@@ -121,6 +147,60 @@ export class LabPageComponent implements OnInit, OnDestroy {
       this.onLoadPreset('arduino');
     } else if (example === 'i2c' || example === 'i2cOled' || example === 'oled' || example === 'ssd1306') {
       this.onLoadPreset('i2cOled');
+    } else if (example === 'halfWave' || example === 'halfwave') {
+      this.onLoadPreset('halfWave');
+    } else if (example === 'bridge') {
+      this.onLoadPreset('bridge');
+    } else if (example === 'filterCap' || example === 'filter') {
+      this.onLoadPreset('filterCap');
+    } else if (example === 'zener') {
+      this.onLoadPreset('zener');
+    } else if (example === 'vreg7805' || example === '7805') {
+      this.onLoadPreset('vreg7805');
+    } else if (example === 'reversePolarity' || example === 'reverse') {
+      this.onLoadPreset('reversePolarity');
+    } else if (example === 'fuseProtect' || example === 'fuse') {
+      this.onLoadPreset('fuseProtect');
+    } else if (example === 'ripple') {
+      this.onLoadPreset('ripple');
+    } else if (example === 'buck') {
+      this.onLoadPreset('buck');
+    } else if (example === 'boost') {
+      this.onLoadPreset('boost');
+    } else if (example === 'rcLowPass' || example === 'lpf') {
+      this.onLoadPreset('rcLowPass');
+    } else if (example === 'rcHighPass' || example === 'hpf') {
+      this.onLoadPreset('rcHighPass');
+    } else if (example === 'rlcSeries' || example === 'rlc') {
+      this.onLoadPreset('rlcSeries');
+    } else if (example === 'bandPass' || example === 'bpf') {
+      this.onLoadPreset('bandPass');
+    } else if (example === 'notchFilter' || example === 'notch') {
+      this.onLoadPreset('notchFilter');
+    } else if (example === 'voltageDivider' || example === 'divider') {
+      this.onLoadPreset('voltageDivider');
+    } else if (example === 'measureAc' || example === 'measure') {
+      this.onLoadPreset('measureAc');
+    } else if (example === 'motorPwm' || example === 'pwm') {
+      this.onLoadPreset('motorPwm');
+    } else if (example === 'hBridge' || example === 'hbridge') {
+      this.onLoadPreset('hBridge');
+    } else if (example === 'motorDirection' || example === 'motorReverse') {
+      this.onLoadPreset('motorDirection');
+    } else if (example === 'pullUpDown' || example === 'pullup') {
+      this.onLoadPreset('pullUpDown');
+    } else if (example === 'debounce') {
+      this.onLoadPreset('debounce');
+    } else if (example === 'ntcDivider' || example === 'ntc') {
+      this.onLoadPreset('ntcDivider');
+    } else if (example === 'pwmFilter' || example === 'pwmDac') {
+      this.onLoadPreset('pwmFilter');
+    } else if (example === 'relayBjt' || example === 'relayTransistor') {
+      this.onLoadPreset('relayBjt');
+    } else if (example === 'estopRelay' || example === 'estop') {
+      this.onLoadPreset('estopRelay');
+    } else if (example === 'industrial24v' || example === '24v') {
+      this.onLoadPreset('industrial24v');
     }
   }
 
@@ -148,6 +228,30 @@ export class LabPageComponent implements OnInit, OnDestroy {
       case 'opamp':
         this.editor.loadOpAmpPreset();
         break;
+      case 'opampFollower':
+        this.editor.loadOpAmpFollowerPreset();
+        break;
+      case 'opampNonInv':
+        this.editor.loadOpAmpNonInvPreset();
+        break;
+      case 'opampComparator':
+        this.editor.loadOpAmpComparatorPreset();
+        break;
+      case 'opampSchmitt':
+        this.editor.loadOpAmpSchmittPreset();
+        break;
+      case 'opampSumming':
+        this.editor.loadOpAmpSummingPreset();
+        break;
+      case 'opampIntegrator':
+        this.editor.loadOpAmpIntegratorPreset();
+        break;
+      case 'opampDifferentiator':
+        this.editor.loadOpAmpDifferentiatorPreset();
+        break;
+      case 'opampActiveFilter':
+        this.editor.loadOpAmpActiveFilterPreset();
+        break;
       case 'ac':
         this.editor.loadAcPreset();
         break;
@@ -162,6 +266,9 @@ export class LabPageComponent implements OnInit, OnDestroy {
         break;
       case 'ne555':
         this.editor.loadNe555Preset();
+        break;
+      case 'ne555Pot':
+        this.editor.loadNe555PotBlinkPreset();
         break;
       case 'christmasTree':
         this.editor.loadChristmasTreePreset();
@@ -183,6 +290,87 @@ export class LabPageComponent implements OnInit, OnDestroy {
         break;
       case 'i2cOled':
         this.editor.loadI2cOledPreset();
+        break;
+      case 'halfWave':
+        this.editor.loadHalfWavePreset();
+        break;
+      case 'bridge':
+        this.editor.loadBridgePreset();
+        break;
+      case 'filterCap':
+        this.editor.loadFilterCapPreset();
+        break;
+      case 'zener':
+        this.editor.loadZenerPreset();
+        break;
+      case 'vreg7805':
+        this.editor.loadVreg7805Preset();
+        break;
+      case 'reversePolarity':
+        this.editor.loadReversePolarityPreset();
+        break;
+      case 'fuseProtect':
+        this.editor.loadFuseProtectPreset();
+        break;
+      case 'ripple':
+        this.editor.loadRipplePreset();
+        break;
+      case 'buck':
+        this.editor.loadBuckPreset();
+        break;
+      case 'boost':
+        this.editor.loadBoostPreset();
+        break;
+      case 'rcLowPass':
+        this.editor.loadRcLowPassPreset();
+        break;
+      case 'rcHighPass':
+        this.editor.loadRcHighPassPreset();
+        break;
+      case 'rlcSeries':
+        this.editor.loadRlcSeriesPreset();
+        break;
+      case 'bandPass':
+        this.editor.loadBandPassPreset();
+        break;
+      case 'notchFilter':
+        this.editor.loadNotchFilterPreset();
+        break;
+      case 'voltageDivider':
+        this.editor.loadVoltageDividerPreset();
+        break;
+      case 'measureAc':
+        this.editor.loadMeasureAcPreset();
+        break;
+      case 'motorPwm':
+        this.editor.loadMotorPwmPreset();
+        break;
+      case 'hBridge':
+        this.editor.loadHBridgePreset();
+        break;
+      case 'motorDirection':
+        this.editor.loadMotorDirectionPreset();
+        break;
+      case 'pullUpDown':
+        this.editor.loadPullUpDownPreset();
+        break;
+      case 'debounce':
+        this.editor.loadDebouncePreset();
+        break;
+      case 'ntcDivider':
+        this.editor.loadNtcDividerPreset();
+        break;
+      case 'pwmFilter':
+        this.editor.loadPwmFilterPreset();
+        break;
+      case 'relayBjt':
+        this.editor.loadRelayBjtPreset();
+        break;
+      case 'estopRelay':
+        this.editor.loadEstopRelayPreset();
+        break;
+      case 'industrial24v':
+        this.editor.loadIndustrial24vPreset();
         break;
     }
   }
@@ -208,7 +396,11 @@ export class LabPageComponent implements OnInit, OnDestroy {
 
   onReplaceBurned(): void {
     const id = this.editor.selectedId();
-    if (id) this.editor.replaceBurned(id);
+    if (!id) return;
+    const clearedSwitches = this.editor.replaceBurned(id);
+    if (clearedSwitches) {
+      this.sim.notifyClientWarning('lab.inspector.fuseReplacedClearedSwitches');
+    }
   }
 
   async checkLearnChallenge(): Promise<void> {

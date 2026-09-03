@@ -37,6 +37,7 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 import { WireFlowBuilder } from '../../data/wire-flow/wire-flow.builder';
 import { resolveCapacitorBranchCurrent } from '../../data/cap-branch-current';
+import { equalizeSeriesBranchCurrent } from '../../data/series-branch-current';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
 import { canBurnOut } from '../../data/burnout';
 import { normalizeLedColorId } from '../../data/led-colors';
@@ -630,13 +631,33 @@ export class SchematicCanvasComponent {
 
   /** Branch current with capacitor I = C·dV/dt fallback when the engine reports ~0. */
   branchCurrentOf(id: string): number | null {
+    return this.branchCurrentOfInner(id, new Set());
+  }
+
+  private branchCurrentOfInner(id: string, visiting: Set<string>): number | null {
+    if (visiting.has(id)) return this.rawResolvedCurrent(id);
+    visiting.add(id);
+
+    const raw = this.rawResolvedCurrent(id);
+    const equalized = equalizeSeriesBranchCurrent(this.doc(), id, raw, (otherId) =>
+      this.branchCurrentOfInner(otherId, visiting)
+    );
+    if (typeof equalized === 'number' && Math.abs(equalized) < 1e-5) return 0;
+    return equalized;
+  }
+
+  private rawResolvedCurrent(id: string): number | null {
     const res = this.result();
     const comp = this.doc().components.find((c) => c.id === id);
+    let i: number | null;
     if (comp?.modelKey === 'capacitor' && res?.tran) {
       const raw = this.rawBranchCurrent(id);
-      return resolveCapacitorBranchCurrent(this.doc(), id, res, this.scrubIndex(), raw);
+      i = resolveCapacitorBranchCurrent(this.doc(), id, res, this.scrubIndex(), raw);
+    } else {
+      i = this.rawBranchCurrent(id);
     }
-    return this.rawBranchCurrent(id);
+    if (typeof i === 'number' && Math.abs(i) < 1e-5) return 0;
+    return i;
   }
 
   private rawBranchCurrent(id: string): number | null {
@@ -684,15 +705,15 @@ export class SchematicCanvasComponent {
   /**
    * LED teaching brightness from branch current.
    * 0 A → off; ~20 mA → full glow. Burned LEDs stay dark (fail open).
+   * Near-linear so the glow tracks the mA label during RC discharge (sqrt looked “dead” early).
    */
   ledBrightness(id: string): number {
     const c = this.doc().components.find((x) => x.id === id);
     if (c?.params['burned']) return 0;
     const i = this.currentOf(id);
-    if (typeof i !== 'number' || i <= 1e-6) return 0;
-    // Sqrt curve keeps mid-fade glow visible (linear looked “instantly off”).
-    // Reused for buzzer “sounding” intensity.
-    return Math.sqrt(Math.min(1, i / LED_FULL_BRIGHT_A));
+    if (typeof i !== 'number' || Math.abs(i) <= 1e-5) return 0;
+    // Mild curve keeps low-mA glow visible without racing ahead of the resistor label.
+    return Math.pow(Math.min(1, Math.abs(i) / LED_FULL_BRIGHT_A), 0.7);
   }
 
   /**

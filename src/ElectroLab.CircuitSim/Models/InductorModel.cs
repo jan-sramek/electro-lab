@@ -50,9 +50,9 @@ public sealed class InductorModel : IDeviceModel
         var a = element.Pins["a"];
         var b = element.Pins["b"];
         var iPrev = state.IndCurrent.GetValueOrDefault(element.Id);
-        // i = iPrev + G*(va - vb)
+        // Backward Euler: i = iPrev + G*(va - vb). KCL at a needs −iPrev injection.
         ctx.StampConductance(a, b, g);
-        ctx.StampCurrentSource(b, a, iPrev);
+        ctx.StampCurrentSource(a, b, iPrev);
     }
 
     public double? BranchCurrentTransient(

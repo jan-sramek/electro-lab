@@ -45,6 +45,21 @@
             }
           </select>
         </label>
+      } @else if (p.type === 'slider') {
+        <div class="slider-field">
+          <div class="slider-head">
+            <span>{{ p.label | t }}@if (p.unit) { ({{ p.unit }}) }</span>
+            <span class="slider-value">{{ sliderDisplay(c.params[p.key]) }}</span>
+          </div>
+          <input
+            type="range"
+            [ngModel]="asNumber(c.params[p.key])"
+            (ngModelChange)="onSlider(p.key, $event)"
+            [min]="p.min ?? 0"
+            [max]="p.max ?? 1"
+            [step]="p.step ?? 0.01"
+          />
+        </div>
       } @else {
         <label>
           {{ p.label | t }}@if (p.unit) { ({{ p.unit }}) }
@@ -56,6 +71,7 @@
             (keydown.enter)="onNumberCommit(c.id, p.key)"
             [step]="p.step ?? 1"
             [min]="p.min ?? null"
+            [max]="p.max ?? null"
           />
         </label>
       }

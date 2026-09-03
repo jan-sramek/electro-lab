@@ -2,12 +2,21 @@ import { LearnModuleDef, LearnUnit } from './learn-catalog.model';
 
 export const LEARN_MODULES: readonly LearnModuleDef[] = [
   { moduleSlug: 'basics', titleKey: 'learn.module.basics.title', order: 1 },
-  { moduleSlug: 'switching', titleKey: 'learn.module.switching.title', order: 2 },
-  { moduleSlug: 'timing', titleKey: 'learn.module.timing.title', order: 3 },
-  { moduleSlug: 'input', titleKey: 'learn.module.input.title', order: 4 },
-  { moduleSlug: 'actuators', titleKey: 'learn.module.actuators.title', order: 5 },
-  { moduleSlug: 'mcu', titleKey: 'learn.module.mcu.title', order: 6 },
-  { moduleSlug: 'buses', titleKey: 'learn.module.buses.title', order: 7 }
+  { moduleSlug: 'power', titleKey: 'learn.module.power.title', order: 2 },
+  { moduleSlug: 'opamps', titleKey: 'learn.module.opamps.title', order: 3 },
+  { moduleSlug: 'filters', titleKey: 'learn.module.filters.title', order: 4 },
+  { moduleSlug: 'motors', titleKey: 'learn.module.motors.title', order: 5 },
+  { moduleSlug: 'digital', titleKey: 'learn.module.digital.title', order: 6 },
+  { moduleSlug: 'sensors', titleKey: 'learn.module.sensors.title', order: 7 },
+  { moduleSlug: 'comms', titleKey: 'learn.module.comms.title', order: 8 },
+  { moduleSlug: 'adc-dac', titleKey: 'learn.module.adcDac.title', order: 9 },
+  { moduleSlug: 'industrial', titleKey: 'learn.module.industrial.title', order: 10 },
+  { moduleSlug: 'switching', titleKey: 'learn.module.switching.title', order: 11 },
+  { moduleSlug: 'timing', titleKey: 'learn.module.timing.title', order: 12 },
+  { moduleSlug: 'input', titleKey: 'learn.module.input.title', order: 13 },
+  { moduleSlug: 'actuators', titleKey: 'learn.module.actuators.title', order: 14 },
+  { moduleSlug: 'mcu', titleKey: 'learn.module.mcu.title', order: 15 },
+  { moduleSlug: 'buses', titleKey: 'learn.module.buses.title', order: 16 }
 ];
 
 export const LEARN_UNITS: readonly LearnUnit[] = [
@@ -30,6 +39,342 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'basics',
     exampleId: 'ledFade',
     i18nKeyPrefix: 'learn.project.ledFade',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'half-wave-rectifier',
+    moduleSlug: 'power',
+    exampleId: 'halfWave',
+    i18nKeyPrefix: 'learn.project.halfWave',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'bridge-rectifier',
+    moduleSlug: 'power',
+    exampleId: 'bridge',
+    i18nKeyPrefix: 'learn.project.bridge',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'filter-capacitor',
+    moduleSlug: 'power',
+    exampleId: 'filterCap',
+    i18nKeyPrefix: 'learn.project.filterCap',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'zener-regulator',
+    moduleSlug: 'power',
+    exampleId: 'zener',
+    i18nKeyPrefix: 'learn.project.zener',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'linear-7805',
+    moduleSlug: 'power',
+    exampleId: 'vreg7805',
+    i18nKeyPrefix: 'learn.project.vreg7805',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'reverse-polarity',
+    moduleSlug: 'power',
+    exampleId: 'reversePolarity',
+    i18nKeyPrefix: 'learn.project.reversePolarity',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'fuse-protection',
+    moduleSlug: 'power',
+    exampleId: 'fuseProtect',
+    i18nKeyPrefix: 'learn.project.fuseProtect',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ripple-measure',
+    moduleSlug: 'power',
+    exampleId: 'ripple',
+    i18nKeyPrefix: 'learn.project.ripple',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'buck-converter',
+    moduleSlug: 'power',
+    exampleId: 'buck',
+    i18nKeyPrefix: 'learn.project.buck',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'boost-converter',
+    moduleSlug: 'power',
+    exampleId: 'boost',
+    i18nKeyPrefix: 'learn.project.boost',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-follower',
+    moduleSlug: 'opamps',
+    exampleId: 'opampFollower',
+    i18nKeyPrefix: 'learn.project.opampFollower',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-invert',
+    moduleSlug: 'opamps',
+    exampleId: 'opamp',
+    i18nKeyPrefix: 'learn.project.opamp',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-noninv',
+    moduleSlug: 'opamps',
+    exampleId: 'opampNonInv',
+    i18nKeyPrefix: 'learn.project.opampNonInv',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-comparator',
+    moduleSlug: 'opamps',
+    exampleId: 'opampComparator',
+    i18nKeyPrefix: 'learn.project.opampComparator',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-schmitt',
+    moduleSlug: 'opamps',
+    exampleId: 'opampSchmitt',
+    i18nKeyPrefix: 'learn.project.opampSchmitt',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-summing',
+    moduleSlug: 'opamps',
+    exampleId: 'opampSumming',
+    i18nKeyPrefix: 'learn.project.opampSumming',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-integrator',
+    moduleSlug: 'opamps',
+    exampleId: 'opampIntegrator',
+    i18nKeyPrefix: 'learn.project.opampIntegrator',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-differentiator',
+    moduleSlug: 'opamps',
+    exampleId: 'opampDifferentiator',
+    i18nKeyPrefix: 'learn.project.opampDifferentiator',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'opamp-active-filter',
+    moduleSlug: 'opamps',
+    exampleId: 'opampActiveFilter',
+    i18nKeyPrefix: 'learn.project.opampActiveFilter',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'rc-low-pass',
+    moduleSlug: 'filters',
+    exampleId: 'rcLowPass',
+    i18nKeyPrefix: 'learn.project.rcLowPass',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'rc-high-pass',
+    moduleSlug: 'filters',
+    exampleId: 'rcHighPass',
+    i18nKeyPrefix: 'learn.project.rcHighPass',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'rlc-series',
+    moduleSlug: 'filters',
+    exampleId: 'rlcSeries',
+    i18nKeyPrefix: 'learn.project.rlcSeries',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'band-pass',
+    moduleSlug: 'filters',
+    exampleId: 'bandPass',
+    i18nKeyPrefix: 'learn.project.bandPass',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'notch-filter',
+    moduleSlug: 'filters',
+    exampleId: 'notchFilter',
+    i18nKeyPrefix: 'learn.project.notchFilter',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'voltage-divider',
+    moduleSlug: 'filters',
+    exampleId: 'voltageDivider',
+    i18nKeyPrefix: 'learn.project.voltageDivider',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'pot-divider',
+    moduleSlug: 'filters',
+    exampleId: 'pot',
+    i18nKeyPrefix: 'learn.project.potDivider',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'measure-freq-amp',
+    moduleSlug: 'filters',
+    exampleId: 'measureAc',
+    i18nKeyPrefix: 'learn.project.measureAc',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-mosfet',
+    moduleSlug: 'motors',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motorMosfet',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-pwm',
+    moduleSlug: 'motors',
+    exampleId: 'motorPwm',
+    i18nKeyPrefix: 'learn.project.motorPwm',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-flyback',
+    moduleSlug: 'motors',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motorFlyback',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'h-bridge',
+    moduleSlug: 'motors',
+    exampleId: 'hBridge',
+    i18nKeyPrefix: 'learn.project.hBridge',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-direction',
+    moduleSlug: 'motors',
+    exampleId: 'motorDirection',
+    i18nKeyPrefix: 'learn.project.motorDirection',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'pull-up-down',
+    moduleSlug: 'digital',
+    exampleId: 'pullUpDown',
+    i18nKeyPrefix: 'learn.project.pullUpDown',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'debounce',
+    moduleSlug: 'digital',
+    exampleId: 'debounce',
+    i18nKeyPrefix: 'learn.project.debounce',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-ldr',
+    moduleSlug: 'sensors',
+    exampleId: 'ldr',
+    i18nKeyPrefix: 'learn.project.sensorLdr',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-pot',
+    moduleSlug: 'sensors',
+    exampleId: 'pot',
+    i18nKeyPrefix: 'learn.project.sensorPot',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-ntc',
+    moduleSlug: 'sensors',
+    exampleId: 'ntcDivider',
+    i18nKeyPrefix: 'learn.project.ntcDivider',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-threshold',
+    moduleSlug: 'sensors',
+    exampleId: 'opampComparator',
+    i18nKeyPrefix: 'learn.project.sensorThreshold',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'i2c-wiring',
+    moduleSlug: 'comms',
+    exampleId: 'i2cOled',
+    i18nKeyPrefix: 'learn.project.commsI2c',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'adc-front-end',
+    moduleSlug: 'adc-dac',
+    exampleId: 'pot',
+    i18nKeyPrefix: 'learn.project.adcFrontEnd',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'adc-reference',
+    moduleSlug: 'adc-dac',
+    exampleId: 'voltageDivider',
+    i18nKeyPrefix: 'learn.project.adcReference',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'pwm-pseudo-dac',
+    moduleSlug: 'adc-dac',
+    exampleId: 'pwmFilter',
+    i18nKeyPrefix: 'learn.project.pwmFilter',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'relay-transistor',
+    moduleSlug: 'industrial',
+    exampleId: 'relayBjt',
+    i18nKeyPrefix: 'learn.project.relayBjt',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'mosfet-driver',
+    moduleSlug: 'industrial',
+    exampleId: 'nmos',
+    i18nKeyPrefix: 'learn.project.mosfetDriver',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'coil-protection',
+    moduleSlug: 'industrial',
+    exampleId: 'relay',
+    i18nKeyPrefix: 'learn.project.coilProtect',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'inductive-load',
+    moduleSlug: 'industrial',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.inductiveLoad',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'estop-principle',
+    moduleSlug: 'industrial',
+    exampleId: 'estopRelay',
+    i18nKeyPrefix: 'learn.project.estopRelay',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'control-24v',
+    moduleSlug: 'industrial',
+    exampleId: 'industrial24v',
+    i18nKeyPrefix: 'learn.project.industrial24v',
     stepCount: 4
   },
   {

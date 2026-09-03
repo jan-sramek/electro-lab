@@ -29,6 +29,15 @@ Unknown module/unit → redirect to `/learn`.
 | moduleSlug | i18n key | Units in MVP |
 |------------|----------|--------------|
 | `basics` | `learn.module.basics.title` | led-series, rc-charge, led-fade |
+| `power` | `learn.module.power.title` | half-wave … boost |
+| `opamps` | `learn.module.opamps.title` | follower … active filter |
+| `filters` | `learn.module.filters.title` | rc-low-pass … measure-freq-amp |
+| `motors` | `learn.module.motors.title` | motor-mosfet … motor-direction |
+| `digital` | `learn.module.digital.title` | pull-up-down, debounce |
+| `sensors` | `learn.module.sensors.title` | sensor-ldr … sensor-threshold |
+| `comms` | `learn.module.comms.title` | i2c-wiring |
+| `adc-dac` | `learn.module.adcDac.title` | adc-front-end, adc-reference, pwm-pseudo-dac |
+| `industrial` | `learn.module.industrial.title` | relay-transistor … control-24v |
 | `switching` | `learn.module.switching.title` | bjt-switch, relay-flyback, nmos-switch, motor-lowside |
 | `timing` | `learn.module.timing.title` | ne555-astable |
 | `input` | `learn.module.input.title` | pushbutton-led, ldr-nightlight |

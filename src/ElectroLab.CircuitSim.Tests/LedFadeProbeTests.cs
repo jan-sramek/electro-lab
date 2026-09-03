@@ -328,6 +328,92 @@ public class LedFadeProbe
         Assert.True(iEnd < i0 * 0.1, $"LED should fade, start={i0} end={iEnd}");
     }
 
+    [Fact]
+    public void Discharge_Series_R_and_LED_CurrentsMatch()
+    {
+        var sim = new CircuitSimulator();
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                new()
+                {
+                    Id = "V1",
+                    Model = "battery",
+                    Pins = new Dictionary<string, string> { ["p"] = "n1", ["n"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["v"] = 5 }
+                },
+                new()
+                {
+                    Id = "S1",
+                    Model = "switch",
+                    Pins = new Dictionary<string, string> { ["a"] = "n1", ["b"] = "n2" },
+                    Params = new Dictionary<string, double>(),
+                    BoolParams = new Dictionary<string, bool> { ["closed"] = false }
+                },
+                new()
+                {
+                    Id = "C1",
+                    Model = "capacitor",
+                    Pins = new Dictionary<string, string> { ["a"] = "n2", ["b"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["c"] = 0.0022, ["ic"] = 5.0 }
+                },
+                new()
+                {
+                    Id = "R1",
+                    Model = "resistor",
+                    Pins = new Dictionary<string, string> { ["a"] = "n2", ["b"] = "n3" },
+                    Params = new Dictionary<string, double> { ["r"] = 220 }
+                },
+                new()
+                {
+                    Id = "D1",
+                    Model = "led",
+                    Pins = new Dictionary<string, string> { ["a"] = "n3", ["c"] = "gnd" },
+                    Params = new Dictionary<string, double> { ["vf"] = 2, ["ron"] = 20 }
+                },
+            ]
+        };
+
+        var result = sim.Simulate(
+            circuit,
+            "tran",
+            new AnalysisOptions { TStop = 3.0, Dt = 0.002 }
+        );
+        Assert.True(result.Ok, string.Join(";", result.Errors));
+        var iR = result.Tran!.BranchCurrents.First(s => s.Id == "R1").Values;
+        var iD = result.Tran!.BranchCurrents.First(s => s.Id == "D1").Values;
+        var times = result.Tran.Time;
+
+        double maxDiff = 0;
+        var worst = 0;
+        for (var k = 0; k < times.Count; k++)
+        {
+            var d = Math.Abs(iR[k] - iD[k]);
+            if (d > maxDiff)
+            {
+                maxDiff = d;
+                worst = k;
+            }
+        }
+
+        Assert.True(
+            maxDiff < 1e-6,
+            $"max |IR-ID|={maxDiff} at t={times[worst]} IR={iR[worst]} ID={iD[worst]}"
+        );
+
+        // Also ensure LED stays forward (positive) while glowing — negative I blanks the glow.
+        var positiveWhileLit = 0;
+        for (var k = 0; k < times.Count; k++)
+        {
+            if (iD[k] > 1e-4) positiveWhileLit++;
+            if (iD[k] < -1e-4)
+                Assert.Fail($"LED reverse current at t={times[k]} ID={iD[k]}");
+        }
+        Assert.True(positiveWhileLit > 10, "expected sustained forward LED current during discharge");
+    }
+
     private static double SignedNear(IReadOnlyList<double> times, IReadOnlyList<double> values, double t)
     {
         var bestIdx = 0;

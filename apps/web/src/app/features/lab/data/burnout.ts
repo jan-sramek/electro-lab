@@ -24,18 +24,21 @@ export type BurnKind =
   | 'ne555'
   | 'buzzer'
   | 'dc_motor'
-  | 'ldr';
+  | 'ldr'
+  | 'fuse';
 
 export function burnKindOf(modelKey: string): BurnKind | null {
   if (modelKey === 'led') return 'led';
   if (modelKey === 'buzzer') return 'buzzer';
   if (modelKey === 'dc_motor') return 'dc_motor';
   if (modelKey === 'ldr') return 'ldr';
+  if (modelKey === 'fuse') return 'fuse';
+  if (modelKey === 'zener') return 'diode';
   if (isBjtNpnPart(modelKey)) return 'bjt';
   if (isNmosPart(modelKey)) return 'nmos';
   if (isNe555Part(modelKey)) return 'ne555';
   const sim = simModelOf(modelKey);
-  if (sim === 'diode') return 'diode';
+  if (sim === 'diode' || sim === 'zener') return 'diode';
   if (sim === 'resistor') return 'resistor';
   if (sim === 'capacitor') return 'capacitor';
   if (sim === 'ammeter') return 'ammeter';
@@ -73,6 +76,8 @@ export function burnWarningKey(kind: BurnKind): string {
       return 'lab.capacitor.burnedWarning';
     case 'ammeter':
       return 'lab.ammeter.burnedWarning';
+    case 'fuse':
+      return 'lab.fuse.burnedWarning';
     case 'nmos':
       return 'lab.nmos.burnedWarning';
     case 'ne555':
@@ -100,6 +105,8 @@ export function burnInspectorNoteKey(kind: BurnKind): string {
       return 'lab.inspector.capacitorBurned';
     case 'ammeter':
       return 'lab.inspector.ammeterBurned';
+    case 'fuse':
+      return 'lab.inspector.fuseBurned';
     case 'nmos':
       return 'lab.inspector.nmosBurned';
     case 'ne555':
@@ -127,6 +134,8 @@ export function burnReplaceLabelKey(kind: BurnKind): string {
       return 'lab.inspector.replaceCapacitor';
     case 'ammeter':
       return 'lab.inspector.replaceAmmeter';
+    case 'fuse':
+      return 'lab.inspector.replaceFuse';
     case 'nmos':
       return 'lab.inspector.replaceNmos';
     case 'ne555':

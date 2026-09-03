@@ -52,6 +52,12 @@ export function capCurrentFromTranVoltage(
   return cVal * (vNow - vPrev) / dt;
 }
 
+/**
+ * Teaching idle floor (~0.01 mA). Below this, labels and wire-flow treat the branch as off.
+ * Large C with C·dV/dt otherwise turns tiny voltage noise into a lasting ghost current.
+ */
+export const CAP_CURRENT_IDLE_A = 1e-5;
+
 /** Prefer simulated I; fall back to C·dV/dt when the reported branch I is negligible. */
 export function resolveCapacitorBranchCurrent(
   doc: SchematicDocument,
@@ -60,17 +66,24 @@ export function resolveCapacitorBranchCurrent(
   scrubIndex: number,
   reported: number | null | undefined
 ): number | null {
-  if (typeof reported === 'number' && Math.abs(reported) > 1e-6) return reported;
-  if (!res?.tran?.time?.length) return typeof reported === 'number' ? reported : null;
+  if (typeof reported === 'number' && Math.abs(reported) > CAP_CURRENT_IDLE_A) return reported;
+  if (!res?.tran?.time?.length) {
+    if (typeof reported === 'number' && Math.abs(reported) <= CAP_CURRENT_IDLE_A) return 0;
+    return typeof reported === 'number' ? reported : null;
+  }
 
   const cap = doc.components.find((c) => c.id === capId && c.modelKey === 'capacitor');
-  if (!cap) return typeof reported === 'number' ? reported : null;
+  if (!cap) {
+    if (typeof reported === 'number' && Math.abs(reported) <= CAP_CURRENT_IDLE_A) return 0;
+    return typeof reported === 'number' ? reported : null;
+  }
 
   const idx = Math.max(0, Math.min(scrubIndex, res.tran.time.length - 1));
   const fromV = capCurrentFromTranVoltage(doc, cap, res, idx);
-  if (fromV !== null && Math.abs(fromV) > 1e-9) return fromV;
+  if (fromV !== null && Math.abs(fromV) > CAP_CURRENT_IDLE_A) return fromV;
 
-  return typeof reported === 'number' ? reported : null;
+  if (typeof reported === 'number') return Math.abs(reported) <= CAP_CURRENT_IDLE_A ? 0 : reported;
+  return 0;
 }
 
 /** Effective |I| at a transient sample (sim branch I or C·dV/dt). */

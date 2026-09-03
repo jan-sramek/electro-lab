@@ -64,6 +64,16 @@ public sealed class StampContext
         return idx;
     }
 
+    /// <summary>
+    /// Tiny conductance from every unknown node to ground so piecewise devices can turn
+    /// off without leaving a floating node (singular matrix).
+    /// </summary>
+    public void StampGminToGround(double gmin = 1e-12)
+    {
+        foreach (var node in Nodes)
+            StampConductance(node, Ground, gmin);
+    }
+
     public void StampConductance(string nodeA, string nodeB, double g)
     {
         EnsureStamping();

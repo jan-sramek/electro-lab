@@ -102,6 +102,21 @@ export class InspectorPanelComponent {
     this.paramChange.emit({ key, value });
   }
 
+  onSlider(key: string, value: number | string): void {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) return;
+    this.paramChange.emit({ key, value: n });
+  }
+
+  asNumber(value: unknown): number {
+    const n = typeof value === 'number' ? value : Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  sliderDisplay(value: unknown): string {
+    return this.asNumber(value).toFixed(2);
+  }
+
   onBool(key: string, value: boolean): void {
     this.paramChange.emit({ key, value: Boolean(value) });
   }

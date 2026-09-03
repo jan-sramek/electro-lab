@@ -1,11 +1,12 @@
 import { Injectable, NgZone, computed, DestroyRef, effect, inject, signal } from '@angular/core';
-import { Subject, catchError, debounceTime, from, of, switchMap, tap } from 'rxjs';
+import { Subject, catchError, debounceTime, from, map, of, switchMap, tap } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
 import { SimulateRequest, SimulateResponse, TranResult } from '../api/circuit-api.types';
 import { AnalysisMode, SchematicDocument, SchematicComponent, assignNets, compileNetlist, parseHighlightedIds, paramNumber } from '../data/schematic.model';
 import {
+  allEnergyPathsClosed,
   allEnergyPathsOpen,
   controllableSwitchStateKey
 } from '../data/switch-state';
@@ -13,6 +14,7 @@ import { EnergyStateStore } from '../data/energy-state.store';
 import {
   TranEnergyState,
   effectiveTargetTStop,
+  estimateDischargeSettlingTStop,
   extractEnergyState,
   injectEnergyState,
   isEnergySettled,
@@ -253,6 +255,8 @@ export class CircuitSimulationFacade {
   private lastRunTStop = 0;
   /** Client diagnostic warnings kept across the API response merge. */
   private clientWarningKeys: string[] = [];
+  /** Shown through the next sim result, then cleared (e.g. fuse-replace note). */
+  private stickyClientWarnings: string[] = [];
 
   readonly highlightedIds = computed(() => {
     const fromDiag = this.highlightComponentIds();
@@ -354,6 +358,7 @@ export class CircuitSimulationFacade {
         }),
         switchMap((job) =>
           from(this.runSimulationJob(job)).pipe(
+            map((res) => ({ res, job })),
             catchError((err) => {
               if (this.showBusyForRequest) this.busy.set(false);
               const rawErrors: string[] =
@@ -371,8 +376,9 @@ export class CircuitSimulationFacade {
         ),
         takeUntilDestroyed()
       )
-      .subscribe((res) => {
-        if (!res) return;
+      .subscribe((payload) => {
+        if (!payload) return;
+        const { res, job } = payload;
         const priorRes = this.result();
         const priorScrub = this.scrubIndex();
         this.result.set(res);
@@ -380,6 +386,10 @@ export class CircuitSimulationFacade {
         const warn = [...(res.warnings ?? [])];
         const doc = this.editor.doc();
         const storedBefore = this.energyStore.maxCapVoltageAbs();
+        // Do not apply overload burns from a result whose switch topology no longer matches
+        // (e.g. fuse replace opened the short while this short-circuit solve was in flight).
+        const applyBurns =
+          controllableSwitchStateKey(job.doc) === controllableSwitchStateKey(doc);
 
         let playback: ReturnType<TranPlaybackPolicy['resolve']> = {
           scrubIndex: 0,
@@ -453,7 +463,9 @@ export class CircuitSimulationFacade {
           }
         }
         this.appendLedPolarityTips(res, warn);
-        this.warnings.set([...this.clientWarningKeys, ...warn]);
+        const sticky = this.stickyClientWarnings;
+        this.stickyClientWarnings = [];
+        this.warnings.set([...sticky, ...this.clientWarningKeys, ...warn]);
         if (!res.ok) {
           const errs = res.errors ?? [];
           this.error.set(this.mapEngineErrors(errs));
@@ -462,6 +474,7 @@ export class CircuitSimulationFacade {
           }
           return;
         }
+        if (!applyBurns) return;
         this.applyLedOverloadFailures(res);
         this.applyBjtBaseOverloadFailures(res);
         this.applyNmosOverloadFailures(res);
@@ -469,10 +482,12 @@ export class CircuitSimulationFacade {
         this.applyDiodeOverloadFailures(res);
         this.applyBuzzerOverloadFailures(res);
         this.applyMotorOverloadFailures(res);
+        // Fuse before passives — an open fuse clears the overload for the next Run.
+        this.applyFuseOverloadFailures(res);
+        this.applyAmmeterOverloadFailures(res);
         this.applyResistorPowerFailures(res);
         this.applyLdrPowerFailures(res);
         this.applyCapacitorOvervoltageFailures(res);
-        this.applyAmmeterOverloadFailures(res);
       });
 
     this.autoRun$.pipe(debounceTime(280), takeUntilDestroyed()).subscribe(() => {
@@ -735,6 +750,16 @@ export class CircuitSimulationFacade {
     this.runInternal(false);
   }
 
+  /** One-shot client note shown through the next simulation result. */
+  notifyClientWarning(messageKey: string): void {
+    const msg = this.i18n.t(messageKey);
+    this.stickyClientWarnings = [
+      msg,
+      ...this.stickyClientWarnings.filter((w) => w !== msg)
+    ];
+    this.warnings.set([...this.stickyClientWarnings, ...this.clientWarningKeys]);
+  }
+
   private runInternal(showBusy: boolean): void {
     const doc = this.editor.doc();
     let mode = this.editor.analysisMode();
@@ -769,7 +794,7 @@ export class CircuitSimulationFacade {
       ]);
     }
     this.clientWarningKeys = warnKeys;
-    this.warnings.set(warnKeys);
+    this.warnings.set([...this.stickyClientWarnings, ...warnKeys]);
 
     if (errors.length > 0) {
       if (showBusy) this.busy.set(false);
@@ -843,7 +868,11 @@ export class CircuitSimulationFacade {
   private async runTranContinuation(job: SimulateJob): Promise<SimulateResponse> {
     const dt = job.body.analysis.dt ?? this.editor.dt();
     const userTStop = job.body.analysis.tStop ?? this.editor.tStop();
-    const targetTStop = effectiveTargetTStop(job.doc, userTStop, dt);
+    let targetTStop = effectiveTargetTStop(job.doc, userTStop, dt);
+    if (job.usedEnergySeed) {
+      const dischargeSettling = estimateDischargeSettlingTStop(job.doc, dt);
+      if (dischargeSettling !== null) targetTStop = Math.max(targetTStop, dischargeSettling);
+    }
     const segMax = maxSegmentTStop(dt);
     const needsContinuation =
       job.showBusy ||
@@ -1043,6 +1072,29 @@ export class CircuitSimulationFacade {
       AMMETER_BURN_A,
       'lab.ammeter.peakOverloadWarning',
       'lab.ammeter.burnedWarning'
+    );
+  }
+
+  /** Teaching fuse — opens when |I| exceeds the part's iMax. */
+  private applyFuseOverloadFailures(res: SimulateResponse): void {
+    const peakBurnIds: string[] = [];
+    const sustainedBurnIds: string[] = [];
+    for (const c of this.editor.doc().components) {
+      if (c.modelKey !== 'fuse' || c.params['burned']) continue;
+      const limitA = paramNumber(c.params, 'iMax', 0.1);
+      if (!(limitA > 0)) continue;
+      const peak = peakBranchCurrent(res, c.id);
+      if (typeof peak === 'number' && Math.abs(peak) >= limitA) peakBurnIds.push(c.id);
+      const sustained = sustainedBranchCurrent(res, c.id);
+      if (typeof sustained === 'number' && Math.abs(sustained) >= limitA) {
+        sustainedBurnIds.push(c.id);
+      }
+    }
+    this.publishBurnResult(
+      peakBurnIds,
+      sustainedBurnIds,
+      'lab.fuse.peakOverloadWarning',
+      'lab.fuse.burnedWarning'
     );
   }
 

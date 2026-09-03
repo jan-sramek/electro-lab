@@ -189,6 +189,44 @@ public class NewDevicesTests
     }
 
     [Fact]
+    public void Relay_BjtLowSide_ClosesContactsAndLightsLed()
+    {
+        // 5 V coil + flyback, NPN low-side, contacts switch LED+R.
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VB", "battery", Pins(("p", "vcc"), ("n", "gnd")), P(("v", 5), ("esr", 0))),
+                El("S1", "switch", Pins(("a", "vcc"), ("b", "nb")), P(), new Dictionary<string, bool> { ["closed"] = true }),
+                El("RB", "resistor", Pins(("a", "nb"), ("b", "b")), P(("r", 2200))),
+                El("Q1", "bjt_npn", Pins(("c", "coiln"), ("b", "b"), ("e", "gnd")), P(("vf", 0.7), ("rb", 10), ("ron", 10))),
+                El(
+                    "K1",
+                    "relay",
+                    Pins(("cp", "vcc"), ("cn", "coiln"), ("a", "ledk"), ("b", "gnd")),
+                    P(("rCoil", 400), ("vPull", 3.5), ("ron", 0.1)),
+                    new Dictionary<string, bool> { ["closed"] = false }
+                ),
+                El("Dfly", "diode", Pins(("a", "coiln"), ("c", "vcc")), P(("vf", 0.7), ("ron", 10))),
+                El("RC", "resistor", Pins(("a", "vcc"), ("b", "leda")), P(("r", 220))),
+                El("D1", "led", Pins(("a", "leda"), ("c", "ledk")), P(("vf", 2), ("ron", 20)))
+            ]
+        };
+
+        var result = _sim.Simulate(circuit);
+        Assert.True(result.Ok, string.Join("; ", result.Errors));
+        Assert.True(
+            result.DcOp!.NodeVoltages["coiln"] < 1.5,
+            $"coiln={result.DcOp.NodeVoltages["coiln"]} should be pulled down by Q1");
+        Assert.True(
+            result.DcOp.NodeVoltages["vcc"] - result.DcOp.NodeVoltages["coiln"] >= 3.5,
+            $"Vcoil={result.DcOp.NodeVoltages["vcc"] - result.DcOp.NodeVoltages["coiln"]}");
+        Assert.True(result.DcOp.BranchCurrents["D1"] > 0.005, $"Iled={result.DcOp.BranchCurrents["D1"]}");
+        Assert.True(result.DcOp.BranchCurrents["K1"] > 0.005, $"Icontacts={result.DcOp.BranchCurrents["K1"]}");
+    }
+
+    [Fact]
     public void Relay_ContactsClose_WhenCoilAbovePullIn()
     {
         var circuit = new Circuit
@@ -292,6 +330,38 @@ public class NewDevicesTests
         Assert.Equal(1000, point.Frequency, 3);
         var mag = point.NodeVoltages["n2"].Mag;
         Assert.Equal(1.0 / Math.Sqrt(2), mag, 3);
+    }
+
+    [Fact]
+    public void AcAnalysis_SeriesLcShuntNotch_DipsAtResonance()
+    {
+        // AC → Rs → out → RL; series L–C from out to gnd. fn ≈ 1 kHz with L=10 mH.
+        var l = 0.01;
+        var c = 1.0 / (l * Math.Pow(2 * Math.PI * 1000.0, 2));
+        var circuit = new Circuit
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("AC1", "ac_source", Pins(("p", "src"), ("n", "gnd")), P(("mag", 1.0), ("phase", 0))),
+                El("RS", "resistor", Pins(("a", "src"), ("b", "out")), P(("r", 1000))),
+                El("RL", "resistor", Pins(("a", "out"), ("b", "gnd")), P(("r", 1000))),
+                El("L1", "inductor", Pins(("a", "out"), ("b", "mid")), P(("l", l))),
+                El("C1", "capacitor", Pins(("a", "mid"), ("b", "gnd")), P(("c", c)))
+            ]
+        };
+
+        var atNotch = _sim.Simulate(circuit, "ac", new AnalysisOptions { Freq = 1000 });
+        Assert.True(atNotch.Ok, string.Join("; ", atNotch.Errors));
+        Assert.True(
+            atNotch.Ac!.Points[0].NodeVoltages["out"].Mag < 1e-6,
+            $"|Vout|@{1000}={atNotch.Ac.Points[0].NodeVoltages["out"].Mag}");
+
+        var far = _sim.Simulate(circuit, "ac", new AnalysisOptions { Freq = 100 });
+        Assert.True(far.Ok, string.Join("; ", far.Errors));
+        Assert.True(
+            far.Ac!.Points[0].NodeVoltages["out"].Mag > 0.2,
+            $"|Vout|@{100}={far.Ac.Points[0].NodeVoltages["out"].Mag} should recover off-notch");
     }
 
     [Fact]

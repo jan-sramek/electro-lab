@@ -2,6 +2,7 @@ import { createLedFadePreset } from './presets/led-fade.preset';
 import { createRcStepPreset } from './presets/rc-step.preset';
 import {
   effectiveTargetTStop,
+  estimateDischargeSettlingTStop,
   estimateDominantTau,
   estimateSettlingTStop,
   isEnergySettled,
@@ -95,8 +96,16 @@ describe('tran-continuation', () => {
         c.modelKey === 'capacitor' ? { ...c, params: { ...c.params, c: 0.1022 } } : c
       )
     };
-    const res = capVoltageTran(bigCap, [5, 0.03, 0.02999]);
+    const res = capVoltageTran(bigCap, [5, 0.008, 0.00799]);
     expect(isEnergySettled(bigCap, res)).toBeTrue();
+  });
+
+  it('extends discharge settling beyond charge (8τ vs 5τ)', () => {
+    const doc = createLedFadePreset();
+    const dt = 0.002;
+    const charge = estimateSettlingTStop(doc, dt)!;
+    const discharge = estimateDischargeSettlingTStop(doc, dt)!;
+    expect(discharge).toBeGreaterThan(charge);
   });
 });
 

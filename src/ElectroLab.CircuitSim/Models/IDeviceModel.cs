@@ -54,6 +54,8 @@ public interface IDeviceModel
 public sealed class DcBiasHint
 {
     public Dictionary<string, bool> LedOn { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, bool> ZenerRevOn { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, bool> VregOn { get; } = new(StringComparer.Ordinal);
     public Dictionary<string, bool> BjtOn { get; } = new(StringComparer.Ordinal);
     public Dictionary<string, bool> MosfetOn { get; } = new(StringComparer.Ordinal);
     public Dictionary<string, bool> RelayOn { get; } = new(StringComparer.Ordinal);

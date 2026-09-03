@@ -48,6 +48,41 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.challenge.tab.pulse': 'Pulse RC',
   'learn.challenge.tab.opamp': 'Op-amp',
   'learn.challenge.tab.ac': 'AC analysis',
+  'learn.challenge.tab.halfWave': 'Half-wave rectifier',
+  'learn.challenge.tab.bridge': 'Bridge rectifier',
+  'learn.challenge.tab.filterCap': 'Filter capacitor',
+  'learn.challenge.tab.zener': 'Zener regulator',
+  'learn.challenge.tab.vreg7805': '7805 regulator',
+  'learn.challenge.tab.reversePolarity': 'Reverse polarity',
+  'learn.challenge.tab.fuseProtect': 'Fuse protection',
+  'learn.challenge.tab.ripple': 'Ripple',
+  'learn.challenge.tab.buck': 'Buck converter',
+  'learn.challenge.tab.boost': 'Boost converter',
+  'learn.challenge.tab.rcLowPass': 'RC low-pass',
+  'learn.challenge.tab.rcHighPass': 'RC high-pass',
+  'learn.challenge.tab.rlcSeries': 'Series RLC',
+  'learn.challenge.tab.bandPass': 'Band-pass filter',
+  'learn.challenge.tab.notchFilter': 'Notch filter',
+  'learn.challenge.tab.voltageDivider': 'Voltage divider',
+  'learn.challenge.tab.measureAc': 'Measure frequency & amplitude',
+  'learn.challenge.tab.motorPwm': 'PWM motor speed',
+  'learn.challenge.tab.hBridge': 'H-bridge',
+  'learn.challenge.tab.motorDirection': 'Motor reverse',
+  'learn.challenge.tab.pullUpDown': 'Pull-up / pull-down',
+  'learn.challenge.tab.ntcDivider': 'NTC / thermistor divider',
+  'learn.challenge.tab.pwmFilter': 'PWM as pseudo-DAC',
+  'learn.challenge.tab.relayBjt': 'Relay + transistor driver',
+  'learn.challenge.tab.estopRelay': 'E-stop principle',
+  'learn.challenge.tab.industrial24v': 'Basic 24 V control',
+  'learn.challenge.tab.debounce': 'RC debounce',
+  'learn.challenge.tab.opampActiveFilter': 'Active low-pass filter',
+  'learn.challenge.tab.opampDifferentiator': 'Differentiator',
+  'learn.challenge.tab.opampIntegrator': 'Integrator',
+  'learn.challenge.tab.opampSumming': 'Summing amplifier',
+  'learn.challenge.tab.opampSchmitt': 'Schmitt trigger',
+  'learn.challenge.tab.opampComparator': 'Comparator',
+  'learn.challenge.tab.opampNonInv': 'Non-inverting amplifier',
+  'learn.challenge.tab.opampFollower': 'Voltage follower',
 
   'learn.challenge.check.sim_ok': 'Simulation completes without errors.',
   'learn.challenge.check.no_circuit_errors': 'Wiring passes circuit checks.',
@@ -75,7 +110,55 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...ldrAssessment(),
   ...buzzerAssessment(),
   ...arduinoAssessment(),
-  ...i2cOledAssessment()
+  ...i2cOledAssessment(),
+  ...halfWaveAssessment(),
+  ...bridgeAssessment(),
+  ...filterCapAssessment(),
+  ...zenerAssessment(),
+  ...vreg7805Assessment(),
+  ...reversePolarityAssessment(),
+  ...fuseProtectAssessment(),
+  ...rippleAssessment(),
+  ...buckAssessment(),
+  ...boostAssessment(),
+  ...opampFollowerAssessment(),
+  ...opampAssessment(),
+  ...opampNonInvAssessment(),
+  ...opampComparatorAssessment(),
+  ...opampSchmittAssessment(),
+  ...opampSummingAssessment(),
+  ...opampIntegratorAssessment(),
+  ...opampDifferentiatorAssessment(),
+  ...opampActiveFilterAssessment(),
+  ...rcLowPassAssessment(),
+  ...rcHighPassAssessment(),
+  ...rlcSeriesAssessment(),
+  ...bandPassAssessment(),
+  ...notchFilterAssessment(),
+  ...voltageDividerAssessment(),
+  ...potDividerAssessment(),
+  ...measureAcAssessment(),
+  ...motorMosfetAssessment(),
+  ...motorPwmAssessment(),
+  ...motorFlybackAssessment(),
+  ...hBridgeAssessment(),
+  ...motorDirectionAssessment(),
+  ...pullUpDownAssessment(),
+  ...debounceAssessment(),
+  ...sensorLdrAssessment(),
+  ...sensorPotAssessment(),
+  ...ntcDividerAssessment(),
+  ...sensorThresholdAssessment(),
+  ...commsI2cAssessment(),
+  ...adcFrontEndAssessment(),
+  ...adcReferenceAssessment(),
+  ...pwmFilterAssessment(),
+  ...relayBjtAssessment(),
+  ...mosfetDriverAssessment(),
+  ...coilProtectAssessment(),
+  ...inductiveLoadAssessment(),
+  ...estopRelayAssessment(),
+  ...industrial24vAssessment()
 };
 
 function lessonKeys(prefix: string, l1Title: string, l1Body: string, l2Title: string, l2Body: string) {
@@ -385,5 +468,828 @@ function i2cOledAssessment() {
       ['Before Run, check…', 'Common ground and supply', 'Only AC mode', 'Remove resistors', 'All parts share reference and power.']
     ),
     ...challengeKeys(p, 'Circuit has no wiring errors.', 'Simulation completes successfully.')
+  };
+}
+
+function halfWaveAssessment() {
+  const p = 'learn.project.halfWave';
+  return {
+    ...lessonKeys(
+      p,
+      'One diode, one half-cycle',
+      'A diode conducts only when anode is higher than cathode by ~Vf — so only positive AC peaks reach the load.',
+      'Pulsating DC',
+      'The load sees zero on the blocked half-cycle. That “missing” energy is why half-wave needs more filtering later.'
+    ),
+    ...quizKeys(
+      p,
+      ['A half-wave rectifier uses…', 'One series diode', 'Four diodes always', 'Only a capacitor', 'Single diode passes one polarity.'],
+      ['On the blocked half-cycle the load voltage is…', 'Near zero', 'Double the peak', 'Negative of Vin always', 'Diode open → no path.'],
+      ['Best analysis mode here?', 'Transient', 'DC only', 'AC small-signal only', 'Need time to see the waveform.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Transient analysis is selected.')
+  };
+}
+
+function bridgeAssessment() {
+  const p = 'learn.project.bridge';
+  return {
+    ...lessonKeys(
+      p,
+      'Four diodes',
+      'A bridge steers both AC half-cycles into the same DC polarity on the load.',
+      'Twice the pulse rate',
+      'For 50 Hz AC you get 100 Hz pulsating DC — easier to filter than half-wave.'
+    ),
+    ...quizKeys(
+      p,
+      ['Bridge rectifiers typically use…', 'Four diodes', 'One diode', 'Only inductors', 'Classic Graetz bridge.'],
+      ['Compared with half-wave, pulse frequency is…', 'Higher (both halves)', 'Lower always', 'Exactly zero', 'Both polarities contribute.'],
+      ['DC return in this Lab sample is…', 'Tied to ground for probing', 'Floating forever', 'AC only', 'Teaching convenience.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Transient analysis is selected.')
+  };
+}
+
+function filterCapAssessment() {
+  const p = 'learn.project.filterCap';
+  return {
+    ...lessonKeys(
+      p,
+      'Reservoir capacitor',
+      'After rectification, C charges near the peaks and supplies the load between peaks.',
+      'Ripple trade-off',
+      'Smaller C or heavier load → more voltage droop between peaks (ripple).'
+    ),
+    ...quizKeys(
+      p,
+      ['Between peaks the capacitor mostly…', 'Discharges into the load', 'Charges from ground only', 'Acts as an open forever', 'Supplies the load.'],
+      ['Larger C generally…', 'Reduces ripple', 'Increases ripple always', 'Removes the diode', 'More stored charge.'],
+      ['Use which analysis?', 'Transient', 'DC operating point only', 'AC phasor only', 'Need time-domain waveform.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Transient analysis is selected.')
+  };
+}
+
+function zenerAssessment() {
+  const p = 'learn.project.zener';
+  return {
+    ...lessonKeys(
+      p,
+      'Shunt clamp',
+      'Series Rs drops excess voltage; the Zener conducts in reverse near Vz to hold the load node.',
+      'Orientation',
+      'Cathode to the regulated node, anode to ground — reverse breakdown is the regulation mode.'
+    ),
+    ...quizKeys(
+      p,
+      ['Zener regulation uses…', 'Reverse breakdown near Vz', 'Only forward Vf', 'Open circuit always', 'Clamps when reverse biased.'],
+      ['Series resistor Rs is needed to…', 'Limit Zener/load current', 'Short the supply', 'Remove ground', 'Drop excess voltage safely.'],
+      ['Best first analysis?', 'DC', 'AC sweep only', 'Transient mandatory', 'Steady clamp is DC.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Wiring passes circuit checks.')
+  };
+}
+
+function vreg7805Assessment() {
+  const p = 'learn.project.vreg7805';
+  return {
+    ...lessonKeys(
+      p,
+      'Series regulator',
+      'A 7805-style IC holds ~5 V on OUT when IN is high enough above dropout.',
+      'Heat & dropout',
+      'The IN−OUT difference is dissipated as heat in a real part; too little headroom and regulation collapses.'
+    ),
+    ...quizKeys(
+      p,
+      ['With enough Vin, OUT is about…', '5 V (teaching default)', 'Equal to Vin always', '0 V always', 'Regulates to vOut.'],
+      ['If Vin falls near dropout…', 'OUT may sag below 5 V', 'OUT doubles', 'Fuse opens always', 'Needs headroom.'],
+      ['Compared with a Zener shunt…', '7805 is a series regulator', 'Identical topology', 'No ground pin', 'Different teaching model.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Wiring passes circuit checks.')
+  };
+}
+
+function reversePolarityAssessment() {
+  const p = 'learn.project.reversePolarity';
+  return {
+    ...lessonKeys(
+      p,
+      'Series protection diode',
+      'If the battery is reversed, the diode blocks — the load never sees reverse voltage.',
+      'Cost of protection',
+      'You pay ~Vf drop in normal operation — budget that into LED current calculations.'
+    ),
+    ...quizKeys(
+      p,
+      ['With correct polarity the series diode…', 'Conducts (drops ~Vf)', 'Always open', 'Shorts ground', 'Forward path.'],
+      ['Reversed battery means…', 'Diode blocks; load off', 'LED brighter', 'Fuse optional only', 'Protection job.'],
+      ['Trade-off is…', 'Lost voltage budget (~Vf)', 'Higher frequency', 'No ground needed', 'Forward drop cost.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'LED conducts with correct polarity.')
+  };
+}
+
+function fuseProtectAssessment() {
+  const p = 'learn.project.fuseProtect';
+  return {
+    ...lessonKeys(
+      p,
+      'Trip on overcurrent',
+      'The teaching fuse stays low-Ron until |I| exceeds iMax, then opens like a burned-open part.',
+      'After a trip',
+      'Replace the fuse — Lab opens closed switches so the new fuse is not instantly overloaded. Fix the fault before closing the short again.'
+    ),
+    ...quizKeys(
+      p,
+      ['A fuse opens when…', 'Current exceeds iMax', 'Voltage is exactly 5 V', 'Ground is removed only', 'Overcurrent trip.'],
+      ['After burnout you should…', 'Replace the fuse', 'Wire around it forever', 'Remove ground', 'Restore protection.'],
+      ['S1 closed across RL means…', 'A short that overloads the fuse', 'Safe normal load forever', 'AC analysis only', 'Bypass path dumps current through F1.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Wiring passes circuit checks.')
+  };
+}
+
+function rippleAssessment() {
+  const p = 'learn.project.ripple';
+  return {
+    ...lessonKeys(
+      p,
+      'What ripple is',
+      'Residual AC riding on filtered DC — the droop between rectifier peaks.',
+      'How to see it',
+      'Transient + probe on the filter node. Smaller C or heavier load makes ripple easier to spot.'
+    ),
+    ...quizKeys(
+      p,
+      ['Ripple is…', 'AC leftover on DC', 'Only DC offset', 'Gate threshold', 'Peak-to-peak residual.'],
+      ['Heavier load usually…', 'Increases ripple', 'Removes diodes', 'Stops AC forever', 'Faster discharge between peaks.'],
+      ['Use…', 'Transient analysis', 'DC only forever', 'No probe ever', 'Time-domain view.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Transient analysis is selected.')
+  };
+}
+
+function buckAssessment() {
+  const p = 'learn.project.buck';
+  return {
+    ...lessonKeys(
+      p,
+      'Step-down idea',
+      'A high-side switch chops Vin; L and C average the pulses into a lower DC.',
+      'Duty cycle',
+      'Longer on-time (higher duty) raises the average output toward Vin.'
+    ),
+    ...quizKeys(
+      p,
+      ['A buck converter ideally…', 'Steps voltage down', 'Always boosts', 'Removes inductors', 'Vout < Vin typically.'],
+      ['Higher duty cycle tends to…', 'Raise average Vout', 'Guarantee zero current', 'Open the diode forever', 'More on-time → higher average.'],
+      ['This sample needs…', 'Transient (PWM)', 'DC only', 'AC phasor only', 'Switching is time-domain.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Transient analysis is selected.')
+  };
+}
+
+function boostAssessment() {
+  const p = 'learn.project.boost';
+  return {
+    ...lessonKeys(
+      p,
+      'Step-up idea',
+      'Low-side switch stores energy in L, then the diode delivers it to a higher Vout capacitor.',
+      'Energy per cycle',
+      'Longer on-time stores more inductor energy — Vout can rise above Vin.'
+    ),
+    ...quizKeys(
+      p,
+      ['A boost converter ideally…', 'Steps voltage up', 'Always bucks', 'Needs no diode', 'Vout > Vin typically.'],
+      ['Inductor energy is stored mainly when…', 'The switch is on', 'The fuse opens', 'Ground floats', 'L charges to ground.'],
+      ['Analysis mode?', 'Transient', 'DC only', 'AC small-signal only', 'PWM needs time.']
+    ),
+    ...challengeKeys(p, 'Simulation succeeds.', 'Transient analysis is selected.')
+  };
+}
+
+
+function opampFollowerAssessment() {
+  const p = 'learn.project.opampFollower';
+  return {
+    ...lessonKeys(
+      p,
+      "Unity gain buffer",
+      "Negative feedback forces −in ≈ +in. With OUT wired to −in, Vout equals Vin. The op-amp supplies the load current so the source is not loaded.",
+      "When to use it",
+      "Followers isolate stages, drive low impedances, and copy sensor voltages without dropping them across source resistance."
+    ),
+    ...quizKeys(
+      p,
+      ["In a voltage follower, feedback connects OUT to…", "The inverting input (−in)", "The non-inverting input (+in)", "Neither input", "OUT ties to −in so the loop keeps −in = +in = Vin."],
+      ["Ideal follower voltage gain is…", "−10", "1 (unity)", "∞", "Vout / Vin ≈ 1."],
+      ["Main teaching benefit of a follower is…", "Clipping the rails harder", "Inverting the signal", "Buffering without loading the source", "It copies voltage while the amp drives the load."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Circuit has an op-amp and a load resistor."
+    )
+  };
+}
+
+function opampAssessment() {
+  const p = 'learn.project.opamp';
+  return {
+    ...lessonKeys(
+      p,
+      "Virtual ground",
+      "Negative feedback holds −in at the same potential as +in (ground here). Current through Rin continues through Rf, so Vout = −Vin·Rf/Rin.",
+      "Rails",
+      "If the ideal gain asks for more than ±vMax/vMin, the teaching model clamps — OUT sticks at the rail."
+    ),
+    ...quizKeys(
+      p,
+      ["Ideal inverting gain is…", "−Rf / Rin", "1 + Rf / Rin", "Rf only", "Closed-loop gain for the inverting topology."],
+      ["With +in grounded, the summing node sits near…", "Vcc", "0 V (virtual ground)", "Vin", "Feedback keeps −in ≈ +in = 0."],
+      ["If |ideal Vout| exceeds the rail…", "Gain doubles", "Nothing changes", "OUT clamps at the rail", "Teaching op-amp saturates at vMax/vMin."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Circuit includes op-amp and resistors."
+    )
+  };
+}
+
+function opampNonInvAssessment() {
+  const p = 'learn.project.opampNonInv';
+  return {
+    ...lessonKeys(
+      p,
+      "Gain formula",
+      "Feedback sets V− = Vin. Divider Rf/Rg gives Vout = Vin·(1 + Rf/Rg).",
+      "Same polarity",
+      "Unlike the inverter, the output moves the same direction as the input."
+    ),
+    ...quizKeys(
+      p,
+      ["Ideal non-inverting gain is…", "−Rf / Rg", "1 + Rf / Rg", "Rf − Rg", "Closed-loop non-inverting gain."],
+      ["Input signal connects to…", "−in only", "+in", "OUT", "Vin drives the non-inverting pin."],
+      ["Compared with the inverter, polarity is…", "Always opposite", "Undefined", "The same as Vin", "Non-inverting keeps sign."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Circuit includes op-amp and feedback resistors."
+    )
+  };
+}
+
+function opampComparatorAssessment() {
+  const p = 'learn.project.opampComparator';
+  return {
+    ...lessonKeys(
+      p,
+      "Open loop",
+      "Without feedback the teaching gain is huge, so OUT saturates high or low depending on which input is larger.",
+      "Threshold",
+      "The resistor divider sets the trip voltage. A pot lets you sweep Vin across that threshold."
+    ),
+    ...quizKeys(
+      p,
+      ["A comparator usually uses…", "Heavy negative feedback", "Open-loop (or tiny feedback) gain", "An inductor only", "High gain drives the output to a rail."],
+      ["When Vin > Vth on this sample, OUT goes…", "Toward the positive rail", "Exactly Vin", "Always 0 V", "+in above −in → high out."],
+      ["Moving the pot Wiper…", "Changes timing capacitance", "Does nothing", "Sweeps Vin across the threshold", "Wiper is the variable input."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Circuit includes op-amp and potentiometer."
+    )
+  };
+}
+
+function opampSchmittAssessment() {
+  const p = 'learn.project.opampSchmitt';
+  return {
+    ...lessonKeys(
+      p,
+      "Hysteresis",
+      "Positive feedback adds a fraction of OUT to the trip level, so rising and falling thresholds differ — noise near the threshold does not chatter.",
+      "Vs plain comparator",
+      "A plain comparator trips at one voltage both ways; Schmitt needs a larger swing to switch back."
+    ),
+    ...quizKeys(
+      p,
+      ["Schmitt triggers add…", "Hysteresis via positive feedback", "Only series inductance", "Unity-gain buffering", "Feedback shifts the threshold with output state."],
+      ["Rising vs falling trip points are…", "Always identical", "Different (hysteresis band)", "Random each run", "Two thresholds by design."],
+      ["Hysteresis helps against…", "Rail voltage", "LED color", "Noise chatter near the threshold", "Small noise cannot flip the state without crossing the other trip point."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Circuit includes op-amp with feedback."
+    )
+  };
+}
+
+function opampSummingAssessment() {
+  const p = 'learn.project.opampSumming';
+  return {
+    ...lessonKeys(
+      p,
+      "Weighted sum",
+      "Each input current Vin/Rn adds at the summing node. With equal R and Rf, Vout = −(V1 + V2).",
+      "Audio / DAC intuition",
+      "Summing amps mix signals or binary-weighted currents in teaching DACs."
+    ),
+    ...quizKeys(
+      p,
+      ["With equal Rin and Rf, Vout is…", "−(V1 + V2)", "V1 − V2", "V1 × V2", "Equal-weight inverting summer."],
+      ["Extra input channels connect through…", "More resistors into the summing node", "The +in pin only", "Shorting OUT to ground", "Each source needs its own input resistor."],
+      ["The summing node is held near…", "Vcc", "Virtual ground", "V1 only", "Same as the inverting amp."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Circuit includes op-amp and two input sources."
+    )
+  };
+}
+
+function opampIntegratorAssessment() {
+  const p = 'learn.project.opampIntegrator';
+  return {
+    ...lessonKeys(
+      p,
+      "Ramp from current",
+      "Feedback current charges Cf. Ideal Vout falls as −(1/Rin·Cf)·∫Vin dt for the inverting integrator.",
+      "Teaching limits",
+      "Real integrators need a large DC feedback resistor to limit drift; this sample shows the ideal ramp behaviour."
+    ),
+    ...quizKeys(
+      p,
+      ["Feedback element in this integrator is…", "A capacitor", "Only a wire", "An inductor", "Cf stores the integrated charge."],
+      ["A constant positive Vin makes ideal Vout…", "Stay at Vin", "Ramp (negative direction for inverting)", "Oscillate forever", "Integral of a constant is a ramp."],
+      ["Best analysis mode here is…", "DC only", "AC single-frequency only", "Transient", "You need time to see the ramp."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Analysis mode is Transient."
+    )
+  };
+}
+
+function opampDifferentiatorAssessment() {
+  const p = 'learn.project.opampDifferentiator';
+  return {
+    ...lessonKeys(
+      p,
+      "Edges only",
+      "Capacitor current is C·dV/dt, so flat levels produce little output; edges produce spikes.",
+      "Noise caution",
+      "Differentiators emphasise fast changes — teaching models stay tame; real circuits often add a series R to limit gain at HF."
+    ),
+    ...quizKeys(
+      p,
+      ["Series input element here is…", "A capacitor", "Only a battery", "A fuse", "Cin couples dV/dt into the amp."],
+      ["A flat DC input ideally yields…", "Huge DC gain", "Near-zero output", "A triangle wave", "dV/dt ≈ 0 on a flat level."],
+      ["You mainly watch…", "Only the DC operating point", "Nothing", "Transient spikes on edges", "Edges are the teaching signal."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Analysis mode is Transient."
+    )
+  };
+}
+
+function opampActiveFilterAssessment() {
+  const p = 'learn.project.opampActiveFilter';
+  return {
+    ...lessonKeys(
+      p,
+      "First-order LPF",
+      "At low f, C is open and gain ≈ −Rf/Rin. At high f, C shunts Rf and gain falls.",
+      "Why active?",
+      "The op-amp isolates the filter and can provide gain; passive RC alone cannot boost."
+    ),
+    ...quizKeys(
+      p,
+      ["Raising frequency well above cutoff…", "Increases |Vout|", "Leaves gain unchanged", "Attenuates the output", "Low-pass behaviour."],
+      ["Feedback capacitor mainly affects…", "Only LED colour", "High-frequency gain (shunts Rf)", "Battery ESR only", "C shorts Rf as f rises."],
+      ["Best analysis mode for this sample is…", "AC", "DC only", "No simulation", "Frequency response is an AC story."]
+    ),
+    ...challengeKeys(
+      p,
+      "Simulation completes without errors.",
+      "Analysis mode is AC."
+    )
+  };
+}
+
+function rcLowPassAssessment() {
+  const p = 'learn.project.rcLowPass';
+  return {
+    ...lessonKeys(p, "First-order LPF", "At low f the capacitor is open so Vout ≈ Vin. Above fc ≈ 1/(2πRC) the shunt C shorts AC to ground and |Vout| rolls off ~20 dB/decade.", "Where you see it", "Sensor smoothing, anti-aliasing before ADCs, and simple tone control all start from this topology."),
+    ...quizKeys(
+      p,
+      ["An RC low-pass puts the capacitor…", "Across the output (shunt to return)", "Only in series with the source", "Floating with no ground", "Series R + shunt C is the classic LPF."],
+      ["Cutoff frequency scales as…", "RC", "1 / (2πRC)", "2πRC", "fc = 1/(2πRC) for the first-order RC LPF."],
+      ["Well above cutoff, |Vout|…", "Equals Vin", "Grows without bound", "Falls as frequency rises", "The shunt C steals more AC current as f increases."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is AC.")
+  };
+}
+
+function rcHighPassAssessment() {
+  const p = 'learn.project.rcHighPass';
+  return {
+    ...lessonKeys(p, "First-order HPF", "At high f the capacitor is a short so Vout ≈ Vin across R. Near DC the C blocks and |Vout| falls toward zero.", "Uses", "AC coupling between stages, removing DC offsets, and simple treble-pass networks."),
+    ...quizKeys(
+      p,
+      ["An RC high-pass puts the capacitor…", "In series with the signal path", "Only as a shunt to ground", "Across the battery", "Series C + shunt R is the classic HPF."],
+      ["Near DC, ideal HPF output…", "Equals Vin", "Approaches zero", "Oscillates", "The series C blocks DC."],
+      ["Raising C (same R) moves fc…", "Higher", "Nowhere", "Lower", "fc = 1/(2πRC) — larger C lowers the knee."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is AC.")
+  };
+}
+
+function rlcSeriesAssessment() {
+  const p = 'learn.project.rlcSeries';
+  return {
+    ...lessonKeys(p, "Resonance", "At fr the inductive and capacitive reactances cancel. Series impedance is near R, so current is largest for a given drive.", "Teaching takeaway", "Filters and tuned tanks are just RLC with different pick-off points — start by feeling the resonance peak."),
+    ...quizKeys(
+      p,
+      ["Series resonance occurs when…", "XL ≈ XC", "R = 0 only", "L = C numerically", "Reactances cancel; impedance ≈ R."],
+      ["Resonant frequency scales as…", "LC", "1 / (2π√(LC))", "2πLC", "fr = 1/(2π√(LC))."],
+      ["At resonance, series impedance is closest to…", "∞", "jωL only", "R", "L and C cancel; R remains."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is AC.")
+  };
+}
+
+function bandPassAssessment() {
+  const p = 'learn.project.bandPass';
+  return {
+    ...lessonKeys(p, "Pass a band", "Around resonance the network transfers signal; far off-resonance reactive mismatch attenuates. Bandwidth depends on Q (R vs √(L/C)).", "Vs LPF/HPF", "A band-pass needs both a high-side and low-side roll-off — RLC (or cascaded RC) gives that shape."),
+    ...quizKeys(
+      p,
+      ["A band-pass ideally…", "Passes a mid band, attenuates ends", "Only blocks DC", "Amplifies all frequencies equally", "That is the definition of band-pass."],
+      ["Center frequency is set mainly by…", "Only R", "L and C (resonance)", "Wire length alone", "fr follows the LC product."],
+      ["Higher Q usually means…", "Wider pass band", "No resonance", "Narrower peak around fr", "Q sharpens the resonance peak."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is AC.")
+  };
+}
+
+function notchFilterAssessment() {
+  const p = 'learn.project.notchFilter';
+  return {
+    ...lessonKeys(p, "Reject a tone", "At the notch frequency the network presents a path that cancels transfer to the load — |Vout| plunges in a narrow band.", "Uses", "Killing mains hum, removing a whistle, or scrubbing one interferer before amplification."),
+    ...quizKeys(
+      p,
+      ["A notch filter…", "Rejects a narrow band", "Only passes DC", "Always amplifies", "Notch = band-stop around one frequency."],
+      ["Far from the notch frequency, |Vout|…", "Is always zero", "Recovers toward the pass level", "Must oscillate", "Rejection is local to the notch."],
+      ["Tuning the notch mainly means changing…", "Only the battery ESR", "Wire color", "L and/or C", "The reject frequency tracks the LC resonance."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is AC.")
+  };
+}
+
+function voltageDividerAssessment() {
+  const p = 'learn.project.voltageDivider';
+  return {
+    ...lessonKeys(p, "Ratio rule", "With no load, Vmid = Vsource · Rbottom / (Rtop + Rbottom). Current is V / (R1+R2).", "Loading", "Anything attached to the mid node is another parallel path — it lowers effective Rbottom and drops Vmid."),
+    ...quizKeys(
+      p,
+      ["Unloaded divider mid voltage is…", "V · R2 / (R1 + R2)", "V · R1 only", "Always V/2 regardless of R", "Ohm’s law on the series string."],
+      ["Equal resistors give…", "Zero volts", "Half the source (ideal)", "Twice the source", "R2/(R1+R2) = 1/2."],
+      ["A heavy load on the mid node…", "Raises Vmid", "Does nothing", "Pulls Vmid down", "Load parallels Rbottom."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function potDividerAssessment() {
+  const p = 'learn.project.potDivider';
+  return {
+    ...lessonKeys(p, "Moving tap", "A potentiometer is two resistors in series whose ratio tracks the mechanical (or slider) position.", "Same math as fixed dividers", "Vwiper ≈ V · pos when unloaded. Volume controls and setpoint knobs are this idea in hardware."),
+    ...quizKeys(
+      p,
+      ["A pot used as a divider…", "Takes a tap between two end terminals", "Must be floating with one pin", "Only works with AC", "Ends on the rail; wiper is the mid."],
+      ["Moving the wiper toward ground…", "Raises Vwiper to Vcc", "Lowers Vwiper toward 0", "Disconnects the circuit", "More resistance above the tap → lower ratio."],
+      ["Heavy load on the wiper…", "Never matters", "Increases supply voltage", "Distorts the expected linear sweep", "Loading parallels the lower arm."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit includes a potentiometer.")
+  };
+}
+
+function measureAcAssessment() {
+  const p = 'learn.project.measureAc';
+  return {
+    ...lessonKeys(p, "AC observables", "AC mode reports phasor magnitude/phase at the analysis frequency — think “how big is this tone here?”", "Lab habit", "Pick one frequency, probe one node, change one parameter — that is how you build intuition without drowning in plots."),
+    ...quizKeys(
+      p,
+      ["AC analysis in this Lab is best for…", "Tone magnitude at a frequency", "Only DC battery ESR", "Mechanical switch bounce", "AC solves the linear network at f."],
+      ["Doubling source mag (linear network)…", "Zeros the output", "Roughly doubles probed mag", "Inverts DC only", "Linear scaling."],
+      ["Good measurement discipline is…", "Change everything at once", "Never use a voltmeter", "Change one thing and re-probe", "Isolation builds understanding."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is AC.")
+  };
+}
+
+function motorMosfetAssessment() {
+  const p = 'learn.project.motorMosfet';
+  return {
+    ...lessonKeys(p, "Low-side switch", "NMOS between motor (−) and ground lets a logic-level gate control a higher-current path from the supply through the motor.", "Always plan the diode", "Motors are inductive — when the FET opens, current needs a freewheel path (flyback diode)."),
+    ...quizKeys(
+      p,
+      ["Low-side NMOS motor drive puts the FET…", "Between motor return and ground", "Only across the battery", "In series with nothing", "Classic low-side switch."],
+      ["Gate high (above threshold)…", "Always burns the motor", "Allows drain–source current", "Opens the channel forever", "Enhancement NMOS conducts when Vgs is high enough."],
+      ["Flyback diode orientation…", "Anode to +V", "Optional decoration", "Cathode toward +V across the motor", "It freewheels inductive current when the switch opens."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function motorPwmAssessment() {
+  const p = 'learn.project.motorPwm';
+  return {
+    ...lessonKeys(p, "Average voltage", "PWM switches fully on/off. The motor inductance/mechanics average the pulses — higher duty ≈ higher effective voltage.", "Why not a linear resistor?", "Switching keeps the FET in low-loss on/off states instead of dissipating as a series rheostat."),
+    ...quizKeys(
+      p,
+      ["PWM motor control mainly varies…", "Duty cycle (on-time fraction)", "Wire color", "Only diode Vf forever", "Duty sets average voltage."],
+      ["During the off interval, inductive current…", "Needs a freewheel path", "Instantly becomes zero safely always", "Charges the gate only", "Flyback diode (or sync path) matters."],
+      ["Higher duty cycle tends to…", "Stop the motor always", "Lower average voltage", "Raise average motor voltage", "More on-time → more average V."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is transient.")
+  };
+}
+
+function motorFlybackAssessment() {
+  const p = 'learn.project.motorFlyback';
+  return {
+    ...lessonKeys(p, "Inductive kick", "Current in an inductor cannot stop instantly. Without a path, voltage spikes and can avalanche the transistor.", "Placement", "Diode anti-parallel to the inductive load: cathode to the more positive motor terminal (toward +V on a low-side switch)."),
+    ...quizKeys(
+      p,
+      ["Flyback diodes protect against…", "Inductive voltage spikes at turn-off", "Only LED color", "USB enumeration", "They freewheel L·di/dt energy."],
+      ["On a low-side motor switch, cathode faces…", "Ground only", "Toward +V (across the motor)", "The gate resistor", "Standard freewheel orientation."],
+      ["Omitting the diode when switching a motor…", "Is always fine", "Speeds PWM forever", "Risks killing the transistor", "Spike energy has nowhere safe to go."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function hBridgeAssessment() {
+  const p = 'learn.project.hBridge';
+  return {
+    ...lessonKeys(p, "Diagonal drive", "Forward: top-left + bottom-right. Reverse: the other diagonal. Both highs or both lows on one side shorts the supply.", "Teaching model", "Ideal switches stand in for MOSFET half-bridges — focus on current path, not gate-drive ICs yet."),
+    ...quizKeys(
+      p,
+      ["Forward H-bridge conduction uses…", "One diagonal pair of switches", "All four switches closed", "Only the flyback LEDs", "Diagonal path through the motor."],
+      ["Closing both switches on one leg…", "Is required", "Shoot-through / shorts the rail", "Charges the motor safely", "High and low both on = supply short."],
+      ["Reversing the motor means…", "Removing ground", "Changing wire color only", "Closing the other diagonal pair", "Current through the motor flips."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function motorDirectionAssessment() {
+  const p = 'learn.project.motorDirection';
+  return {
+    ...lessonKeys(p, "Flip the diagonal", "Reversing is not a second motor — it is the other pair of switches so current enters the opposite motor terminal.", "Safe sequencing", "Real drivers insert dead time so both FETs on a leg are never on together."),
+    ...quizKeys(
+      p,
+      ["To reverse with an H-bridge…", "Close the opposite diagonal", "Short both rails", "Remove the motor", "Other diagonal flips current."],
+      ["Forward and reverse diagonals should be…", "Closed at the same time", "Mutually exclusive", "Irrelevant", "Overlap causes shoot-through."],
+      ["Dead time is…", "Extra LED brightness", "USB delay only", "A brief both-off gap when changing direction", "Prevents leg shoot-through."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function pullUpDownAssessment() {
+  const p = 'learn.project.pullUpDown';
+  return {
+    ...lessonKeys(p, "Idle level", "Inputs must not float. A pull-up weakly holds HIGH until the switch (or open-drain) strongly pulls LOW.", "Strong vs weak", "The switch wins when closed; the resistor wins when open. Choose R so leakage and speed still work."),
+    ...quizKeys(
+      p,
+      ["A pull-up resistor…", "Holds the node high when the switch is open", "Always shorts VCC to ground", "Replaces the battery", "Weak HIGH idle."],
+      ["Closing a switch to ground on a pull-up input…", "Leaves the node floating", "Drives the node low", "Raises VCC", "Strong low overrides the weak pull-up."],
+      ["Floating inputs are bad because…", "They are always 5.000 V", "LEDs become brighter", "Noise can randomly trip logic", "Undefined voltage = unreliable reads."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function debounceAssessment() {
+  const p = 'learn.project.debounce';
+  return {
+    ...lessonKeys(p, "Bounce", "Mechanical contacts chatter for milliseconds. Logic that samples raw edges may see many false transitions.", "RC softens edges", "A capacitor to ground (with pull-up) low-pass filters the switch node. Firmware debounce is the digital twin of this idea."),
+    ...quizKeys(
+      p,
+      ["Switch bounce causes…", "Multiple edges from one press", "Higher battery voltage", "Perfect single edges always", "Contacts chatter."],
+      ["An RC on the switch node…", "Removes the need for ground", "Slows/filters fast chatter", "Increases bounce", "Low-pass softens edges."],
+      ["Debounce belongs with…", "Only RF antennas", "Only transformers", "Buttons, limit switches, and noisy contacts", "Any mechanical contact benefits."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function sensorLdrAssessment() {
+  const p = 'learn.project.sensorLdr';
+  return {
+    ...lessonKeys(p, "Resistance to voltage", "Most sensors do not output a clean volt by themselves. An LDR is a variable R; a fixed resistor completes a divider so you get a voltage that tracks light.", "Usable signal", "That mid-node voltage can drive a FET, a comparator, or (later) an ADC pin. Same idea for many resistive sensors."),
+    ...quizKeys(
+      p,
+      ["An LDR mainly changes…", "Resistance with light", "Only battery ESR", "Wire color", "Photoresistance varies with illumination."],
+      ["A series resistor with the LDR makes…", "A short across VCC", "A voltage divider (usable signal)", "An antenna", "Divider mid-node is the sensor voltage."],
+      ["Raising light (lower LDR R to ground) tends to…", "Raise the mid node forever", "Disconnect ground", "Pull the mid node toward ground", "Lower bottom R drops the divider ratio."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function sensorPotAssessment() {
+  const p = 'learn.project.sensorPot';
+  return {
+    ...lessonKeys(p, "Position → voltage", "Mechanical travel changes the divider ratio. The wiper is already a usable analog signal.", "Loading", "Whatever you attach to the wiper (ADC, amp, FET) must not drag the voltage if you need accuracy — buffer or high impedance helps."),
+    ...quizKeys(
+      p,
+      ["A pot used as a sensor outputs…", "A tap voltage between the rails", "Only digital pulses", "RF only", "Wiper is the analog signal."],
+      ["Moving the wiper changes…", "Nothing electrical", "The divider ratio (and Vwiper)", "Only LED color", "Position sets the resistive split."],
+      ["Heavy load on the wiper…", "Never matters", "Raises VCC", "Can distort the expected voltage", "Loading parallels the lower arm."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function ntcDividerAssessment() {
+  const p = 'learn.project.ntcDivider';
+  return {
+    ...lessonKeys(p, "Thermistor idea", "NTCs drop resistance as they warm. In a divider that moves the mid voltage — that is your temperature signal.", "Why a stand-in", "Lab v1 has no dedicated NTC model yet. A pot lets you feel the divider math before a future sensor ADR."),
+    ...quizKeys(
+      p,
+      ["An NTC in a divider mainly gives…", "A voltage that tracks temperature", "Only PWM", "Galvanic isolation", "R(T) → Vmid."],
+      ["If NTC resistance falls (warmer) on the bottom arm…", "Vmid usually falls", "Vmid must rise to VCC", "The battery shorts", "Lower bottom R lowers the ratio."],
+      ["This sample uses a pot because…", "Pots are NTCs", "It is a teaching stand-in for variable R", "AC analysis requires it", "Interactive R without a dedicated NTC model."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function sensorThresholdAssessment() {
+  const p = 'learn.project.sensorThreshold';
+  return {
+    ...lessonKeys(p, "Threshold decision", "Many sensor apps need a trip point, not a continuous number. A comparator (or MCU digital read after conditioning) turns analog into on/off.", "Hysteresis next", "Real systems add Schmitt feedback so noise does not chatter at the trip point — see the Schmitt unit."),
+    ...quizKeys(
+      p,
+      ["A comparator on a sensor voltage…", "Compares it to a threshold", "Always integrates", "Removes the need for ground", "Open-loop amp rails high/low vs −in."],
+      ["Crossing the threshold…", "Leaves OUT unchanged", "Flips OUT toward a rail", "Burns the pot always", "That is the decision edge."],
+      ["Sensor dividers feed comparators because…", "They already output USB", "They only work at 24 V", "They produce a voltage you can compare", "Analog mid-node → decision."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function commsI2cAssessment() {
+  const p = 'learn.project.commsI2c';
+  return {
+    ...lessonKeys(p, "Open-drain bus", "I²C lines idle high via pull-ups; devices only pull low. Missing pull-ups = a stuck or flaky bus.", "Why it matters", "Sensors, EEPROMs, and displays share this pattern. UART/SPI/RS-485 need their own wiring stories (later ADRs)."),
+    ...quizKeys(
+      p,
+      ["I²C SDA/SCL idle state relies on…", "Pull-up resistors to VCC", "Series inductors only", "Floating pins", "Open-drain needs pull-ups."],
+      ["Two devices on one I²C bus share…", "SDA and SCL (plus ground)", "Only TX", "Only CAN_H", "Multi-drop on two wires + GND."],
+      ["UART / SPI / RS-485 in this Lab…", "Are fully simulated today", "Need future models (documented gaps)", "Replace I²C pull-ups", "Only I²C wiring is ready in Lab v1."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function adcFrontEndAssessment() {
+  const p = 'learn.project.adcFrontEnd';
+  return {
+    ...lessonKeys(p, "Sample a voltage", "ADC converts Vin into an integer using Vref and bit depth. The front-end job is delivering a clean Vin in range.", "Sensors → ADC", "Dividers, amps, and filters condition the sensor so the MCU pin sees a friendly voltage — not raw milliamp loops."),
+    ...quizKeys(
+      p,
+      ["An ADC primarily converts…", "A voltage into a number", "Only resistance into light", "UART into SPI", "Quantization of Vin vs Vref."],
+      ["The wiper voltage here stands in for…", "Vin at an analog pin", "A crystal oscillator", "CAN differential only", "Front-end voltage before digitizing."],
+      ["If Vin exceeds Vref…", "Codes keep growing forever", "Nothing happens", "The reading saturates / clips", "Full-scale is Vref."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function adcReferenceAssessment() {
+  const p = 'learn.project.adcReference';
+  return {
+    ...lessonKeys(p, "Vref sets the ruler", "Resolution is Vref / 2^N per count (ideal). A noisy or wrong Vref scales every reading.", "Sampling", "How often you convert (sample rate) is separate from bits — both matter for faithful reconstruction."),
+    ...quizKeys(
+      p,
+      ["ADC full-scale is set by…", "The reference voltage (Vref)", "Only wire gauge", "LED color", "Codes span 0…Vref."],
+      ["More bits (same Vref) means…", "Coarser steps", "Finer voltage steps", "No change", "Step ≈ Vref/2^N."],
+      ["A resistive divider helps teach…", "Known fractions of a rail", "I²C addressing", "CAN arbitration", "Ratio → predictable mid voltage."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function pwmFilterAssessment() {
+  const p = 'learn.project.pwmFilter';
+  return {
+    ...lessonKeys(p, "Average is the “analog”", "PWM is still digital edges. An RC (or the load’s own filtering) averages them into a DC-ish voltage.", "Vs true DAC", "A real DAC outputs a held level with better linearity/noise. PWM+filter is the teaching stand-in and a common MCU trick."),
+    ...quizKeys(
+      p,
+      ["PWM as a DAC mainly varies…", "Duty cycle", "Only crystal ppm", "Wire color", "Average tracks duty."],
+      ["The RC after PWM…", "Low-pass filters / averages the pulses", "Creates I²C addresses", "Removes ground", "That is the pseudo-analog stage."],
+      ["Higher duty tends to…", "Lower average voltage", "Stop the pulse source", "Raise the filtered average", "More high-time → higher mean."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is transient.")
+  };
+}
+
+function relayBjtAssessment() {
+  const p = 'learn.project.relayBjt';
+  return {
+    ...lessonKeys(p, "Why a driver", "Relay coils take tens of mA. A transistor (or MOSFET) lets a small base/gate current control that coil.", "Still need the diode", "Turning the coil off dumps inductive energy — Dfly protects the transistor."),
+    ...quizKeys(
+      p,
+      ["The BJT in this sample…", "Switches the relay coil current", "Is the contact load", "Replaces the flyback diode", "Low-side coil driver."],
+      ["Flyback diode belongs…", "Across the coil", "Only across the LED", "In series with VCC forever", "Freewheels inductive kick."],
+      ["Contacts are for…", "The load circuit", "Base bias only", "Crystal drive", "Galvanically separate switch path."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function mosfetDriverAssessment() {
+  const p = 'learn.project.mosfetDriver';
+  return {
+    ...lessonKeys(p, "Gate is the control", "Enhancement NMOS conducts when Vgs is high enough. Almost no DC gate current vs BJT base current.", "Industrial cousin", "MOSFET drivers and SSR inputs are this idea scaled — still a control side and a load side."),
+    ...quizKeys(
+      p,
+      ["NMOS low-side switch needs…", "Adequate gate voltage", "Only a floating gate", "No ground return", "Vgs above threshold."],
+      ["Gate resistor mainly…", "Limits gate charge current / softens edges", "Sets LED color", "Creates I²C pull-ups", "Series RG is standard practice."],
+      ["Pull-down on the gate…", "Holds OFF when drive is open", "Always turns the FET on", "Removes the need for a load", "Defined idle level."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "At least one switch is closed.")
+  };
+}
+
+function coilProtectAssessment() {
+  const p = 'learn.project.coilProtect';
+  return {
+    ...lessonKeys(p, "L·di/dt", "Current in a coil cannot stop instantly. Without a path, voltage rises until something breaks down.", "Orientation", "Diode cathode toward the positive coil supply so it is reverse-biased in steady on-state."),
+    ...quizKeys(
+      p,
+      ["Flyback diodes protect against…", "Inductive turn-off spikes", "Only ESD on USB", "Crystal drift", "Freewheel path for coil current."],
+      ["Diode across a DC coil: cathode faces…", "The positive coil supply", "Always ground only", "The LED anode only", "Reverse-biased when coil is energized."],
+      ["Skipping the diode when switching a coil…", "Is always fine", "Risks killing the transistor/driver", "Speeds I²C", "Spike energy needs a path."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function inductiveLoadAssessment() {
+  const p = 'learn.project.inductiveLoad';
+  return {
+    ...lessonKeys(p, "Not a resistor", "Inductive loads fight current change. DC motors look resistive when spinning, but turn-off still spikes.", "Design habit", "Whenever you switch L, plan the freewheel path and the voltage rating of the switch."),
+    ...quizKeys(
+      p,
+      ["Inductive loads need attention at…", "Turn-off (current interruption)", "Only silk-screen fonts", "Only Wi-Fi channels", "That is when energy has nowhere to go."],
+      ["A flyback diode on a motor…", "Provides a freewheel path", "Increases PWM frequency magically", "Removes the MOSFET", "Clamps the kick."],
+      ["Industrial coils and hobby motors share…", "The need for kick protection", "Identical pinouts always", "Only USB power", "Same physics, different scale."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function estopRelayAssessment() {
+  const p = 'learn.project.estopRelay';
+  return {
+    ...lessonKeys(p, "Series interrupt", "Emergency stop removes energy from the actuator path. A contact in series with the coil is the clearest teaching picture.", "Not a full safety system", "Standards (dual channels, monitoring, category/PL) go far beyond this sample — treat it as the first mental model."),
+    ...quizKeys(
+      p,
+      ["In this sample, SESTOP is…", "In series with the coil supply", "Across the LED only", "An I²C pull-up", "Series path must stay closed."],
+      ["Opening SESTOP while S1 is closed…", "Should drop the coil", "Does nothing", "Forces the LED brighter", "Path is broken."],
+      ["This Lab sample is…", "A teaching principle, not a certified e-stop", "A SIL-3 certified system", "A replacement for contactors", "Pedagogy first."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function industrial24vAssessment() {
+  const p = 'learn.project.industrial24v';
+  return {
+    ...lessonKeys(p, "Control voltage", "24 V DC is common for industrial I/O and relay coils. Logic may still be 3.3/5 V behind drivers/isolation.", "Same rules scale", "Coil protection, e-stop series paths, and rated contacts still apply — only the numbers change."),
+    ...quizKeys(
+      p,
+      ["This sample’s supply is…", "24 V DC", "Only 3.3 V logic", "Mains AC directly on the LED", "Industrial-ish control rail."],
+      ["Flyback at 24 V…", "Still required on the coil", "Is optional decoration", "Only for USB", "Inductive kick scales with the circuit."],
+      ["LED series R is larger because…", "Higher voltage would over-current a small R", "LEDs need 24 V across them", "I²C requires it", "Ohm’s law on the load."]
+    ),
+    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
   };
 }

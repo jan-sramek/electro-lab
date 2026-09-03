@@ -78,6 +78,35 @@ input[type='number'] {
   border-radius: 6px;
 }
 
+.slider-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+}
+
+.slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.slider-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+input[type='range'] {
+  width: 100%;
+  margin: 0;
+  accent-color: #0b6e4f;
+  cursor: pointer;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

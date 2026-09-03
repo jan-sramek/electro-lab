@@ -4,8 +4,10 @@ export interface ParamDef {
   key: string;
   /** i18n key, e.g. lab.param.voltage */
   label: string;
-  type: 'number' | 'boolean' | 'enum' | 'momentary';
+  type: 'number' | 'slider' | 'boolean' | 'enum' | 'momentary';
   min?: number;
+  /** Required for type === 'slider'; optional clamp hint for number fields. */
+  max?: number;
   step?: number;
   unit?: string;
   /** For type === 'enum': option value + i18n label key. */
@@ -353,6 +355,81 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     ],
     width: 44,
     height: 28
+  },
+  zener: {
+    modelKey: 'zener',
+    label: 'lab.symbol.zener',
+    teachingNote: 'lab.modelNote.zener',
+    displayScale: 0.68,
+    pins: [
+      { name: 'a', ox: -40, oy: 0 },
+      { name: 'c', ox: 40, oy: 0 }
+    ],
+    defaultParams: { vf: 0.7, vz: 5.1, ron: 10, burned: false },
+    paramDefs: [
+      { key: 'vf', label: 'lab.param.forwardV', type: 'number', min: 0, step: 0.05, unit: 'V' },
+      { key: 'vz', label: 'lab.param.zenerV', type: 'number', min: 0.5, step: 0.1, unit: 'V' },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.1,
+        step: 1,
+        unit: 'Ω'
+      }
+    ],
+    width: 44,
+    height: 28
+  },
+  fuse: {
+    modelKey: 'fuse',
+    label: 'lab.symbol.fuse',
+    teachingNote: 'lab.modelNote.fuse',
+    displayScale: 0.7,
+    pins: [
+      { name: 'a', ox: -40, oy: 0 },
+      { name: 'b', ox: 40, oy: 0 }
+    ],
+    defaultParams: { iMax: 0.1, ron: 0.05, burned: false },
+    paramDefs: [
+      { key: 'iMax', label: 'lab.param.fuseIMax', type: 'number', min: 0.01, step: 0.01, unit: 'A' },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.01,
+        step: 0.01,
+        unit: 'Ω'
+      }
+    ],
+    width: 48,
+    height: 24
+  },
+  vreg_7805: {
+    modelKey: 'vreg_7805',
+    label: 'lab.symbol.vreg7805',
+    teachingNote: 'lab.modelNote.vreg7805',
+    displayScale: 0.72,
+    pins: [
+      { name: 'in', ox: -36, oy: 0 },
+      { name: 'gnd', ox: 0, oy: 28 },
+      { name: 'out', ox: 36, oy: 0 }
+    ],
+    defaultParams: { vOut: 5, dropout: 2, ron: 2, burned: false },
+    paramDefs: [
+      { key: 'vOut', label: 'lab.param.regVout', type: 'number', min: 1, step: 0.1, unit: 'V' },
+      { key: 'dropout', label: 'lab.param.regDropout', type: 'number', min: 0, step: 0.1, unit: 'V' },
+      {
+        key: 'ron',
+        label: 'lab.param.onResistance',
+        type: 'number',
+        min: 0.1,
+        step: 0.5,
+        unit: 'Ω'
+      }
+    ],
+    width: 52,
+    height: 40
   },
   switch: {
     modelKey: 'switch',
@@ -780,9 +857,10 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       {
         key: 'pos',
         label: 'lab.param.wiper',
-        type: 'number',
+        type: 'slider',
         min: 0.01,
-        step: 0.05,
+        max: 0.99,
+        step: 0.01,
         unit: ''
       }
     ],
@@ -796,12 +874,20 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       { name: 'p', ox: 40, oy: 0 },
       { name: 'n', ox: -40, oy: 0 }
     ],
-    defaultParams: { v1: 0, v2: 5, td: 0.001, pw: 0.004 },
+    defaultParams: { v1: 0, v2: 5, td: 0.001, pw: 0.004, period: 0 },
     paramDefs: [
       { key: 'v1', label: 'lab.param.vInitial', type: 'number', min: 0, step: 0.1, unit: 'V' },
       { key: 'v2', label: 'lab.param.vPulse', type: 'number', min: 0, step: 0.1, unit: 'V' },
       { key: 'td', label: 'lab.param.delay', type: 'number', min: 0, step: 0.0005, unit: 's' },
-      { key: 'pw', label: 'lab.param.pulseWidth', type: 'number', min: 0, step: 0.0005, unit: 's' }
+      { key: 'pw', label: 'lab.param.pulseWidth', type: 'number', min: 0, step: 0.0005, unit: 's' },
+      {
+        key: 'period',
+        label: 'lab.param.pulsePeriod',
+        type: 'number',
+        min: 0,
+        step: 0.0005,
+        unit: 's'
+      }
     ],
     width: 48,
     height: 36
@@ -840,6 +926,9 @@ export const PALETTE_ORDER = [
   'ldr',
   'led',
   'diode',
+  'zener',
+  'fuse',
+  'vreg_7805',
   'buzzer',
   'switch',
   'pushbutton',
@@ -878,7 +967,12 @@ export const PALETTE_GROUPS: ReadonlyArray<{
   {
     id: 'diodes',
     labelKey: 'lab.palette.group.diodes',
-    keys: ['diode', 'led']
+    keys: ['diode', 'led', 'zener']
+  },
+  {
+    id: 'power',
+    labelKey: 'lab.palette.group.power',
+    keys: ['fuse', 'vreg_7805']
   },
   {
     id: 'transistors',

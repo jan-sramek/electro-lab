@@ -67,6 +67,28 @@ describe('cap-branch-current', () => {
     expect(Math.abs(resolved!)).toBeGreaterThan(0.4);
   });
 
+  it('treats teaching-noise residuals as zero', () => {
+    const doc = createLedFadePreset();
+    const nettled = assignNets(doc);
+    const cap = nettled.components.find((c) => c.id === 'C1')!;
+    const na = cap.pins['a']!.net;
+
+    const res: SimulateResponse = {
+      schemaVersion: 1,
+      ok: true,
+      analysisType: 'tran',
+      errors: [],
+      warnings: [],
+      tran: {
+        time: [0, 0.002],
+        nodeVoltages: [{ id: na, values: [5, 5 + 1e-9] }],
+        branchCurrents: [{ id: 'C1', values: [0, 1e-7] }]
+      }
+    };
+
+    expect(resolveCapacitorBranchCurrent(doc, 'C1', res, 1, 1e-7)).toBe(0);
+  });
+
   it('animates cap branch wires when only voltage-derived C1 current is available', () => {
     const doc = createLedFadePreset();
     const nettled = assignNets(doc);

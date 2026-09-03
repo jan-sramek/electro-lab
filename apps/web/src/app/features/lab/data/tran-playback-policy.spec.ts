@@ -1,5 +1,9 @@
 import { TranPlaybackPolicy } from './tran-playback-policy';
 import { createLedFadePreset } from './presets/led-fade.preset';
+import { createBuckPreset } from './presets/buck.preset';
+import { createBoostPreset } from './presets/boost.preset';
+import { createHalfWavePreset } from './presets/half-wave.preset';
+import { createNe555AstablePreset } from './presets/ne555-astable.preset';
 import { SimulateResponse } from '../api/circuit-api.types';
 import { assignNets, createComponent } from './schematic.model';
 
@@ -17,6 +21,94 @@ describe('TranPlaybackPolicy', () => {
     expect(out.scrubIndex).toBeGreaterThan(0);
     expect(out.timing?.sampleCount).toBeGreaterThan(10);
     expect(out.timing?.sampleCount).toBeLessThan(res.tran!.time.length);
+  });
+
+  it('loops buck/boost PWM instead of one-shot cap charge scrub', () => {
+    const buck = createBuckPreset();
+    const res = fakePwmTran(200);
+    const buckPlan = policy.resolve(
+      {
+        doc: buck,
+        activePreset: 'buck',
+        usedEnergySeed: false,
+        storedCapVoltageAbs: 0,
+        animateDischargePlayback: false,
+        tStop: 0.01
+      },
+      res
+    );
+    expect(policy.isSwitchingConverter(buck)).toBeTrue();
+    expect(buckPlan.playback).toBe('blink-loop');
+
+    const boostPlan = policy.resolve(
+      {
+        doc: createBoostPreset(),
+        activePreset: 'boost',
+        usedEnergySeed: false,
+        storedCapVoltageAbs: 0,
+        animateDischargePlayback: false,
+        tStop: 0.01
+      },
+      res
+    );
+    expect(boostPlan.playback).toBe('blink-loop');
+  });
+
+  it('loops half-wave AC so conduction half-cycles stay visible', () => {
+    const doc = createHalfWavePreset();
+    const res = fakeHalfWaveTran(400);
+    const plan = policy.resolve(
+      {
+        doc,
+        activePreset: 'halfWave',
+        usedEnergySeed: false,
+        storedCapVoltageAbs: 0,
+        animateDischargePlayback: false,
+        tStop: 0.08
+      },
+      res
+    );
+    expect(policy.hasAcSource(doc)).toBeTrue();
+    expect(plan.playback).toBe('blink-loop');
+  });
+
+  it('loops NE555 astable instead of one-shot RC charge scrub', () => {
+    const doc = createNe555AstablePreset();
+    const res = fakeNe555Tran(400);
+    const withPreset = policy.resolve(
+      {
+        doc,
+        activePreset: 'ne555',
+        usedEnergySeed: false,
+        storedCapVoltageAbs: 0,
+        animateDischargePlayback: false,
+        tStop: 0.1
+      },
+      res
+    );
+    expect(policy.shouldAnimateCharge({
+      doc,
+      activePreset: 'ne555',
+      usedEnergySeed: false,
+      storedCapVoltageAbs: 0,
+      animateDischargePlayback: false,
+      tStop: 0.1
+    })).toBeFalse();
+    expect(withPreset.playback).toBe('blink-loop');
+
+    // Topology alone is enough — preset id may be missing after edits.
+    const byTopology = policy.resolve(
+      {
+        doc,
+        activePreset: null,
+        usedEnergySeed: false,
+        storedCapVoltageAbs: 0,
+        animateDischargePlayback: false,
+        tStop: 0.1
+      },
+      res
+    );
+    expect(byTopology.playback).toBe('blink-loop');
   });
 
   it('plays discharge animation when switch is open with stored energy', () => {
@@ -53,7 +145,7 @@ describe('TranPlaybackPolicy', () => {
     expect(led.values[out.endScrubIndex]!).toBeLessThan(led.values[out.scrubIndex]! * 0.5);
   });
 
-  it('slow discharge playback spans ~5τ for large capacitors', () => {
+  it('slow discharge playback spans ~8τ for large capacitors', () => {
     const doc = assignNets({
       ...createLedFadePreset(),
       components: createLedFadePreset().components.map((c) => {
@@ -64,7 +156,7 @@ describe('TranPlaybackPolicy', () => {
     });
     const dt = 0.002;
     const tau = 24.5;
-    const samples = Math.floor((5 * tau) / dt) + 1;
+    const samples = Math.floor((8 * tau) / dt) + 1;
     const time = Array.from({ length: samples }, (_, i) => i * dt);
     const ledI = time.map((t) => 0.012 * Math.exp(-t / tau));
     const res: SimulateResponse = {
@@ -88,8 +180,43 @@ describe('TranPlaybackPolicy', () => {
     );
     expect(out.playback).toBe('discharge-once');
     const endT = res.tran!.time[out.endScrubIndex]!;
-    expect(endT).toBeGreaterThan(tau * 2);
-    expect(ledI[out.endScrubIndex]!).toBeLessThan(ledI[out.scrubIndex]! * 0.1);
+    expect(endT).toBeGreaterThan(tau * 6);
+    expect(ledI[out.endScrubIndex]! * 1000).toBeLessThan(0.01);
+  });
+
+  it('discharge playback ends at the simulated tail, not at 5% of peak current', () => {
+    const doc = assignNets({
+      ...createLedFadePreset(),
+      components: createLedFadePreset().components.map((c) =>
+        c.modelKey === 'switch' ? { ...c, params: { ...c.params, closed: false } } : c
+      )
+    });
+    const dt = 0.002;
+    const tau = 0.5;
+    const samples = Math.floor((8 * tau) / dt) + 1;
+    const time = Array.from({ length: samples }, (_, i) => i * dt);
+    const ledI = time.map((t) => 0.012 * Math.exp(-t / tau));
+    const res: SimulateResponse = {
+      schemaVersion: 1,
+      ok: true,
+      analysisType: 'tran',
+      errors: [],
+      warnings: [],
+      tran: {
+        time,
+        nodeVoltages: [],
+        branchCurrents: [
+          { id: 'C1', values: time.map((t, i) => (i === 0 ? 0 : -0.015 * Math.exp(-t / tau))) },
+          { id: 'D1', values: ledI }
+        ]
+      }
+    };
+    const out = policy.resolve(
+      { doc, activePreset: 'ledFade', usedEnergySeed: true, storedCapVoltageAbs: 4.5, animateDischargePlayback: true, tStop: 6 },
+      res
+    );
+    expect(out.endScrubIndex).toBe(samples - 1);
+    expect(ledI[out.endScrubIndex]! * 1000).toBeLessThan(0.01);
   });
 
   it('plays discharge from stored energy even when this run did not inject seed', () => {
@@ -177,10 +304,22 @@ describe('TranPlaybackPolicy', () => {
     );
     expect(out.playback).toBe('charge-once');
     expect(out.timing!.sampleCount).toBeLessThan(30);
-    expect(out.endScrubIndex).toBe(1);
-    expect(out.scrubIndex).toBe(1);
-    const iPeak = res.tran!.branchCurrents.find((s) => s.id === 'C1')!.values[out.endScrubIndex]!;
-    expect(Math.abs(iPeak)).toBeGreaterThan(0.01);
+    // Animation covers the spike; final scrub parks where |I_cap|≈0.
+    expect(out.endScrubIndex).toBeGreaterThan(2);
+    const iEnd = res.tran!.branchCurrents.find((s) => s.id === 'C1')!.values[out.endScrubIndex]!;
+    expect(Math.abs(iEnd)).toBeLessThan(1e-5);
+  });
+
+  it('charge playback parks on settled zero after the inrush, not the peak frame', () => {
+    const doc = createLedFadePreset();
+    const res = engineChargeSpikeTran(3001);
+    const out = policy.resolve(
+      { doc, activePreset: 'ledFade', usedEnergySeed: false, storedCapVoltageAbs: 0, animateDischargePlayback: false, tStop: 6 },
+      res
+    );
+    const peak = policy.peakCapCurrentIndex(doc, res.tran!)!;
+    expect(out.endScrubIndex).not.toBe(peak);
+    expect(Math.abs(res.tran!.branchCurrents.find((s) => s.id === 'C1')!.values[peak]!)).toBeGreaterThan(0.01);
   });
 });
 
@@ -203,6 +342,80 @@ function fakeLedFadeTran(
       branchCurrents: [
         { id: 'C1', values: capI },
         { id: 'D1', values: ledI }
+      ]
+    }
+  };
+}
+
+function fakePwmTran(samples: number): SimulateResponse {
+  const dt = 2e-5;
+  const time = Array.from({ length: samples }, (_, i) => i * dt);
+  const iL = time.map((t) => 0.04 + 0.01 * Math.sin((2 * Math.PI * t) / 0.001));
+  return {
+    schemaVersion: 1,
+    ok: true,
+    analysisType: 'tran',
+    errors: [],
+    warnings: [],
+    tran: {
+      time,
+      nodeVoltages: [{ id: 'out', values: time.map(() => 4) }],
+      branchCurrents: [
+        { id: 'C1', values: time.map((_, i) => (i % 2 === 0 ? 0.005 : -0.004)) },
+        { id: 'L1', values: iL },
+        { id: 'RL', values: time.map(() => 0.02) },
+        { id: 'M1', values: time.map((t) => ((t % 0.001) < 0.00025 ? 0.04 : 0)) },
+        { id: 'Dfly', values: time.map((t) => ((t % 0.001) < 0.00025 ? 0 : 0.04)) }
+      ]
+    }
+  };
+}
+
+/** Ends on a blocked half-cycle (I=0) — static scrub would hide wire flow. */
+function fakeHalfWaveTran(samples: number): SimulateResponse {
+  const dt = 2e-4;
+  const time = Array.from({ length: samples }, (_, i) => i * dt);
+  const iLoad = time.map((t) => {
+    const v = 10 * Math.SQRT2 * Math.sin(2 * Math.PI * 50 * t);
+    return v > 0.7 ? (v - 0.7) / 1000 : 0;
+  });
+  return {
+    schemaVersion: 1,
+    ok: true,
+    analysisType: 'tran',
+    errors: [],
+    warnings: [],
+    tran: {
+      time,
+      nodeVoltages: [],
+      branchCurrents: [
+        { id: 'AC1', values: iLoad },
+        { id: 'D1', values: iLoad },
+        { id: 'R1', values: iLoad }
+      ]
+    }
+  };
+}
+
+/** Oscillating OUT / LED — must not be mistaken for a one-shot RC charge. */
+function fakeNe555Tran(samples: number): SimulateResponse {
+  const dt = 5e-5;
+  const time = Array.from({ length: samples }, (_, i) => i * dt);
+  const outHigh = time.map((t) => (Math.floor(t / 0.005) % 2 === 0 ? 5 : 0.1));
+  const ledI = outHigh.map((v) => (v > 2 ? 0.012 : 0));
+  return {
+    schemaVersion: 1,
+    ok: true,
+    analysisType: 'tran',
+    errors: [],
+    warnings: [],
+    tran: {
+      time,
+      nodeVoltages: [{ id: 'out', values: outHigh }],
+      branchCurrents: [
+        { id: 'CT', values: time.map((t) => 0.001 * Math.sin((2 * Math.PI * t) / 0.01)) },
+        { id: 'D1', values: ledI },
+        { id: 'U1', values: ledI }
       ]
     }
   };

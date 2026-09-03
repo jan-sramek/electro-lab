@@ -16,18 +16,54 @@ import { createRcStepPreset } from '../data/presets/rc-step.preset';
 import { createPotDividerPreset } from '../data/presets/pot-divider.preset';
 import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
 import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
+import { createOpAmpFollowerPreset } from '../data/presets/opamp-follower.preset';
+import { createOpAmpNonInvPreset } from '../data/presets/opamp-noninv.preset';
+import { createOpAmpComparatorPreset } from '../data/presets/opamp-comparator.preset';
+import { createOpAmpSchmittPreset } from '../data/presets/opamp-schmitt.preset';
+import { createOpAmpSummingPreset } from '../data/presets/opamp-summing.preset';
+import { createOpAmpIntegratorPreset } from '../data/presets/opamp-integrator.preset';
+import { createOpAmpDifferentiatorPreset } from '../data/presets/opamp-differentiator.preset';
+import { createOpAmpActiveFilterPreset } from '../data/presets/opamp-active-filter.preset';
 import { createAcRcPreset } from '../data/presets/ac-rc.preset';
+import { createRcLowPassPreset } from '../data/presets/rc-low-pass.preset';
+import { createRcHighPassPreset } from '../data/presets/rc-high-pass.preset';
+import { createRlcSeriesPreset } from '../data/presets/rlc-series.preset';
+import { createBandPassPreset } from '../data/presets/band-pass.preset';
+import { createNotchFilterPreset } from '../data/presets/notch-filter.preset';
+import { createVoltageDividerPreset } from '../data/presets/voltage-divider.preset';
+import { createMeasureAcPreset } from '../data/presets/measure-ac.preset';
+import { createMotorPwmPreset } from '../data/presets/motor-pwm.preset';
+import { createHBridgePreset } from '../data/presets/h-bridge.preset';
+import { createMotorDirectionPreset } from '../data/presets/motor-direction.preset';
+import { createPullUpDownPreset } from '../data/presets/pull-up-down.preset';
+import { createDebouncePreset } from '../data/presets/debounce.preset';
+import { createNtcDividerPreset } from '../data/presets/ntc-divider.preset';
+import { createPwmFilterPreset } from '../data/presets/pwm-filter.preset';
+import { createRelayBjtPreset } from '../data/presets/relay-bjt.preset';
+import { createEstopRelayPreset } from '../data/presets/estop-relay.preset';
+import { createIndustrial24vPreset } from '../data/presets/industrial-24v.preset';
 import { createBjtSwitchPreset } from '../data/presets/bjt-switch.preset';
 import { createRelayDiodePreset } from '../data/presets/relay-diode.preset';
 import { createNmosSwitchPreset } from '../data/presets/nmos-switch.preset';
 import { createNe555AstablePreset } from '../data/presets/ne555-astable.preset';
 import { createNe555ChristmasTreePreset } from '../data/presets/ne555-christmas-tree.preset';
+import { createNe555PotBlinkPreset } from '../data/presets/ne555-pot-blink.preset';
 import { createPushbuttonLedPreset } from '../data/presets/pushbutton-led.preset';
 import { createLdrNightLightPreset } from '../data/presets/ldr-nightlight.preset';
 import { createBuzzerButtonPreset } from '../data/presets/buzzer-button.preset';
 import { createMotorNmosPreset } from '../data/presets/motor-nmos.preset';
 import { createArduinoLedPreset } from '../data/presets/arduino-led.preset';
 import { createI2cOledPreset } from '../data/presets/i2c-oled.preset';
+import { createHalfWavePreset } from '../data/presets/half-wave.preset';
+import { createBridgePreset } from '../data/presets/bridge.preset';
+import { createFilterCapPreset } from '../data/presets/filter-cap.preset';
+import { createZenerPreset } from '../data/presets/zener.preset';
+import { createVreg7805Preset } from '../data/presets/vreg-7805.preset';
+import { createReversePolarityPreset } from '../data/presets/reverse-polarity.preset';
+import { createFuseProtectPreset } from '../data/presets/fuse-protect.preset';
+import { createRipplePreset } from '../data/presets/ripple.preset';
+import { createBuckPreset } from '../data/presets/buck.preset';
+import { createBoostPreset } from '../data/presets/boost.preset';
 import { ledColorById } from '../data/led-colors';
 import { canBurnOut } from '../data/burnout';
 import {
@@ -44,18 +80,115 @@ export type ExamplePresetId =
   | 'pot'
   | 'pulse'
   | 'opamp'
+  | 'opampFollower'
+  | 'opampNonInv'
+  | 'opampComparator'
+  | 'opampSchmitt'
+  | 'opampSumming'
+  | 'opampIntegrator'
+  | 'opampDifferentiator'
+  | 'opampActiveFilter'
   | 'ac'
   | 'bjt'
   | 'relay'
   | 'nmos'
   | 'ne555'
+  | 'ne555Pot'
   | 'christmasTree'
   | 'pushbutton'
   | 'ldr'
   | 'buzzer'
   | 'motor'
   | 'arduino'
-  | 'i2cOled';
+  | 'i2cOled'
+  | 'halfWave'
+  | 'bridge'
+  | 'filterCap'
+  | 'zener'
+  | 'vreg7805'
+  | 'reversePolarity'
+  | 'fuseProtect'
+  | 'ripple'
+  | 'buck'
+  | 'boost'
+  | 'rcLowPass'
+  | 'rcHighPass'
+  | 'rlcSeries'
+  | 'bandPass'
+  | 'notchFilter'
+  | 'voltageDivider'
+  | 'measureAc'
+  | 'motorPwm'
+  | 'hBridge'
+  | 'motorDirection'
+  | 'pullUpDown'
+  | 'debounce'
+  | 'ntcDivider'
+  | 'pwmFilter'
+  | 'relayBjt'
+  | 'estopRelay'
+  | 'industrial24v';
+
+const EXAMPLE_PRESET_IDS: readonly ExamplePresetId[] = [
+  'led',
+  'ledFade',
+  'rc',
+  'pot',
+  'pulse',
+  'opamp',
+  'opampFollower',
+  'opampNonInv',
+  'opampComparator',
+  'opampSchmitt',
+  'opampSumming',
+  'opampIntegrator',
+  'opampDifferentiator',
+  'opampActiveFilter',
+  'ac',
+  'bjt',
+  'relay',
+  'nmos',
+  'ne555',
+  'ne555Pot',
+  'christmasTree',
+  'pushbutton',
+  'ldr',
+  'buzzer',
+  'motor',
+  'arduino',
+  'i2cOled',
+  'halfWave',
+  'bridge',
+  'filterCap',
+  'zener',
+  'vreg7805',
+  'reversePolarity',
+  'fuseProtect',
+  'ripple',
+  'buck',
+  'boost',
+  'rcLowPass',
+  'rcHighPass',
+  'rlcSeries',
+  'bandPass',
+  'notchFilter',
+  'voltageDivider',
+  'measureAc',
+  'motorPwm',
+  'hBridge',
+  'motorDirection',
+  'pullUpDown',
+  'debounce',
+  'ntcDivider',
+  'pwmFilter',
+  'relayBjt',
+  'estopRelay',
+  'industrial24v'
+];
+
+export function isExamplePresetId(value: string): value is ExamplePresetId {
+  return (EXAMPLE_PRESET_IDS as readonly string[]).includes(value);
+}
 
 @Injectable()
 export class LabEditorStore {
@@ -476,16 +609,38 @@ export class LabEditorStore {
     }));
   }
 
-  /** Clear burned flag — teaching “replace the part”. */
-  replaceBurned(id: string): void {
+  /**
+   * Clear burned flag — teaching “replace the part”.
+   * Replacing a fuse also opens closed switches/pushbuttons so auto-sim does not
+   * immediately overload the new fuse while the fault path is still engaged.
+   * @returns true when fault switches were opened
+   */
+  replaceBurned(id: string): boolean {
     const c = this.doc().components.find((x) => x.id === id);
-    if (!c || !canBurnOut(c.modelKey) || !c.params['burned']) return;
+    if (!c || !canBurnOut(c.modelKey) || !c.params['burned']) return false;
+    const clearFaultSwitches = c.modelKey === 'fuse';
+    let cleared = false;
     this.commit((doc) => ({
       ...doc,
-      components: doc.components.map((x) =>
-        x.id === id ? { ...x, params: { ...x.params, burned: false } } : x
-      )
+      components: doc.components.map((x) => {
+        if (x.id === id) {
+          return { ...x, params: { ...x.params, burned: false } };
+        }
+        if (
+          clearFaultSwitches &&
+          (x.modelKey === 'switch' || x.modelKey === 'pushbutton') &&
+          x.params['closed'] === true
+        ) {
+          cleared = true;
+          return {
+            ...x,
+            params: { ...x.params, closed: false, openAt: -1, closeAt: -1 }
+          };
+        }
+        return x;
+      })
     }));
+    return cleared;
   }
 
   /** @deprecated Use markBurned */
@@ -666,6 +821,60 @@ export class LabEditorStore {
     this.openExampleInNewTab('opamp', 'Op-amp invert', createOpAmpBufferPreset, 'dcOp');
   }
 
+  loadOpAmpFollowerPreset(): void {
+    this.openExampleInNewTab('opampFollower', 'Op-amp follower', createOpAmpFollowerPreset, 'dcOp');
+  }
+
+  loadOpAmpNonInvPreset(): void {
+    this.openExampleInNewTab('opampNonInv', 'Op-amp non-inv', createOpAmpNonInvPreset, 'dcOp');
+  }
+
+  loadOpAmpComparatorPreset(): void {
+    this.openExampleInNewTab('opampComparator', 'Op-amp comparator', createOpAmpComparatorPreset, 'dcOp');
+  }
+
+  loadOpAmpSchmittPreset(): void {
+    this.openExampleInNewTab('opampSchmitt', 'Op-amp Schmitt', createOpAmpSchmittPreset, 'dcOp');
+  }
+
+  loadOpAmpSummingPreset(): void {
+    this.openExampleInNewTab('opampSumming', 'Op-amp summing', createOpAmpSummingPreset, 'dcOp');
+  }
+
+  loadOpAmpIntegratorPreset(): void {
+    this.openExampleInNewTab(
+      'opampIntegrator',
+      'Op-amp integrator',
+      createOpAmpIntegratorPreset,
+      'tran',
+      0.03,
+      5e-5
+    );
+  }
+
+  loadOpAmpDifferentiatorPreset(): void {
+    this.openExampleInNewTab(
+      'opampDifferentiator',
+      'Op-amp differentiator',
+      createOpAmpDifferentiatorPreset,
+      'tran',
+      0.03,
+      5e-5
+    );
+  }
+
+  loadOpAmpActiveFilterPreset(): void {
+    this.openExampleInNewTab(
+      'opampActiveFilter',
+      'Op-amp active LPF',
+      createOpAmpActiveFilterPreset,
+      'ac',
+      undefined,
+      undefined,
+      1000
+    );
+  }
+
   loadAcPreset(): void {
     this.openExampleInNewTab('ac', 'AC low-pass', createAcRcPreset, 'ac', undefined, undefined, 1000);
   }
@@ -684,6 +893,17 @@ export class LabEditorStore {
 
   loadNe555Preset(): void {
     this.openExampleInNewTab('ne555', 'NE555 astable', createNe555AstablePreset, 'tran', 0.1, 5e-5);
+  }
+
+  loadNe555PotBlinkPreset(): void {
+    this.openExampleInNewTab(
+      'ne555Pot',
+      'NE555 pot blink',
+      createNe555PotBlinkPreset,
+      'tran',
+      0.5,
+      2e-4
+    );
   }
 
   loadChristmasTreePreset(): void {
@@ -719,6 +939,119 @@ export class LabEditorStore {
 
   loadI2cOledPreset(): void {
     this.openExampleInNewTab('i2cOled', 'I2C OLED', createI2cOledPreset, 'dcOp');
+  }
+
+  loadHalfWavePreset(): void {
+    this.openExampleInNewTab('halfWave', 'Half-wave rectifier', createHalfWavePreset, 'tran', 0.08, 2e-4);
+  }
+
+  loadBridgePreset(): void {
+    this.openExampleInNewTab('bridge', 'Bridge rectifier', createBridgePreset, 'tran', 0.08, 2e-4);
+  }
+
+  loadFilterCapPreset(): void {
+    this.openExampleInNewTab('filterCap', 'Filter capacitor', createFilterCapPreset, 'tran', 0.12, 2e-4);
+  }
+
+  loadZenerPreset(): void {
+    this.openExampleInNewTab('zener', 'Zener regulator', createZenerPreset, 'dcOp');
+  }
+
+  loadVreg7805Preset(): void {
+    this.openExampleInNewTab('vreg7805', '7805 regulator', createVreg7805Preset, 'dcOp');
+  }
+
+  loadReversePolarityPreset(): void {
+    this.openExampleInNewTab(
+      'reversePolarity',
+      'Reverse-polarity diode',
+      createReversePolarityPreset,
+      'dcOp'
+    );
+  }
+
+  loadFuseProtectPreset(): void {
+    this.openExampleInNewTab('fuseProtect', 'Fuse protection', createFuseProtectPreset, 'dcOp');
+  }
+
+  loadRipplePreset(): void {
+    this.openExampleInNewTab('ripple', 'Ripple measurement', createRipplePreset, 'tran', 0.12, 2e-4);
+  }
+
+  loadBuckPreset(): void {
+    this.openExampleInNewTab('buck', 'Buck converter', createBuckPreset, 'tran', 0.01, 2e-5);
+  }
+
+  loadBoostPreset(): void {
+    this.openExampleInNewTab('boost', 'Boost converter', createBoostPreset, 'tran', 0.01, 2e-5);
+  }
+
+  loadRcLowPassPreset(): void {
+    this.openExampleInNewTab('rcLowPass', 'RC low-pass', createRcLowPassPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadRcHighPassPreset(): void {
+    this.openExampleInNewTab('rcHighPass', 'RC high-pass', createRcHighPassPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadRlcSeriesPreset(): void {
+    this.openExampleInNewTab('rlcSeries', 'RLC series', createRlcSeriesPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadBandPassPreset(): void {
+    this.openExampleInNewTab('bandPass', 'Band-pass', createBandPassPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadNotchFilterPreset(): void {
+    this.openExampleInNewTab('notchFilter', 'Notch filter', createNotchFilterPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadVoltageDividerPreset(): void {
+    this.openExampleInNewTab('voltageDivider', 'Voltage divider', createVoltageDividerPreset, 'dcOp');
+  }
+
+  loadMeasureAcPreset(): void {
+    this.openExampleInNewTab('measureAc', 'Measure AC', createMeasureAcPreset, 'ac', undefined, undefined, 1000);
+  }
+
+  loadMotorPwmPreset(): void {
+    this.openExampleInNewTab('motorPwm', 'Motor PWM', createMotorPwmPreset, 'tran', 0.01, 2e-5);
+  }
+
+  loadHBridgePreset(): void {
+    this.openExampleInNewTab('hBridge', 'H-bridge', createHBridgePreset, 'dcOp');
+  }
+
+  loadMotorDirectionPreset(): void {
+    this.openExampleInNewTab('motorDirection', 'Motor reverse', createMotorDirectionPreset, 'dcOp');
+  }
+
+  loadPullUpDownPreset(): void {
+    this.openExampleInNewTab('pullUpDown', 'Pull-up / pull-down', createPullUpDownPreset, 'dcOp');
+  }
+
+  loadDebouncePreset(): void {
+    this.openExampleInNewTab('debounce', 'RC debounce', createDebouncePreset, 'dcOp');
+  }
+
+  loadNtcDividerPreset(): void {
+    this.openExampleInNewTab('ntcDivider', 'NTC divider', createNtcDividerPreset, 'dcOp');
+  }
+
+  loadPwmFilterPreset(): void {
+    this.openExampleInNewTab('pwmFilter', 'PWM filter (DAC)', createPwmFilterPreset, 'tran', 0.02, 5e-5);
+  }
+
+  loadRelayBjtPreset(): void {
+    this.openExampleInNewTab('relayBjt', 'Relay + BJT', createRelayBjtPreset, 'dcOp');
+  }
+
+  loadEstopRelayPreset(): void {
+    this.openExampleInNewTab('estopRelay', 'E-stop relay', createEstopRelayPreset, 'dcOp');
+  }
+
+  loadIndustrial24vPreset(): void {
+    this.openExampleInNewTab('industrial24v', '24 V control', createIndustrial24vPreset, 'dcOp');
   }
 
   newSchematic(): void {
@@ -806,26 +1139,7 @@ export class LabEditorStore {
     this.acFreq.set(sim.acFreq);
     this.initFromDc.set(!!sim.initFromDc);
     const p = sim.examplePreset;
-    if (
-      p === 'led' ||
-      p === 'ledFade' ||
-      p === 'rc' ||
-      p === 'pot' ||
-      p === 'pulse' ||
-      p === 'opamp' ||
-      p === 'ac' ||
-      p === 'bjt' ||
-      p === 'relay' ||
-      p === 'nmos' ||
-      p === 'ne555' ||
-      p === 'christmasTree' ||
-      p === 'pushbutton' ||
-      p === 'ldr' ||
-      p === 'buzzer' ||
-      p === 'motor' ||
-      p === 'arduino' ||
-      p === 'i2cOled'
-    ) {
+    if (p && isExamplePresetId(p)) {
       this.activeExamplePreset.set(p);
     } else {
       this.activeExamplePreset.set(null);

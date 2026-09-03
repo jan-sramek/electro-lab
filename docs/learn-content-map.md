@@ -96,6 +96,25 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 **Quiz C (later):** Larger C → slower/faster; what happens if R doubles.
 
+### Module C2 — Power supplies
+
+**Intent:** AC→DC, regulation, protection, and simple switching converters.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `half-wave-rectifier` | Single-diode rectification | ready (`halfWave`) | **mvp** |
+| `bridge-rectifier` | Full-wave bridge | ready (`bridge`) | **mvp** |
+| `filter-capacitor` | Reservoir C after rectifier | ready (`filterCap`) | **mvp** |
+| `zener-regulator` | Shunt Zener clamp | ready (`zener`) | **mvp** |
+| `linear-7805` | Series 7805 teaching IC | ready (`vreg7805`) | **mvp** |
+| `reverse-polarity` | Series protection diode | ready (`reversePolarity`) | **mvp** |
+| `fuse-protection` | Fuse opens on overcurrent | ready (`fuseProtect`) | **mvp** |
+| `ripple-measure` | See residual AC on DC | ready (`ripple`) | **mvp** |
+| `buck-converter` | Discrete buck (PWM+L+C) | ready (`buck`) | **mvp** |
+| `boost-converter` | Discrete boost (PWM+L+C) | ready (`boost`) | **mvp** |
+
+**Quiz C2 (later):** Half-wave vs bridge pulse rate; why series R with a Zener; buck vs boost switch placement.
+
 ### Module D — Dividers and pots
 
 **Intent:** Make and read intermediate voltages.
@@ -131,16 +150,23 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 **Quiz F (later):** Diode orientation; what the diode is for.
 
-### Module G — Op-amps (teaching)
+### Module G — Op-amps ⭐⭐⭐
 
-**Intent:** Feedback sets gain; rails exist.
+**Intent:** Feedback sets gain; open-loop compares; capacitors turn amps into timing/filters. Very important chapter.
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
-| `opamp-invert` | Inverting amp | ready (`opamp`) | soon |
-| `opamp-rails` | Clamping / limits | ready (`opamp`) | later |
+| `opamp-follower` | Voltage follower (buffer) | ready (`opampFollower`) | **mvp** |
+| `opamp-invert` | Inverting amp | ready (`opamp`) | **mvp** |
+| `opamp-noninv` | Non-inverting amp | ready (`opampNonInv`) | **mvp** |
+| `opamp-comparator` | Comparator | ready (`opampComparator`) | **mvp** |
+| `opamp-schmitt` | Schmitt trigger | ready (`opampSchmitt`) | **mvp** |
+| `opamp-summing` | Summing amp | ready (`opampSumming`) | **mvp** |
+| `opamp-integrator` | Integrator | ready (`opampIntegrator`) | **mvp** |
+| `opamp-differentiator` | Differentiator | ready (`opampDifferentiator`) | **mvp** |
+| `opamp-active-filter` | Active low-pass filter | ready (`opampActiveFilter`) | **mvp** |
 
-**Quiz G (later):** Ideal gain −Rf/Rin; what “hit the rail” means.
+**Quiz G (later):** Ideal gain −Rf/Rin vs 1+Rf/Rg; what “hit the rail” means; hysteresis vs plain compare.
 
 ### Module H — Timing ICs
 
@@ -207,6 +233,118 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 **Quiz M (later):** Above cutoff → more/less attenuation.
 
+### Module F2 — Filters & analog signals ⭐⭐⭐
+
+**Intent:** Passive filters, dividers, and reading AC amplitude/frequency. Broadens analog-signal intuition.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `rc-low-pass` | RC low-pass | ready (`rcLowPass` / `ac`) | **mvp** |
+| `rc-high-pass` | RC high-pass | ready (`rcHighPass`) | **mvp** |
+| `rlc-series` | Series RLC | ready (`rlcSeries`) | **mvp** |
+| `band-pass` | Band-pass (RLC) | ready (`bandPass`) | **mvp** |
+| `notch-filter` | Notch (series LC shunt + Rs) | ready (`notchFilter`) | **mvp** |
+| `voltage-divider` | Resistive divider | ready (`voltageDivider`) | **mvp** |
+| `pot-divider` | Pot as divider | ready (`pot`) | **mvp** |
+| `bjt-amplifier` | Linear BJT amp | **gap** (BJT is switch model today) | later |
+| `measure-freq-amp` | Frequency & amplitude (AC probe) | ready (`measureAc`) | **mvp** |
+
+**Quiz F2 (later):** LPF vs HPF; what a notch rejects; pot mid-point.
+
+### Module Mot — Motors & power electronics ⭐⭐⭐
+
+**Intent:** MOSFETs, PWM, flyback, and H-bridge direction — ties Arduino-style drive to power paths.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `motor-mosfet` | DC motor + MOSFET | ready (`motor`) | **mvp** |
+| `motor-pwm` | PWM speed control | ready (`motorPwm`) | **mvp** |
+| `motor-flyback` | Flyback diode | ready (`motor`) | **mvp** |
+| `h-bridge` | H-bridge | ready (`hBridge`) | **mvp** |
+| `motor-direction` | Reverse with H-bridge | ready (`motorDirection`) | **mvp** |
+| `motor-speed` | Speed via PWM (alias) | ready (`motorPwm`) | soon |
+| `servo` | Hobby servo | **gap** (needs servo model ADR) | later |
+| `stepper` | Stepper motor | **gap** | later |
+| `stepper-driver` | Stepper driver | **gap** | later |
+| `bldc-basics` | BLDC principle (text) | **gap** | later |
+
+**Quiz Mot (later):** Why the flyback diode; which switches close for forward vs reverse.
+
+### Module Dig — Digital logic ⭐⭐⭐
+
+**Intent:** Combinational & sequential basics. **Gate ICs need a future Lab ADR** — ship wiring habits now, truth-table labs later.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `logic-not` … `logic-xor` | Gate primitives | **gap** (no gate models) | later |
+| `truth-tables` | Truth tables | gap (text/quiz) | later |
+| `pull-up-down` | Pull-up / pull-down | ready (`pullUpDown`) | **mvp** |
+| `debounce` | Switch debounce (RC) | ready (`debounce`) | **mvp** |
+| `latch` / `flip-flop` / `counter` / `shift-register` / `mux` / `seven-seg` | Sequential & display | **gap** | later |
+| `counter-0-9` | Counter 0–9 without MCU | **gap** (needs gates + display) | later |
+
+**Quiz Dig (later):** Pull-up vs floating; why debounce.
+
+### Module Sen — Sensors ⭐⭐⭐
+
+**Intent:** Turn physical quantities into usable voltages — dividers, variable R, and thresholds. Most specialty sensors need a future Lab ADR.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `sensor-ldr` | LDR → voltage / night-light | ready (`ldr`) | **mvp** |
+| `sensor-pot` | Pot as position sensor | ready (`pot`) | **mvp** |
+| `sensor-ntc` | NTC / thermistor divider (pot stand-in) | ready (`ntcDivider`) | **mvp** |
+| `sensor-threshold` | Sensor vs comparator threshold | ready (`opampComparator`) | **mvp** |
+| `hall` / `pir` / `ultrasonic` / `ir` / `temp-ic` / `pressure` / `accel` / `gyro` | Specialty sensors | **gap** | later |
+
+**Quiz Sen (later):** Why a sensor usually needs a divider or pull-up; what “usable signal” means.
+
+### Module Com — Communication ⭐⭐⭐
+
+**Intent:** Wiring-first buses for MCU / industrial paths. Bit-level protocols stay later.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `i2c-wiring` | I²C + pull-ups (OLED) | ready (`i2cOled`) | **mvp** |
+| `uart` | UART TX/RX | **gap** | later |
+| `spi` | SPI (SCLK/MOSI/MISO/CS) | **gap** | later |
+| `one-wire` | 1-Wire | **gap** | later |
+| `rs485` | RS-485 differential | **gap** | later |
+| `can-basics` | CAN principle | **gap** (text) | later |
+| `modbus-rtu` | Modbus RTU idea | **gap** (text) | later |
+
+**Quiz Com (later):** Why I²C needs pull-ups; UART vs shared bus.
+
+### Module AD — ADC / DAC ⭐⭐⭐
+
+**Intent:** Analog ↔ digital intuition without a full MCU ADC peripheral model.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `adc-front-end` | Voltage an ADC would sample | ready (`pot`) | **mvp** |
+| `adc-reference` | Reference / full-scale idea (divider) | ready (`voltageDivider`) | **mvp** |
+| `pwm-pseudo-dac` | PWM + RC as pseudo-DAC | ready (`pwmFilter`) | **mvp** |
+| `arduino-adc` | Arduino analogRead | **gap** (no ADC model) | later |
+| `true-dac` | Dedicated DAC IC | **gap** | later |
+
+**Quiz AD (later):** Duty → average; what resolution means qualitatively.
+
+### Module Ind — Relays & industrial control ⭐⭐⭐
+
+**Intent:** Coil drive, protection, e-stop idea, and 24 V control habits — with today’s relay/BJT/NMOS parts.
+
+| Unit id | Topic | Lab | Learn ship |
+|---------|--------|-----|------------|
+| `relay-transistor` | Relay + BJT driver | ready (`relayBjt`) | **mvp** |
+| `mosfet-driver` | MOSFET as switch/driver | ready (`nmos`) | **mvp** |
+| `coil-protection` | Flyback on coil | ready (`relay`) | **mvp** |
+| `inductive-load` | Inductive load awareness | ready (`motor`) | **mvp** |
+| `estop-principle` | Series e-stop in coil path | ready (`estopRelay`) | **mvp** |
+| `control-24v` | Basic 24 V control rail | ready (`industrial24v`) | **mvp** |
+| `optocoupler` / `galvanic` / `ssr` / `contactor` | Isolation & power switching | **gap** | later |
+
+**Quiz Ind (later):** Why e-stop is series; why coil diodes matter at 24 V too.
+
 ### Module N — Practice habits *(ongoing, weave in)*
 
 Not always separate projects — short notes or challenges:
@@ -259,6 +397,7 @@ Ship Learn catalog structure + modules that already have strong Lab coverage, **
 - C: `rc-charge`, `led-fade` (same)  
 - E: `bjt-switch`, `nmos-switch`  
 - F: `relay-flyback`, `motor-lowside`  
+- G: `opamp-follower`, `opamp-invert`, `opamp-noninv`, `opamp-comparator`, `opamp-schmitt`, `opamp-summing`, `opamp-integrator`, `opamp-differentiator`, `opamp-active-filter`  
 - H: `ne555-astable`  
 - I: `pushbutton-led`, `ldr-nightlight`  
 - J: `buzzer-button`  

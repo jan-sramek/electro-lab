@@ -4,6 +4,10 @@ import { createNe555ChristmasTreePreset } from '../presets/ne555-christmas-tree.
 import { createNmosSwitchPreset } from '../presets/nmos-switch.preset';
 import { createLedPreset } from '../presets/led-series.preset';
 import { createLedFadePreset } from '../presets/led-fade.preset';
+import { createBuckPreset } from '../presets/buck.preset';
+import { createBoostPreset } from '../presets/boost.preset';
+import { createHalfWavePreset } from '../presets/half-wave.preset';
+import { createNtcDividerPreset } from '../presets/ntc-divider.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -111,5 +115,107 @@ describe('wire flow coverage on presets', () => {
       return null;
     });
     expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Buck on-phase — supply→MOSFET→L→load animate; gate idle; diode idle', () => {
+    const doc = createBuckPreset();
+    const I = 0.04;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1') return 0;
+      if (id === 'Dfly') return 0;
+      if (id === 'VB' || id === 'M1' || id === 'L1' || id === 'RL') return I;
+      if (id === 'C1') return 0.005;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W8', 'W9', 'W14', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} power path`)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W10', 'W12', 'W13']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} gate/diode idle`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Buck off-phase — freewheel diode + L→load animate; MOSFET feed idle', () => {
+    const doc = createBuckPreset();
+    const I = 0.04;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1' || id === 'M1' || id === 'VB') return 0;
+      if (id === 'Dfly' || id === 'L1' || id === 'RL') return I;
+      if (id === 'C1') return -0.004;
+      return null;
+    });
+    for (const id of ['W4', 'W5', 'W8', 'W9', 'W10', 'W11']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} freewheel path`)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W1', 'W2', 'W3', 'W12', 'W13']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} supply/gate idle`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Boost — ground-referenced PWM wires stay idle while power return flows', () => {
+    const doc = createBoostPreset();
+    const I = 0.03;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1') return 0;
+      if (id === 'VB' || id === 'L1' || id === 'M1') return I;
+      if (id === 'D1' || id === 'RL') return 0;
+      if (id === 'C1') return 0.002;
+      return null;
+    });
+    for (const id of ['W12', 'W13', 'W14']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} gate drive must be idle`)
+        .toBeLessThan(1e-6);
+    }
+    expect(Math.abs(currents.get('W15') ?? 0))
+      .withContext('W15 MOSFET return')
+      .toBeGreaterThan(1e-6);
+    expect(Math.abs(currents.get('W16') ?? 0))
+      .withContext('W16 battery return')
+      .toBeGreaterThan(1e-6);
+  });
+
+  it('Half-wave conduction — AC→diode→load→return all animate', () => {
+    const doc = createHalfWavePreset();
+    const I = 0.012;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'AC1' || id === 'D1' || id === 'R1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('NTC divider — mid→pot→return animate; voltmeter idle', () => {
+    const doc = createNtcDividerPreset();
+    const I = 0.000333;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id === 'JT' || id === 'JM' || id === 'JB' || id === 'VM1') return null;
+      if (id === 'V1' || id === 'R1' || id === 'NTC1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W7', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    // Wiper stub may be idle when b already returns the rheostat current.
+    expect(Math.abs(currents.get('W9') ?? 0))
+      .withContext('VM+ idle')
+      .toBeLessThan(1e-6);
+    expect(Math.abs(currents.get('W10') ?? 0))
+      .withContext('VM− idle')
+      .toBeLessThan(1e-6);
   });
 });

@@ -35,6 +35,13 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
         {
             if (IsPiecewiseDiode(el.Model))
                 hint.LedOn[el.Id] = true;
+            if (IsZener(el.Model))
+            {
+                hint.LedOn[el.Id] = false;
+                hint.ZenerRevOn[el.Id] = true;
+            }
+            if (IsVreg(el.Model))
+                hint.VregOn[el.Id] = true;
             if (IsPiecewiseBjt(el.Model))
                 hint.BjtOn[el.Id] = true;
             if (IsPiecewiseMosfet(el.Model))
@@ -66,6 +73,7 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
             ctx.BeginStamp();
             foreach (var (el, model) in models)
                 model.ContributeDc(el, ctx, hint);
+            ctx.StampGminToGround();
 
             if (!ctx.TrySolve(out solution, out lastError))
                 return SimulationResult.Fail(Type, lastError ?? "Solve failed.");
@@ -87,6 +95,16 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
                         hint.LedOn[el.Id] = nextOn;
                         changed = true;
                     }
+                }
+                else if (IsZener(el.Model))
+                {
+                    if (ZenerModel.UpdateBias(el, ctx, solution!, hint))
+                        changed = true;
+                }
+                else if (IsVreg(el.Model))
+                {
+                    if (Vreg7805Model.UpdateBias(el, ctx, solution!, hint))
+                        changed = true;
                 }
                 else if (IsPiecewiseBjt(el.Model))
                 {
@@ -204,6 +222,12 @@ public sealed class DcOperatingPointAnalysis : IAnalysis
         model.Equals("led", StringComparison.OrdinalIgnoreCase) ||
         model.Equals("diode", StringComparison.OrdinalIgnoreCase) ||
         model.Equals("buzzer", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsZener(string model) =>
+        model.Equals("zener", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsVreg(string model) =>
+        model.Equals("vreg_7805", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsPiecewiseBjt(string model) =>
         model.Equals("bjt_npn", StringComparison.OrdinalIgnoreCase);

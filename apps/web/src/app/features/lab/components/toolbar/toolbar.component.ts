@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AnalysisMode, EditorTool } from '../../data/schematic.model';
-import { ExamplePresetId } from '../../services/lab-editor.store';
+import { ExamplePresetId, isExamplePresetId } from '../../services/lab-editor.store';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
@@ -51,26 +51,7 @@ export class LabToolbarComponent {
   }
 
   onPresetModelChange(value: string): void {
-    if (
-      value === 'led' ||
-      value === 'ledFade' ||
-      value === 'rc' ||
-      value === 'pot' ||
-      value === 'pulse' ||
-      value === 'opamp' ||
-      value === 'ac' ||
-      value === 'bjt' ||
-      value === 'relay' ||
-      value === 'nmos' ||
-      value === 'ne555' ||
-      value === 'christmasTree' ||
-      value === 'pushbutton' ||
-      value === 'ldr' ||
-      value === 'buzzer' ||
-      value === 'motor' ||
-      value === 'arduino' ||
-      value === 'i2cOled'
-    ) {
+    if (isExamplePresetId(value)) {
       this.loadPreset.emit(value);
     }
   }

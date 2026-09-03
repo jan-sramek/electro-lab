@@ -369,6 +369,70 @@ import { ledColorById, normalizeLedColorId } from '../../data/led-colors';
         <svg:text x="-28" y="-10" class="polarity-mark pin-hint">A</svg:text>
         <svg:text x="22" y="-10" class="polarity-mark pin-hint">K</svg:text>
       }
+      @case ('zener') {
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-8" rx="18" ry="20" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 4 C -8 -2, -10 -14, -2 -24 C 2 -16, 6 -6, 0 4 Z"
+            />
+          </svg:g>
+        }
+        <svg:line x1="-36" y1="0" x2="-8" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:polygon
+          points="-8,0 -8,-14 12,0 -8,14"
+          class="diode"
+          [class.led-charred]="ledBurn() > 0.08"
+        />
+        <svg:line x1="12" y1="-14" x2="12" y2="14" class="sym thick" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:polyline
+          class="sym"
+          fill="none"
+          points="6,-14 12,-14 12,14 18,14"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:line x1="12" y1="0" x2="36" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:text x="-28" y="-10" class="polarity-mark pin-hint">A</svg:text>
+        <svg:text x="22" y="-10" class="polarity-mark pin-hint">K</svg:text>
+      }
+      @case ('fuse') {
+        @if (ledBurn() > 0.08) {
+          <svg:g class="led-fire" [attr.opacity]="0.55 + ledBurn() * 0.45" pointer-events="none">
+            <svg:ellipse class="fire-glow" cx="0" cy="-6" rx="16" ry="18" />
+            <svg:path
+              class="flame flame-a"
+              d="M 0 4 C -8 -2, -10 -14, -2 -22 C 2 -14, 6 -4, 0 4 Z"
+            />
+          </svg:g>
+        }
+        <svg:line x1="-40" y1="0" x2="-18" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+        <svg:rect
+          x="-18"
+          y="-10"
+          width="36"
+          height="20"
+          class="sym"
+          fill="none"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:path
+          class="sym"
+          fill="none"
+          d="M -12 0 Q -6 -8, 0 0 Q 6 8, 12 0"
+          [class.bjt-charred]="ledBurn() > 0.08"
+        />
+        <svg:line x1="18" y1="0" x2="40" y2="0" class="sym" [class.bjt-charred]="ledBurn() > 0.08" />
+      }
+      @case ('vreg_7805') {
+        <svg:rect x="-28" y="-20" width="56" height="40" class="sym" fill="none" />
+        <svg:text x="0" y="4" text-anchor="middle" class="polarity-mark">7805</svg:text>
+        <svg:line x1="-40" y1="0" x2="-28" y2="0" class="sym" />
+        <svg:line x1="28" y1="0" x2="40" y2="0" class="sym" />
+        <svg:line x1="0" y1="20" x2="0" y2="28" class="sym" />
+        <svg:text x="-34" y="-8" class="polarity-mark pin-hint">IN</svg:text>
+        <svg:text x="22" y="-8" class="polarity-mark pin-hint">OUT</svg:text>
+      }
       @case ('current_source') {
         <svg:circle cx="0" cy="0" r="22" class="sym" />
         <svg:line x1="0" y1="12" x2="0" y2="-12" class="sym thick" />

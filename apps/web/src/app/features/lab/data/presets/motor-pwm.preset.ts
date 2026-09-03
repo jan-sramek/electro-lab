@@ -1,0 +1,57 @@
+import {
+  SchematicDocument,
+  assignNets,
+  createComponent,
+  resetIdSeq
+} from '../schematic.model';
+
+/**
+ * PWM gate drive for NMOS low-side motor switch with flyback diode.
+ * Pulse source → RG → gate; no manual switch — transient analysis.
+ */
+export function createMotorPwmPreset(): SchematicDocument {
+  resetIdSeq(470);
+  const v1 = createComponent('battery', 70, 200, 'V1');
+  v1.params = { v: 5, esr: 0 };
+  const jV = createComponent('junction', 160, 80, 'JV');
+  const vp = createComponent('pulse_source', 220, 240, 'VP1');
+  vp.params = { v1: 0, v2: 5, td: 0, pw: 0.0005, period: 0.001 };
+  const rg = createComponent('resistor', 340, 80, 'RG');
+  rg.params = { r: 1000 };
+  const jG = createComponent('junction', 420, 180, 'JG');
+  const rpd = createComponent('resistor', 420, 260, 'RPD');
+  rpd.params = { r: 100000 };
+  rpd.rotation = 90;
+  const m1 = createComponent('nmos', 500, 200, 'M1');
+  const jLoad = createComponent('junction', 160, 40, 'JL');
+  const mot = createComponent('dc_motor', 300, 40, 'MOT1');
+  mot.params = { ron: 15, vStart: 1, burned: false };
+  // Flyback vertical: cathode toward +V (JV), anode toward drain.
+  const dFly = createComponent('diode', 220, 140, 'Dfly');
+  dFly.params = { vf: 0.7, ron: 10, burned: false };
+  dFly.rotation = 270;
+  const j1 = createComponent('junction', 420, 300, 'J1');
+  const gnd = createComponent('ground', 70, 320, 'GND1');
+
+  return assignNets({
+    groundNet: 'gnd',
+    components: [v1, jV, vp, rg, jG, rpd, m1, jLoad, mot, dFly, j1, gnd],
+    wires: [
+      { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'JV', pin: 'j' } },
+      { id: 'W2', a: { componentId: 'VP1', pin: 'p' }, b: { componentId: 'RG', pin: 'a' } },
+      { id: 'W3', a: { componentId: 'RG', pin: 'b' }, b: { componentId: 'JG', pin: 'j' } },
+      { id: 'W4', a: { componentId: 'JG', pin: 'j' }, b: { componentId: 'M1', pin: 'g' } },
+      { id: 'W5', a: { componentId: 'JG', pin: 'j' }, b: { componentId: 'RPD', pin: 'a' } },
+      { id: 'W6', a: { componentId: 'RPD', pin: 'b' }, b: { componentId: 'J1', pin: 'j' } },
+      { id: 'W7', a: { componentId: 'JV', pin: 'j' }, b: { componentId: 'JL', pin: 'j' } },
+      { id: 'W8', a: { componentId: 'JL', pin: 'j' }, b: { componentId: 'MOT1', pin: 'a' } },
+      { id: 'W9', a: { componentId: 'MOT1', pin: 'b' }, b: { componentId: 'M1', pin: 'd' } },
+      { id: 'W10', a: { componentId: 'Dfly', pin: 'c' }, b: { componentId: 'JV', pin: 'j' } },
+      { id: 'W11', a: { componentId: 'Dfly', pin: 'a' }, b: { componentId: 'M1', pin: 'd' } },
+      { id: 'W12', a: { componentId: 'M1', pin: 's' }, b: { componentId: 'J1', pin: 'j' } },
+      { id: 'W13', a: { componentId: 'J1', pin: 'j' }, b: { componentId: 'GND1', pin: 'g' } },
+      { id: 'W14', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } },
+      { id: 'W15', a: { componentId: 'VP1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+    ]
+  });
+}

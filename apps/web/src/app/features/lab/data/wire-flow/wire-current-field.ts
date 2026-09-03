@@ -27,9 +27,19 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
       return 0;
     case 'diode':
     case 'led':
+    case 'zener':
     case 'buzzer':
       if (pin === 'a') return -branchI;
       if (pin === 'c') return branchI;
+      return 0;
+    case 'fuse':
+      if (pin === 'a') return -branchI;
+      if (pin === 'b') return branchI;
+      return 0;
+    case 'vreg_7805':
+      if (pin === 'out') return branchI;
+      if (pin === 'in') return -branchI;
+      if (pin === 'gnd') return 0;
       return 0;
     case 'battery':
     case 'pulse_source':
@@ -102,6 +112,24 @@ export function isPinCurrentModeled(modelKey: string, pin: string): boolean {
 
 function isBjtBasePin(modelKey: string, pin: string): boolean {
   return simModelOf(modelKey) === 'bjt_npn' && pin === 'b';
+}
+
+/** Pot wiper stub when a/b already carries branch current (rheostat tie to b). */
+function isPotWiperWithEndFlow(
+  pot: SchematicComponent,
+  pin: string,
+  wires: SchematicWire[],
+  along: Map<string, number>
+): boolean {
+  if (simModelOf(pot.modelKey) !== 'potentiometer' || pin !== 'w') return false;
+  for (const w of wires) {
+    const i = along.get(w.id);
+    if (i === undefined || Math.abs(i) < 1e-12) continue;
+    for (const end of [w.a, w.b]) {
+      if (end.componentId === pot.id && (end.pin === 'a' || end.pin === 'b')) return true;
+    }
+  }
+  return false;
 }
 
 function isPassiveNetNode(modelKey: string): boolean {
@@ -320,6 +348,13 @@ export class WireCurrentField {
         if (unknown.length !== 1) continue;
 
         const w = unknown[0]!;
+        const other = otherPin(w, pin);
+        const oc = componentOf(this.components, other.componentId);
+        // Idle gate-drive / open sources must not absorb ground-return residuals
+        // (boost PWM return shares the ground symbol with the power path).
+        if (oc && explicitZero(oc)) continue;
+        if (oc?.modelKey === 'ground') continue;
+
         const needLeave = required - knownLeaving;
         const iAlong = pinKey(w.a) === pinKey(pin) ? needLeave : -needLeave;
         if (this.assignWire(w.id, iAlong)) changed = true;
@@ -464,8 +499,11 @@ export class WireCurrentField {
           const oc = componentOf(this.components, other.componentId);
           if (!oc || isPinCurrentModeled(oc.modelKey, other.pin)) continue;
           if (explicitZero(oc)) continue;
+          if (oc.modelKey === 'voltmeter') continue;
           if (oc.modelKey === 'nmos' && other.pin === 'g') continue;
           if (isBjtBasePin(oc.modelKey, other.pin)) continue;
+          // Rheostat: a/b already seeded — don't double-count the tied wiper stub.
+          if (isPotWiperWithEndFlow(oc, other.pin, this.wires, this.along)) continue;
           const iAlong = (pinKey(w.a) === pinKey(pin) ? 1 : -1) * sign * stubMag;
           if (this.assignWire(w.id, iAlong)) changed = true;
         }
@@ -492,6 +530,9 @@ export class WireCurrentField {
         }
         if (unknown.length !== 1) continue;
         const w = unknown[0]!;
+        const other = otherPin(w, pin);
+        const oc = componentOf(this.components, other.componentId);
+        if (oc && explicitZero(oc)) continue;
         const needLeave = -knownLeaving;
         const iAlong = pinKey(w.a) === pinKey(pin) ? needLeave : -needLeave;
         if (this.assignWire(w.id, iAlong)) changed = true;
@@ -509,6 +550,8 @@ export class WireCurrentField {
         for (const pin of [w.a, w.b]) {
           const oc = componentOf(this.components, pin.componentId);
           if (!oc || !isUnmodeledDevicePin(oc, pin.pin)) continue;
+          if (oc.modelKey === 'voltmeter') continue;
+          if (isPotWiperWithEndFlow(oc, pin.pin, this.wires, this.along)) continue;
 
           const jc = componentOf(this.components, otherPin(w, pin).componentId);
           if (!jc || !isPassiveNetNode(jc.modelKey)) continue;

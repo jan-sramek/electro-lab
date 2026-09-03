@@ -7,6 +7,7 @@ namespace ElectroLab.CircuitSim.Models;
 
 /// <summary>
 /// Teaching pulse voltage: v1 until td, then v2 for pw, then v1.
+/// Optional <c>period</c> &gt; 0 repeats the high pulse every period (PWM for buck/boost demos).
 /// DC uses v1 (initial).
 /// </summary>
 public sealed class PulseSourceModel : IDeviceModel
@@ -27,6 +28,8 @@ public sealed class PulseSourceModel : IDeviceModel
             errors.Add($"{element.Id}: pulse_source params.td must be >= 0.");
         if (element.Params.TryGetValue("pw", out var pw) && pw < 0)
             errors.Add($"{element.Id}: pulse_source params.pw must be >= 0.");
+        if (element.Params.TryGetValue("period", out var period) && period < 0)
+            errors.Add($"{element.Id}: pulse_source params.period must be >= 0.");
         return errors;
     }
 
@@ -66,7 +69,15 @@ public sealed class PulseSourceModel : IDeviceModel
         var v2 = element.Params["v2"];
         var td = element.Params["td"];
         var pw = element.Params["pw"];
-        if (t >= td && t < td + pw) return v2;
+        var period = element.Params.GetValueOrDefault("period", 0);
+        if (t < td) return v1;
+        if (period > 0)
+        {
+            var phase = (t - td) % period;
+            if (phase < 0) phase += period;
+            return phase < pw ? v2 : v1;
+        }
+        if (t < td + pw) return v2;
         return v1;
     }
 }

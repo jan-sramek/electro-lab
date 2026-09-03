@@ -40,6 +40,12 @@ export function estimateDominantTau(doc: SchematicDocument): number | null {
   return maxTau > 0 ? maxTau : null;
 }
 
+/** Charge / general RC settling (~99% at 5τ). */
+export const CHARGE_SETTLING_TAU_MULT = 5;
+
+/** Open-switch discharge — run longer so labels and LED reach ~0 mA. */
+export const DISCHARGE_SETTLING_TAU_MULT = 8;
+
 /**
  * Teaching estimate of time to reach ~99% settling (5τ) from largest RC / L/R in the schematic.
  * Returns null when no energy-storage parts are present.
@@ -49,7 +55,16 @@ export function estimateSettlingTStop(doc: SchematicDocument, dt: number): numbe
   const tau = estimateDominantTau(doc);
   if (tau === null) return null;
   const maxReach = maxSegmentTStop(dt) * TRAN_MAX_SEGMENTS;
-  return Math.min(5 * tau, maxReach);
+  return Math.min(CHARGE_SETTLING_TAU_MULT * tau, maxReach);
+}
+
+/** Discharge needs more time constants so canvas current and LED brightness reach ~0. */
+export function estimateDischargeSettlingTStop(doc: SchematicDocument, dt: number): number | null {
+  if (!(dt > 0)) return null;
+  const tau = estimateDominantTau(doc);
+  if (tau === null) return null;
+  const maxReach = maxSegmentTStop(dt) * TRAN_MAX_SEGMENTS;
+  return Math.min(DISCHARGE_SETTLING_TAU_MULT * tau, maxReach);
 }
 
 /** Total simulated time: honor toolbar tStop but extend when storage parts need longer to settle. */
@@ -248,10 +263,10 @@ export function isEnergySettled(doc: SchematicDocument, res: SimulateResponse): 
       const dvdt = dv / dt;
 
       // Exponential tail: |dV/dt| ≈ |V|/τ when still moving; 5% of that is "settled".
-      if (tau !== null && absV > 0.05) {
+      if (tau !== null && absV > 0.01) {
         const tailRate = absV / tau;
         if (dvdt > tailRate * 0.05) return false;
-      } else {
+      } else if (absV > 0.01) {
         const scale = Math.max(absV, 0.1);
         if (dv / scale > 0.002) return false;
       }
