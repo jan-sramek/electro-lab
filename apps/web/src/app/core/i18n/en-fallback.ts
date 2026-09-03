@@ -14,15 +14,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'diag.no_ground': 'Add a Ground symbol and wire it to your circuit return path.',
   'diag.ground_disconnected': 'Ground is not connected — wire Ground to the circuit.',
   'diag.floating_component':
-    'Some parts are unwired (highlighted). Connect every pin you need, or delete unused parts.',
+    'Unwired parts: {ids}. Connect every pin you need, or delete unused parts.',
   'diag.dc_capacitor_island':
     'In DC mode capacitors are open. Use Transient, or add a resistive path.',
   'diag.shorted_voltage_source':
-    'A voltage source has both terminals on the same net (highlighted). Separate the pins.',
+    'Voltage source shorted ({ids}): both terminals share a net. Separate the pins.',
   'diag.singular_fallback':
     'Circuit cannot be solved. Check Ground is wired and there are no floating parts.',
   'diag.ac_nonlinear_open':
-    'LED, diode, and BJT are treated as open in AC analysis (highlighted). Use Transient for switching behavior.',
+    'Nonlinear / switching parts are treated as open in AC ({ids}). Use Transient for LEDs, diodes, transistors, relays, motors, and MCU pins.',
   'diag.ac_source_tran_no_freq':
     'AC source needs Frequency (Hz) > 0 for a sine wave in Transient. Without it the source is 0 V.',
   'diag.switch_inductor_spike':

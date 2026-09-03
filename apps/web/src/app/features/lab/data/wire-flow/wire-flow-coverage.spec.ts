@@ -8,6 +8,7 @@ import { createBuckPreset } from '../presets/buck.preset';
 import { createBoostPreset } from '../presets/boost.preset';
 import { createHalfWavePreset } from '../presets/half-wave.preset';
 import { createNtcDividerPreset } from '../presets/ntc-divider.preset';
+import { createSeriesParallelPreset } from '../presets/series-parallel.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -134,6 +135,18 @@ describe('wire flow coverage on presets', () => {
       if (id === 'U1' || ledIds.includes(id) || rIds.includes(id)) return Iled;
       if (id === 'VCC') return Iled * ledIds.length + 0.002;
       if (id === 'RA' || id === 'RB' || id === 'CT' || id === 'CC') return 0.0002;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Series-parallel — both LED branches and shared rails animate', () => {
+    const doc = createSeriesParallelPreset();
+    const I = 0.01;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id === 'JT' || id === 'JR') return null;
+      if (id === 'V1' || id === 'S1') return I * 2;
+      if (id === 'R1' || id === 'D1' || id === 'R2' || id === 'D2') return I;
       return null;
     });
     expect(missing).withContext(missing.join(', ')).toEqual([]);

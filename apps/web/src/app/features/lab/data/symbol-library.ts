@@ -507,8 +507,9 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
       {
         key: 'light',
         label: 'lab.param.light',
-        type: 'number',
+        type: 'slider',
         min: 0,
+        max: 1,
         step: 0.05,
         unit: ''
       },

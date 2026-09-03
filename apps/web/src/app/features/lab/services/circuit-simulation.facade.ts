@@ -775,7 +775,11 @@ export class CircuitSimulationFacade {
 
     this.highlightComponentIds.set(diags.flatMap((d) => d.componentIds));
     this.highlightNetIds.set(diags.flatMap((d) => d.netIds));
-    const warnKeys = warns.map((w) => this.i18n.t(w.messageKey));
+    const formatDiag = (d: (typeof diags)[number]) => {
+      const ids = d.componentIds?.length ? d.componentIds.join(', ') : '';
+      return this.i18n.t(d.messageKey, ids ? { ids } : undefined);
+    };
+    const warnKeys = warns.map((w) => formatDiag(w));
     const burned = doc.components.filter((c) => canBurnOut(c.modelKey) && c.params['burned']);
     if (burned.length) {
       const byKind = new Map<string, string[]>();
@@ -798,7 +802,7 @@ export class CircuitSimulationFacade {
 
     if (errors.length > 0) {
       if (showBusy) this.busy.set(false);
-      this.error.set(errors.map((e) => this.i18n.t(e.messageKey)).join(' '));
+      this.error.set(errors.map((e) => formatDiag(e)).join(' '));
       this.result.set(null);
       return;
     }

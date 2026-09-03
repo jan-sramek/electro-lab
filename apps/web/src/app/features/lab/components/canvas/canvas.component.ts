@@ -412,11 +412,11 @@ export class SchematicCanvasComponent {
     }
     if (tool === 'place') return;
 
-    // Wire tool: pin clicks still wire; clicking the part body exits to Select + inspector.
+    // Wire tool: pin clicks still wire; clicking the part body exits to Select + inspector
+    // without starting a drag (avoids stealing an in-progress rubber-band into a move).
     if (tool === 'wire') {
       this.toolChange.emit('select');
       this.select.emit({ id: c.id, additive: false });
-      this.beginSymbolDrag(ev, c, [c.id]);
       return;
     }
 
