@@ -39,6 +39,7 @@
 /learn/filters/measure-freq-amp
 /learn/motors/motor-mosfet
 /learn/motors/motor-pwm
+/learn/motors/motor-speed
 /learn/motors/motor-flyback
 /learn/motors/h-bridge
 /learn/motors/motor-direction

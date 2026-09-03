@@ -144,6 +144,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...measureAcAssessment(),
   ...motorMosfetAssessment(),
   ...motorPwmAssessment(),
+  ...motorSpeedAssessment(),
   ...motorFlybackAssessment(),
   ...hBridgeAssessment(),
   ...motorDirectionAssessment(),
@@ -1043,6 +1044,44 @@ function motorPwmAssessment() {
       ["Higher duty cycle tends to…", "Stop the motor always", "Lower average voltage", "Raise average motor voltage", "More on-time → more average V."]
     ),
     ...challengeKeys(p, "Simulation completes without errors.", "Analysis mode is transient.")
+  };
+}
+
+function motorSpeedAssessment() {
+  const p = 'learn.project.motorSpeed';
+  return {
+    ...lessonKeys(
+      p,
+      'Speed ≈ average voltage',
+      'In the teaching model, raising PWM duty raises the average voltage across the motor — it spins harder.',
+      'Tune carefully',
+      'Change pulse width (duty), Run Transient, and watch motor current / animation. Keep the flyback path intact.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'To spin faster you usually…',
+        'Increase PWM duty cycle',
+        'Remove the flyback diode',
+        'Delete ground',
+        'More on-time raises average voltage.'
+      ],
+      [
+        'Best analysis mode to see PWM…',
+        'Import JSON only',
+        'Transient',
+        'SEO mode',
+        'Need time to see the pulses.'
+      ],
+      [
+        'Lowering duty cycle tends to…',
+        'Always burn the FET',
+        'Raise speed forever',
+        'Reduce average motor voltage',
+        'Less on-time → slower / weaker drive.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use Transient analysis.')
   };
 }
 

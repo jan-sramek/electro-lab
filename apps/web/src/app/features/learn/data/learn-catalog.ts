@@ -301,6 +301,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'motor-speed',
+    moduleSlug: 'motors',
+    exampleId: 'motorPwm',
+    i18nKeyPrefix: 'learn.project.motorSpeed',
+    stepCount: 4
+  },
+  {
     unitSlug: 'motor-flyback',
     moduleSlug: 'motors',
     exampleId: 'motor',

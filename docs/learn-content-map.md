@@ -262,7 +262,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | `motor-flyback` | Flyback diode | ready (`motor`) | **mvp** |
 | `h-bridge` | H-bridge | ready (`hBridge`) | **mvp** |
 | `motor-direction` | Reverse with H-bridge | ready (`motorDirection`) | **mvp** |
-| `motor-speed` | Speed via PWM (alias) | ready (`motorPwm`) | soon |
+| `motor-speed` | Speed via PWM (alias) | ready (`motorPwm`) | **mvp** |
 | `servo` | Hobby servo | **gap** (needs servo model ADR) | later |
 | `stepper` | Stepper motor | **gap** | later |
 | `stepper-driver` | Stepper driver | **gap** | later |

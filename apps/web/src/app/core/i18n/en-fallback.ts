@@ -1844,6 +1844,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.seriesParallel.step4': 'Open S1 — both go dark. Parallel loads still need the shared switch path.',
   'learn.project.seriesParallel.openLab': 'Open in Lab',
 
+  'learn.project.motorSpeed.title': 'Motor speed via PWM',
+  'learn.project.motorSpeed.summary':
+    'Same PWM motor drive — focus on duty cycle as the speed knob.',
+  'learn.project.motorSpeed.step1': 'Open the PWM motor example and Run Transient.',
+  'learn.project.motorSpeed.step2': 'Increase pulse width (duty) and compare motor drive.',
+  'learn.project.motorSpeed.step3': 'Decrease duty — average voltage falls and the motor slows.',
+  'learn.project.motorSpeed.step4': 'Keep the flyback diode in place while you tune.',
+  'learn.project.motorSpeed.openLab': 'Open in Lab',
+
   'lab.toolbar.diodeDirectionPreset': 'Diode direction (DC)',
   'lab.toolbar.seriesParallelPreset': 'Series vs parallel (DC)',
   'lab.hint.diodeDirection':
