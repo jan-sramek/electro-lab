@@ -1,5 +1,5 @@
 import { SchematicDocument, SchematicWire } from '../schematic.model';
-import { wirePolyline } from '../wire-routing';
+import { routeAllWirePolylines } from '../wire-routing';
 import { polylineToPath } from '../schematic.model';
 import { BranchCurrentLookup, WireRenderPath } from './wire-flow.model';
 import { WireCurrentField } from './wire-current-field';
@@ -18,17 +18,17 @@ export class WireFlowBuilder {
       ? new WireCurrentField(doc.components, doc.wires, currentOf).solve()
       : null;
 
+    const routed = routeAllWirePolylines(doc);
     return doc.wires
-      .map((w) => WireFlowBuilder.renderWire(w, doc, field))
+      .map((w) => WireFlowBuilder.renderWire(w, routed.get(w.id) ?? [], field))
       .filter((r): r is WireRenderPath => r !== null);
   }
 
   private static renderWire(
     w: SchematicWire,
-    doc: SchematicDocument,
+    pts: { x: number; y: number }[],
     field: ReadonlyMap<string, number> | null
   ): WireRenderPath | null {
-    const pts = wirePolyline(doc, w);
     if (pts.length < 2) return null;
 
     const iAlong = field?.get(w.id) ?? 0;

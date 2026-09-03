@@ -113,6 +113,7 @@
           (selectMany)="editor.setSelection($event.ids, $event.additive)"
           (selectWire)="editor.onSelectWire($event.id, $event.additive)"
           (probe)="editor.onProbe($event)"
+          (toolChange)="editor.setTool($event)"
           (placeAt)="editor.onPlaceAt($event)"
           (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
           (pushbuttonPress)="onPushbuttonPress($event)"

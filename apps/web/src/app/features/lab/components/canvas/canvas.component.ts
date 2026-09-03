@@ -26,11 +26,12 @@ import {
 } from '../../data/symbol-scale';
 import {
   clearWireWaypoints,
-  pinExitDirection,
+  nearestOrthogonalTee,
   routeOrthogonal,
-  wirePolyline,
+  updateAxisLock,
   withWireWaypoint
 } from '../../data/wire-routing';
+import type { Point, PreferAxis } from '../../data/wire-routing';
 import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
@@ -89,6 +90,8 @@ export class SchematicCanvasComponent {
   readonly selectMany = output<{ ids: string[]; additive: boolean }>();
   readonly selectWire = output<{ id: string | null; additive: boolean }>();
   readonly probe = output<{ kind: 'net' | 'component'; id: string } | null>();
+  /** Request toolbar tool change (e.g. wire → select when clicking a part body). */
+  readonly toolChange = output<EditorTool>();
   readonly placeAt = output<{ x: number; y: number }>();
   readonly dropPlace = output<{ modelKey: string; x: number; y: number }>();
   /** Momentary press on a pushbutton part (hold = pressed). */
@@ -97,6 +100,10 @@ export class SchematicCanvasComponent {
   readonly wireFrom = signal<PinRef | null>(null);
   /** Cursor in SVG space while drawing a wire (rubber-band). */
   readonly wireCursor = signal<{ x: number; y: number } | null>(null);
+  /** Recent cursor samples while rubber-banding (oldest → newest). */
+  readonly wireMotion = signal<Point[]>([]);
+  /** Sticky L orientation for the in-progress wire (follows first clear mouse pull). */
+  readonly wireAxisLock = signal<PreferAxis | null>(null);
   readonly dragOver = signal(false);
   /** Normalized marquee rect while dragging on empty canvas. */
   readonly marqueeRect = signal<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -118,8 +125,7 @@ export class SchematicCanvasComponent {
     // Leaving wire mode (e.g. Select toolbar) must drop the rubber-band / start pin.
     effect(() => {
       if (this.tool() !== 'wire') {
-        this.wireFrom.set(null);
-        this.wireCursor.set(null);
+        this.clearWireGesture();
       }
     });
   }
@@ -167,13 +173,45 @@ export class SchematicCanvasComponent {
     const d = this.nettled();
     const a = this.endpoint(d, from);
     if (!a) return null;
-    const ca = d.components.find((c) => c.id === from.componentId);
-    const exitA = ca ? pinExitDirection(ca, from.pin) : null;
     return polylineToPath(
-      routeOrthogonal(a.x, a.y, cursor.x, cursor.y, { exitA, exitB: null })
+      routeOrthogonal(a.x, a.y, cursor.x, cursor.y, {
+        motion: this.wireMotion(),
+        axisLock: this.wireAxisLock()
+      })
     );
   });
 
+  private clearWireGesture(): void {
+    this.wireFrom.set(null);
+    this.wireCursor.set(null);
+    this.wireMotion.set([]);
+    this.wireAxisLock.set(null);
+  }
+
+  private pushWireMotion(from: Point, cursor: Point): void {
+    const prev = this.wireMotion();
+    const last = prev[prev.length - 1];
+    if (last && Math.hypot(cursor.x - last.x, cursor.y - last.y) < 3) return;
+    const next = [...prev, cursor].slice(-12);
+    this.wireMotion.set(next);
+    this.wireAxisLock.set(updateAxisLock(this.wireAxisLock(), next, from, cursor));
+  }
+
+  /** Interior elbow of an orthogonal route — stored so the drawn L survives commit. */
+  private elbowWaypointFromRoute(pts: Point[]): Point | null {
+    for (let i = 1; i < pts.length - 1; i++) {
+      const a = pts[i - 1]!;
+      const b = pts[i]!;
+      const c = pts[i + 1]!;
+      const abH = Math.abs(a.y - b.y) < 0.5;
+      const bcH = Math.abs(b.y - c.y) < 0.5;
+      if (abH === bcH) continue;
+      // Skip tiny exit-stub corners.
+      if (Math.hypot(b.x - a.x, b.y - a.y) < 12) continue;
+      return { x: b.x, y: b.y };
+    }
+    return null;
+  }
   readonly netTags = computed(() => {
     const d = this.nettled();
     const seen = new Set<string>();
@@ -265,8 +303,7 @@ export class SchematicCanvasComponent {
     }
 
     if (this.tool() === 'wire') {
-      this.wireFrom.set(null);
-      this.wireCursor.set(null);
+      this.clearWireGesture();
     }
   }
 
@@ -274,7 +311,12 @@ export class SchematicCanvasComponent {
     if (this.tool() !== 'wire' || !this.wireFrom()) return;
     const svg = ev.currentTarget as SVGSVGElement;
     const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
-    this.wireCursor.set({ x: pt.x, y: pt.y });
+    const from = this.wireFrom();
+    const d = this.nettled();
+    const a = from ? this.endpoint(d, from) : null;
+    const snapped = this.snapWireCursor(a, pt);
+    this.wireCursor.set(snapped);
+    if (a) this.pushWireMotion(a, snapped);
   }
 
   onBackgroundPointerMove(ev: PointerEvent): void {
@@ -368,7 +410,15 @@ export class SchematicCanvasComponent {
       this.probe.emit({ kind: 'component', id: c.id });
       return;
     }
-    if (tool === 'wire' || tool === 'place') return;
+    if (tool === 'place') return;
+
+    // Wire tool: pin clicks still wire; clicking the part body exits to Select + inspector.
+    if (tool === 'wire') {
+      this.toolChange.emit('select');
+      this.select.emit({ id: c.id, additive: false });
+      this.beginSymbolDrag(ev, c, [c.id]);
+      return;
+    }
 
     const additive = ev.ctrlKey || ev.metaKey;
     if (additive) {
@@ -382,6 +432,10 @@ export class SchematicCanvasComponent {
       this.select.emit({ id: c.id, additive: false });
     }
 
+    this.beginSymbolDrag(ev, c, ids);
+  }
+
+  private beginSymbolDrag(ev: PointerEvent, c: SchematicComponent, ids: string[]): void {
     const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
     const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
     const origins = new Map<string, { x: number; y: number }>();
@@ -479,29 +533,42 @@ export class SchematicCanvasComponent {
     const from = this.wireFrom();
     if (!from) {
       this.wireFrom.set(ref);
+      this.wireMotion.set([]);
+      this.wireAxisLock.set(null);
+      this.wireCursor.set(null);
       return;
     }
     if (pinKey(from) === pinKey(ref)) {
-      this.wireFrom.set(null);
-      this.wireCursor.set(null);
+      this.clearWireGesture();
       return;
     }
     if (this.wireExists(from, ref)) {
-      this.wireFrom.set(null);
-      this.wireCursor.set(null);
+      this.clearWireGesture();
       return;
     }
-    const wire: SchematicWire = {
+
+    const d = this.nettled();
+    const a = this.endpoint(d, from);
+    const b = this.endpoint(d, ref);
+    let wire: SchematicWire = {
       id: `W${Date.now()}`,
       a: from,
       b: ref
     };
+    if (a && b) {
+      const pts = routeOrthogonal(a.x, a.y, b.x, b.y, {
+        motion: this.wireMotion(),
+        axisLock: this.wireAxisLock()
+      });
+      const elbow = this.elbowWaypointFromRoute(pts);
+      if (elbow) wire = withWireWaypoint(wire, elbow);
+    }
+
     this.docChange.emit({
       ...this.doc(),
       wires: [...this.doc().wires, wire]
     });
-    this.wireFrom.set(null);
-    this.wireCursor.set(null);
+    this.clearWireGesture();
   }
 
   onWireClick(ev: MouseEvent, wireId: string): void {
@@ -513,7 +580,14 @@ export class SchematicCanvasComponent {
       if (!path) return;
       const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
       const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
-      const hit = closestPointOnOrthogonalWire(pt.x, pt.y, path.pts, 16);
+      const startPin = this.wireFrom()
+        ? this.endpoint(this.nettled(), this.wireFrom()!)
+        : null;
+      const tee = startPin
+        ? nearestOrthogonalTee(startPin, [path.pts], { x: pt.x, y: pt.y }, 24)
+        : null;
+      const hit =
+        tee ?? closestPointOnOrthogonalWire(pt.x, pt.y, path.pts, 16);
       if (!hit) return;
       const junction = createComponent('junction', hit.x, hit.y);
       const jRef: PinRef = { componentId: junction.id, pin: 'j' };
@@ -526,19 +600,31 @@ export class SchematicCanvasComponent {
       const from = this.wireFrom();
       if (from && pinKey(from) !== pinKey(jRef) && !this.wireExists(from, jRef)) {
         // Finish an in-progress wire onto this wire (auto T-junction).
+        const start = this.endpoint(next, from);
+        let branch: SchematicWire = { id: `W${Date.now()}`, a: from, b: jRef };
+        if (start) {
+          const pts = routeOrthogonal(start.x, start.y, hit.x, hit.y, {
+            motion: this.wireMotion(),
+            axisLock: this.wireAxisLock()
+          });
+          const elbow = this.elbowWaypointFromRoute(pts);
+          if (elbow) branch = withWireWaypoint(branch, elbow);
+        }
         next = {
           ...next,
-          wires: [...next.wires, { id: `W${Date.now()}`, a: from, b: jRef }]
+          wires: [...next.wires, branch]
         };
         this.docChange.emit(next);
-        this.wireFrom.set(null);
-        this.wireCursor.set(null);
+        this.clearWireGesture();
         return;
       }
 
       // Start a branch from the tap point.
       this.docChange.emit(next);
       this.wireFrom.set(jRef);
+      this.wireMotion.set([]);
+      this.wireAxisLock.set(null);
+      this.wireCursor.set(null);
       return;
     }
 
@@ -811,6 +897,34 @@ export class SchematicCanvasComponent {
 
   pinPos(c: SchematicComponent, pinName: string): { x: number; y: number } {
     return pinWorldPos(c, pinName) ?? { x: c.x, y: c.y };
+  }
+
+  /** Grid + pin + orthogonal T onto an existing rail (so preview is a drop, not a bus run). */
+  private snapWireCursor(from: Point | null, raw: Point): Point {
+    let x = snap(raw.x);
+    let y = snap(raw.y);
+    const d = this.nettled();
+    let bestPin: { x: number; y: number; dist: number } | null = null;
+    for (const c of d.components) {
+      for (const name of Object.keys(c.pins)) {
+        const p = pinWorldPos(c, name);
+        if (!p) continue;
+        const dist = Math.hypot(p.x - raw.x, p.y - raw.y);
+        if (dist > 12) continue;
+        if (!bestPin || dist < bestPin.dist) bestPin = { x: p.x, y: p.y, dist };
+      }
+    }
+    if (bestPin) return { x: bestPin.x, y: bestPin.y };
+    if (from) {
+      const tee = nearestOrthogonalTee(
+        from,
+        this.wirePaths().map((w) => w.pts),
+        { x, y },
+        14
+      );
+      if (tee) return tee;
+    }
+    return { x, y };
   }
 
   isSelected(id: string): boolean {
