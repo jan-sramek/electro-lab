@@ -187,8 +187,24 @@ export function placeAllPartLabels(
       break;
     }
     if (!chosen) {
-      chosen = ranked[0]!.local;
-      boxes.push({ id: c.id, box: labelBox(c, chosen, c.id) });
+      // All preferred sides collide — nudge further out on the best side.
+      const fallback = ranked[0]!;
+      const def = SYMBOL_LIBRARY[c.modelKey];
+      const s = symbolDisplayScale(c.modelKey);
+      const hw = ((def?.width ?? 40) * s) / 2 + 2;
+      const hh = ((def?.height ?? 40) * s) / 2 + 2;
+      for (const extra of [6, 10, 14, 20]) {
+        const nudged = sidePlacement(c, fallback.side, hw, hh, 3.2 + extra);
+        const box = labelBox(c, nudged, c.id);
+        if (boxes.some((b) => overlaps(box, b.box))) continue;
+        chosen = nudged;
+        boxes.push({ id: c.id, box });
+        break;
+      }
+      if (!chosen) {
+        chosen = { ...fallback.local, y: fallback.local.y + (fallback.local.y >= 0 ? 10 : -10) };
+        boxes.push({ id: c.id, box: labelBox(c, chosen, c.id) });
+      }
     }
     out.set(c.id, chosen);
   }
