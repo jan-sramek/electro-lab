@@ -73,9 +73,12 @@ export function diagnoseSchematic(
   }
 
   const wiredIds = new Set<string>();
+  const pinWired = new Set<string>();
   for (const w of doc.wires) {
     wiredIds.add(w.a.componentId);
     wiredIds.add(w.b.componentId);
+    pinWired.add(`${w.a.componentId}:${w.a.pin}`);
+    pinWired.add(`${w.b.componentId}:${w.b.pin}`);
   }
 
   if (!grounds.some((g) => wiredIds.has(g.id))) {
@@ -83,8 +86,17 @@ export function diagnoseSchematic(
   }
 
   const floating = simParts.filter((c) => !wiredIds.has(c.id));
-  if (floating.length > 0) {
-    out.push(diag('floating_component', 'error', floating.map((c) => c.id)));
+  // Two-terminal parts with only one pin wired are also "floating" for teaching purposes.
+  const halfWired = simParts.filter((c) => {
+    if (!wiredIds.has(c.id)) return false;
+    const def = SYMBOL_LIBRARY[c.modelKey];
+    if (!def || def.pins.length !== 2) return false;
+    const hit = def.pins.filter((p) => pinWired.has(`${c.id}:${p.name}`)).length;
+    return hit === 1;
+  });
+  const floatingIds = [...new Set([...floating, ...halfWired].map((c) => c.id))];
+  if (floatingIds.length > 0) {
+    out.push(diag('floating_component', 'error', floatingIds));
   }
 
   const nettled = assignNets(doc);

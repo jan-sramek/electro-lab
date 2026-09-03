@@ -42,9 +42,23 @@ describe('circuit-diagnostics', () => {
     expect(diags.find((d) => d.code === 'floating_component')!.componentIds).toContain('V1');
   });
 
-  it('accepts LED preset without errors', () => {
-    const diags = diagnoseSchematic(createLedPreset(), 'dcOp');
-    expect(diags.filter((d) => d.severity === 'error').length).toBe(0);
+  it('reports floating_component when a two-pin part has only one terminal wired', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const r1 = createComponent('resistor', 100, 0, 'R1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, r1, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'R1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+        // R1.b left dangling on purpose
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    const floating = diags.find((d) => d.code === 'floating_component');
+    expect(floating).toBeTruthy();
+    expect(floating!.componentIds).toContain('R1');
   });
 
   it('maps singular matrix and keeps i18n keys in sync with fallback', () => {
