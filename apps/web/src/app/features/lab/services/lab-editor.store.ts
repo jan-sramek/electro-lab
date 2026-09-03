@@ -15,6 +15,7 @@ import { createLedFadePreset } from '../data/presets/led-fade.preset';
 import { createRcStepPreset } from '../data/presets/rc-step.preset';
 import { createPotDividerPreset } from '../data/presets/pot-divider.preset';
 import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
+import { createDiodeDirectionPreset } from '../data/presets/diode-direction.preset';
 import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
 import { createOpAmpFollowerPreset } from '../data/presets/opamp-follower.preset';
 import { createOpAmpNonInvPreset } from '../data/presets/opamp-noninv.preset';
@@ -79,6 +80,7 @@ export type ExamplePresetId =
   | 'rc'
   | 'pot'
   | 'pulse'
+  | 'diodeDirection'
   | 'opamp'
   | 'opampFollower'
   | 'opampNonInv'
@@ -135,6 +137,7 @@ export const EXAMPLE_PRESET_IDS: readonly ExamplePresetId[] = [
   'rc',
   'pot',
   'pulse',
+  'diodeDirection',
   'opamp',
   'opampFollower',
   'opampNonInv',
@@ -815,6 +818,10 @@ export class LabEditorStore {
 
   loadPulsePreset(): void {
     this.openExampleInNewTab('pulse', 'Pulse RC', createPulseRcPreset, 'tran', 0.01, 5e-5);
+  }
+
+  loadDiodeDirectionPreset(): void {
+    this.openExampleInNewTab('diodeDirection', 'Diode direction', createDiodeDirectionPreset, 'dcOp');
   }
 
   loadOpAmpPreset(): void {

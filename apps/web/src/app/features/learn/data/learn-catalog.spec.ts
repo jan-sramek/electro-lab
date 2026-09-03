@@ -13,6 +13,7 @@ const VALID_EXAMPLE_IDS = new Set<ExamplePresetId>([
   'rc',
   'pot',
   'pulse',
+  'diodeDirection',
   'opamp',
   'opampFollower',
   'opampNonInv',

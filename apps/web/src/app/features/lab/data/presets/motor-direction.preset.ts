@@ -7,32 +7,33 @@ import {
 
 /**
  * Teaching H-bridge reverse: S2+S3 closed, S1+S4 open (motor current flips).
+ * Same rail layout as h-bridge — battery off the mid-line.
  */
 export function createMotorDirectionPreset(): SchematicDocument {
   resetIdSeq(490);
-  const v1 = createComponent('battery', 70, 180, 'V1');
+  const v1 = createComponent('battery', 40, 100, 'V1');
   v1.params = { v: 5, esr: 0 };
-  const jT = createComponent('junction', 300, 60, 'JT');
+  const jT = createComponent('junction', 300, 40, 'JT');
   const jL = createComponent('junction', 180, 180, 'JL');
   const jR = createComponent('junction', 420, 180, 'JR');
-  const jG = createComponent('junction', 300, 300, 'JG');
+  const jG = createComponent('junction', 300, 320, 'JG');
 
-  const s1 = createComponent('switch', 180, 100, 'S1');
+  const s1 = createComponent('switch', 180, 90, 'S1');
   s1.params = { closed: false, openAt: -1, closeAt: -1 };
   s1.rotation = 90;
-  const s2 = createComponent('switch', 180, 240, 'S2');
+  const s2 = createComponent('switch', 180, 250, 'S2');
   s2.params = { closed: true, openAt: -1, closeAt: -1 };
   s2.rotation = 90;
-  const s3 = createComponent('switch', 420, 100, 'S3');
+  const s3 = createComponent('switch', 420, 90, 'S3');
   s3.params = { closed: true, openAt: -1, closeAt: -1 };
   s3.rotation = 90;
-  const s4 = createComponent('switch', 420, 240, 'S4');
+  const s4 = createComponent('switch', 420, 250, 'S4');
   s4.params = { closed: false, openAt: -1, closeAt: -1 };
   s4.rotation = 90;
 
   const mot = createComponent('dc_motor', 300, 180, 'MOT1');
   mot.params = { ron: 15, vStart: 1, burned: false };
-  const gnd = createComponent('ground', 300, 360, 'GND1');
+  const gnd = createComponent('ground', 300, 380, 'GND1');
 
   return assignNets({
     groundNet: 'gnd',

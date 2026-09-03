@@ -42,6 +42,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'diode-direction',
+    moduleSlug: 'basics',
+    exampleId: 'diodeDirection',
+    i18nKeyPrefix: 'learn.project.diodeDirection',
+    stepCount: 4
+  },
+  {
     unitSlug: 'led-burn-limit',
     moduleSlug: 'basics',
     exampleId: 'led',

@@ -65,8 +65,8 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
-| `fundamentals-loop` | Battery, resistor, current, ground | partial (`led`) | soon |
-| `ohm-explore` | Change R, see I (probe) | partial (`led`) | soon |
+| `fundamentals-loop` | Battery, resistor, current, ground | ready (`led`) | **mvp** |
+| `ohm-explore` | Change R, see I (probe) | ready (`led`) | **mvp** |
 | `series-parallel-intro` | Series vs parallel intuition | gap | later |
 
 **Quiz A (later):** Identify which change raises current; pick a safe ballpark resistor for an LED given Vf (teaching numbers).
@@ -78,7 +78,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `led-series` | LED + series R | ready (`led`) | **mvp** *(add if missing)* |
-| `diode-direction` | Diode orientation / blocking | partial (`diode` part) | soon |
+| `diode-direction` | Diode orientation / blocking | ready (`diodeDirection`) | **mvp** |
 | `led-burn-limit` | What “too much current” means in Lab | ready (`led`) | soon |
 
 **Quiz B (later):** Pick polarity; choose “more R / less R” for brighter vs safer.
@@ -91,8 +91,8 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `rc-charge` | Capacitor charge curve | ready (`rc`) | **mvp** *(add if missing)* |
 | `led-fade` | Store and release energy (fade) | ready (`ledFade`) | **mvp** *(add if missing)* |
-| `pulse-rc` | Edges and RC | ready (`pulse`) | soon |
-| `time-constant-estimate` | τ ≈ R·C by eye on the scope | ready (`rc`) | soon |
+| `pulse-rc` | Edges and RC | ready (`pulse`) | **mvp** |
+| `time-constant-estimate` | τ ≈ R·C by eye on the scope | ready (`rc`) | **mvp** |
 
 **Quiz C (later):** Larger C → slower/faster; what happens if R doubles.
 
@@ -175,7 +175,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `ne555-astable` | 555 blinker | ready (`ne555`) | **mvp** |
-| `ne555-play` | Richer LED load / tree | ready (`christmasTree`) | soon |
+| `ne555-play` | Richer LED load / tree | ready (`christmasTree`) | **mvp** |
 
 **Quiz H (later):** Which parts set period (qualitative).
 
@@ -228,7 +228,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
-| `ac-rc-lpf` | AC low-pass feel | ready (`ac`) | soon |
+| `ac-rc-lpf` | AC low-pass feel | ready (`ac`) | **mvp** |
 | `bode-intuition` | Magnitude vs frequency | partial | later |
 
 **Quiz M (later):** Above cutoff → more/less attenuation.

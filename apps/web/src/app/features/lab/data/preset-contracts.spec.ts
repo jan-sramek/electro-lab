@@ -4,6 +4,7 @@ import { createLedFadePreset } from './presets/led-fade.preset';
 import { createRcStepPreset } from './presets/rc-step.preset';
 import { createPotDividerPreset } from './presets/pot-divider.preset';
 import { createPulseRcPreset } from './presets/pulse-rc.preset';
+import { createDiodeDirectionPreset } from './presets/diode-direction.preset';
 import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
 import { createOpAmpFollowerPreset } from './presets/opamp-follower.preset';
 import { createOpAmpNonInvPreset } from './presets/opamp-noninv.preset';
@@ -332,6 +333,7 @@ describe('Lab preset contracts', () => {
       ['rc', createRcStepPreset(), 'tran'],
       ['pot', createPotDividerPreset(), 'dcOp'],
       ['pulse', createPulseRcPreset(), 'tran'],
+      ['diodeDirection', createDiodeDirectionPreset(), 'dcOp'],
       ['opamp', createOpAmpBufferPreset(), 'dcOp'],
       ['opampFollower', createOpAmpFollowerPreset(), 'dcOp'],
       ['opampNonInv', createOpAmpNonInvPreset(), 'dcOp'],

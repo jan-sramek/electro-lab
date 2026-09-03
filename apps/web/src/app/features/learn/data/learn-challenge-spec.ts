@@ -228,6 +228,19 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'sim_ok', paramsJson: '{}' }
     ]
   },
+  diodeDirection: {
+    tabNameKey: 'learn.challenge.tab.diodeDirection',
+    analysisMode: 'dcOp',
+    criteria: [
+      { type: 'no_circuit_errors', paramsJson: '{}' },
+      {
+        type: 'has_models',
+        paramsJson: JSON.stringify({ models: ['battery', 'diode', 'led', 'resistor', 'ground'] })
+      },
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+    ]
+  },
   opamp: {
     tabNameKey: 'learn.challenge.tab.opamp',
     analysisMode: 'dcOp',

@@ -46,6 +46,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.challenge.tab.i2cOled': 'I2C OLED',
   'learn.challenge.tab.pot': 'Pot divider',
   'learn.challenge.tab.pulse': 'Pulse RC',
+  'learn.challenge.tab.diodeDirection': 'Diode direction',
   'learn.challenge.tab.opamp': 'Op-amp',
   'learn.challenge.tab.ac': 'AC analysis',
   'learn.challenge.tab.halfWave': 'Half-wave rectifier',
@@ -164,6 +165,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...fundamentalsLoopAssessment(),
   ...ohmExploreAssessment(),
   ...ledBurnLimitAssessment(),
+  ...diodeDirectionAssessment(),
   ...timeConstantAssessment(),
   ...pulseRcAssessment(),
   ...acRcLpfAssessment(),
@@ -1371,6 +1373,43 @@ function ledBurnLimitAssessment() {
   };
 }
 
+function diodeDirectionAssessment() {
+  const p = 'learn.project.diodeDirection';
+  return {
+    ...lessonKeys(
+      p,
+      'One-way street',
+      'A diode conducts when the anode is more positive than the cathode (forward). Reverse bias blocks current.',
+      'Orientation matters',
+      'Swap the diode and the LED stays dark — polarity is not optional.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'Forward bias means…',
+        'Anode more positive than cathode',
+        'Cathode more positive always',
+        'No voltage ever',
+        'Conventional current can flow anode→cathode when forward.'
+      ],
+      [
+        'If you reverse the diode in this sample…',
+        'LED gets brighter',
+        'LED stays dark (blocked)',
+        'Ground disappears',
+        'Reverse bias blocks the series path.'
+      ],
+      [
+        'The series resistor still…',
+        'Stores charge like a capacitor',
+        'Removes the need for ground',
+        'Limits current when the diode conducts',
+        'Protects the LED in the forward path.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+  };
+}
 
 function timeConstantAssessment() {
   const p = 'learn.project.timeConstant';

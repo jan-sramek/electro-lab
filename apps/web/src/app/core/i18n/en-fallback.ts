@@ -1826,6 +1826,19 @@ export const EN_FALLBACK: Record<string, string> = {
 
 
   // --- overnight soon units ---
+  'learn.project.diodeDirection.title': 'Diode direction',
+  'learn.project.diodeDirection.summary':
+    'See why diode orientation matters — forward lights the LED; reverse blocks the path.',
+  'learn.project.diodeDirection.step1': 'Open the diode direction example and Run DC — the LED should light.',
+  'learn.project.diodeDirection.step2': 'Select D1 and note anode toward the supply, cathode toward the LED.',
+  'learn.project.diodeDirection.step3': 'Rewire or rotate so the diode is reversed, Run again — the LED stays dark.',
+  'learn.project.diodeDirection.step4': 'Put it back forward and confirm current returns.',
+  'learn.project.diodeDirection.openLab': 'Open in Lab',
+
+  'lab.toolbar.diodeDirectionPreset': 'Diode direction (DC)',
+  'lab.hint.diodeDirection':
+    'Diode direction: Run DC — LED on when D1 is forward. Reverse the diode and it blocks.',
+
   'learn.project.fundamentalsLoop.title': 'The simple loop',
   'learn.project.fundamentalsLoop.summary':
     'Battery, resistor, LED, and ground — the smallest complete circuit that teaches current and return path.',

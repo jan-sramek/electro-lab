@@ -103,6 +103,8 @@ export class LabPageComponent implements OnInit, OnDestroy {
       this.onLoadPreset('pot');
     } else if (example === 'pulse') {
       this.onLoadPreset('pulse');
+    } else if (example === 'diodeDirection' || example === 'diode') {
+      this.onLoadPreset('diodeDirection');
     } else if (example === 'opampFollower' || example === 'follower' || example === 'buffer') {
       this.onLoadPreset('opampFollower');
     } else if (example === 'opamp' || example === 'opampInvert' || example === 'invert') {
@@ -224,6 +226,9 @@ export class LabPageComponent implements OnInit, OnDestroy {
         break;
       case 'pulse':
         this.editor.loadPulsePreset();
+        break;
+      case 'diodeDirection':
+        this.editor.loadDiodeDirectionPreset();
         break;
       case 'opamp':
         this.editor.loadOpAmpPreset();
