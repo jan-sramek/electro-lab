@@ -6,6 +6,7 @@ import { createPotDividerPreset } from './presets/pot-divider.preset';
 import { createPulseRcPreset } from './presets/pulse-rc.preset';
 import { createDiodeDirectionPreset } from './presets/diode-direction.preset';
 import { createSeriesParallelPreset } from './presets/series-parallel.preset';
+import { createSeriesLedsPreset } from './presets/series-leds.preset';
 import { createOpAmpBufferPreset } from './presets/opamp-buffer.preset';
 import { createOpAmpFollowerPreset } from './presets/opamp-follower.preset';
 import { createOpAmpNonInvPreset } from './presets/opamp-noninv.preset';
@@ -336,6 +337,7 @@ describe('Lab preset contracts', () => {
       ['pulse', createPulseRcPreset(), 'tran'],
       ['diodeDirection', createDiodeDirectionPreset(), 'dcOp'],
       ['seriesParallel', createSeriesParallelPreset(), 'dcOp'],
+      ['seriesLeds', createSeriesLedsPreset(), 'dcOp'],
       ['opamp', createOpAmpBufferPreset(), 'dcOp'],
       ['opampFollower', createOpAmpFollowerPreset(), 'dcOp'],
       ['opampNonInv', createOpAmpNonInvPreset(), 'dcOp'],

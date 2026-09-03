@@ -48,6 +48,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.challenge.tab.pulse': 'Pulse RC',
   'learn.challenge.tab.diodeDirection': 'Diode direction',
   'learn.challenge.tab.seriesParallel': 'Series vs parallel',
+  'learn.challenge.tab.seriesLeds': 'Series LEDs',
   'learn.challenge.tab.opamp': 'Op-amp',
   'learn.challenge.tab.ac': 'AC analysis',
   'learn.challenge.tab.halfWave': 'Half-wave rectifier',

@@ -17,6 +17,7 @@ import { createPotDividerPreset } from '../data/presets/pot-divider.preset';
 import { createPulseRcPreset } from '../data/presets/pulse-rc.preset';
 import { createDiodeDirectionPreset } from '../data/presets/diode-direction.preset';
 import { createSeriesParallelPreset } from '../data/presets/series-parallel.preset';
+import { createSeriesLedsPreset } from '../data/presets/series-leds.preset';
 import { createOpAmpBufferPreset } from '../data/presets/opamp-buffer.preset';
 import { createOpAmpFollowerPreset } from '../data/presets/opamp-follower.preset';
 import { createOpAmpNonInvPreset } from '../data/presets/opamp-noninv.preset';
@@ -83,6 +84,7 @@ export type ExamplePresetId =
   | 'pulse'
   | 'diodeDirection'
   | 'seriesParallel'
+  | 'seriesLeds'
   | 'opamp'
   | 'opampFollower'
   | 'opampNonInv'
@@ -141,6 +143,7 @@ export const EXAMPLE_PRESET_IDS: readonly ExamplePresetId[] = [
   'pulse',
   'diodeDirection',
   'seriesParallel',
+  'seriesLeds',
   'opamp',
   'opampFollower',
   'opampNonInv',
@@ -829,6 +832,10 @@ export class LabEditorStore {
 
   loadSeriesParallelPreset(): void {
     this.openExampleInNewTab('seriesParallel', 'Series vs parallel', createSeriesParallelPreset, 'dcOp');
+  }
+
+  loadSeriesLedsPreset(): void {
+    this.openExampleInNewTab('seriesLeds', 'Series LEDs', createSeriesLedsPreset, 'dcOp');
   }
 
   loadOpAmpPreset(): void {

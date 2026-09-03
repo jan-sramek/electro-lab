@@ -15,6 +15,7 @@ const VALID_EXAMPLE_IDS = new Set<ExamplePresetId>([
   'pulse',
   'diodeDirection',
   'seriesParallel',
+  'seriesLeds',
   'opamp',
   'opampFollower',
   'opampNonInv',

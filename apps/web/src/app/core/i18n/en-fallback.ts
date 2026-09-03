@@ -1841,7 +1841,8 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.seriesParallel.step1': 'Open the parallel branches example and Run DC — both LEDs should light.',
   'learn.project.seriesParallel.step2': 'Probe each LED current — they should be similar with equal R.',
   'learn.project.seriesParallel.step3': 'Raise R2 a lot — D2 dims while D1 stays bright (independent branches).',
-  'learn.project.seriesParallel.step4': 'Open S1 — both go dark. Parallel loads still need the shared switch path.',
+  'learn.project.seriesParallel.step4':
+    'Open the Series LEDs sample too — same current through both LEDs, unlike parallel branches.',
   'learn.project.seriesParallel.openLab': 'Open in Lab',
 
   'learn.project.motorSpeed.title': 'Motor speed via PWM',
@@ -1854,11 +1855,14 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.motorSpeed.openLab': 'Open in Lab',
 
   'lab.toolbar.diodeDirectionPreset': 'Diode direction (DC)',
-  'lab.toolbar.seriesParallelPreset': 'Series vs parallel (DC)',
+  'lab.toolbar.seriesParallelPreset': 'Parallel LED branches (DC)',
+  'lab.toolbar.seriesLedsPreset': 'Series LEDs (DC)',
   'lab.hint.diodeDirection':
     'Diode direction: Run DC — LED on when D1 is forward. Reverse the diode and it blocks.',
   'lab.hint.seriesParallel':
     'Parallel LEDs: Run DC — both branches light. Change one R; only that branch dims.',
+  'lab.hint.seriesLeds':
+    'Series LEDs: Run DC — same current through both. Compare with the parallel branches sample.',
 
   'learn.project.fundamentalsLoop.title': 'The simple loop',
   'learn.project.fundamentalsLoop.summary':

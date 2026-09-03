@@ -121,7 +121,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
-| `pot-divider` | Wiper sets mid voltage | ready (`pot`) | soon |
+| `pot-divider` | Wiper sets mid voltage | ready (`pot`) | **mvp** |
 | `divider-design` | Two resistors, predict Vmid | gap / partial | later |
 
 **Quiz D (later):** Estimate mid-point for equal resistors.
