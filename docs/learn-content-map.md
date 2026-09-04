@@ -198,7 +198,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `buzzer-button` | Simple “sounding” load | ready (`buzzer`) | **mvp** |
-| `motor-control` | H-bridge direction + PWM speed on `motor` | ready (`motor`) | **mvp** |
+| `motor-control` | Low-side NMOS motor drive with flyback on `motor` | ready (`motor`) | **mvp** |
 
 **Quiz J (later):** Why series R / switch rating matters (teaching).
 
@@ -247,7 +247,6 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | `band-pass` | Band-pass (RLC) | ready (`bandPass`) | **mvp** |
 | `notch-filter` | Notch (series LC shunt + Rs) | ready (`notchFilter`) | **mvp** |
 | `voltage-divider` | Resistive divider | ready (`voltageDivider`) | **mvp** |
-| `pot-divider` | Pot as divider | ready (`pot`) | **mvp** |
 | `bjt-amplifier` | Linear BJT amp | **gap** (BJT is switch model today) | later |
 | `measure-freq-amp` | Frequency & amplitude (AC probe) | ready (`measureAc`) | **mvp** |
 

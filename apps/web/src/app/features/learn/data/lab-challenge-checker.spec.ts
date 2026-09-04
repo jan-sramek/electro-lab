@@ -391,4 +391,74 @@ describe('lab-challenge-checker', () => {
     );
     expect(results[0].passed).toBeFalse();
   });
+
+  it('checks any_switch_closed when a switch is closed', () => {
+    const doc = createBjtSwitchPreset();
+    const results = checkLabCriteria(
+      [{ id: 1, order: 1, labelKey: 'x', type: 'any_switch_closed', paramsJson: '{}' }],
+      { doc, result: null, analysisMode: 'dcOp' }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
+
+  it('checks any_pushbutton_pressed only for pushbutton parts', () => {
+    const closed = {
+      ...createBuzzerButtonPreset(),
+      components: createBuzzerButtonPreset().components.map((c) =>
+        c.modelKey === 'pushbutton' ? { ...c, params: { ...c.params, closed: true } } : c
+      )
+    };
+    const results = checkLabCriteria(
+      [{ id: 1, order: 1, labelKey: 'x', type: 'any_pushbutton_pressed', paramsJson: '{}' }],
+      { doc: closed, result: null, analysisMode: 'dcOp' }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
+
+  it('checks min_wire_count', () => {
+    const doc = createLedPreset();
+    const pass = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'min_wire_count',
+          paramsJson: JSON.stringify({ min: 2 })
+        }
+      ],
+      { doc, result: null, analysisMode: 'dcOp' }
+    );
+    const fail = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'min_wire_count',
+          paramsJson: JSON.stringify({ min: 999 })
+        }
+      ],
+      { doc, result: null, analysisMode: 'dcOp' }
+    );
+    expect(pass[0].passed).toBeTrue();
+    expect(fail[0].passed).toBeFalse();
+  });
+
+  it('fails analysis_mode when Lab mode does not match', () => {
+    const doc = createLedPreset();
+    const results = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'analysis_mode',
+          paramsJson: JSON.stringify({ mode: 'tran' })
+        }
+      ],
+      { doc, result: null, analysisMode: 'dcOp' }
+    );
+    expect(results[0].passed).toBeFalse();
+  });
 });

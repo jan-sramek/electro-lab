@@ -33,6 +33,9 @@ import { createBjtSwitchPreset } from '../presets/bjt-switch.preset';
 import { createLdrNightLightPreset } from '../presets/ldr-nightlight.preset';
 import { createIndustrial24vPreset } from '../presets/industrial-24v.preset';
 import { createMotorDirectionPreset } from '../presets/motor-direction.preset';
+import { createEstopRelayPreset } from '../presets/estop-relay.preset';
+import { createRelayBjtPreset } from '../presets/relay-bjt.preset';
+import { createOpAmpNonInvPreset } from '../presets/opamp-noninv.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -693,6 +696,66 @@ describe('wire flow coverage on presets', () => {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(`${id} open diagonal`)
         .toBeLessThan(1e-6);
+    }
+  });
+
+  it('E-stop relay — series switches + coil and contact LED paths animate', () => {
+    const doc = createEstopRelayPreset();
+    const Icoil = 0.012;
+    const Iled = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'Dfly') return 0;
+      if (id === 'VB') return Icoil + Iled;
+      if (id === 'SESTOP' || id === 'S1' || id === 'K1') return Icoil;
+      if (id === 'RC' || id === 'D1') return Iled;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W10', 'W11', 'W12', 'W13', 'W14']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Relay+BJT — base drive, coil, and contact LED paths animate', () => {
+    const doc = createRelayBjtPreset();
+    const Ib = 0.001;
+    const Icoil = 0.012;
+    const Iled = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'Dfly') return 0;
+      if (id === 'S1' || id === 'RB') return Ib;
+      if (id === 'K1') return Icoil;
+      if (id === 'Q1') return Icoil + Ib;
+      if (id === 'RC' || id === 'D1') return Iled;
+      if (id === 'VB') return Icoil + Iled + Ib;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15', 'W16']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp non-inverting — feedback and load paths animate', () => {
+    const doc = createOpAmpNonInvPreset();
+    const Ifb = 0.0005;
+    const Iload = 0.001;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VIN') return 0;
+      if (id === 'RF' || id === 'RG') return Ifb;
+      if (id === 'RL') return Iload;
+      if (id === 'U1') return Iload + Ifb;
+      return null;
+    });
+    for (const id of ['W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W11']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
     }
   });
 });

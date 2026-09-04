@@ -305,8 +305,10 @@ describe('Lab preset contracts', () => {
     expect(diagnoseSchematic(createRelayBjtPreset(), 'dcOp').filter((d) => d.severity === 'error')).toEqual([]);
     expect(overlappingHorizontalRails([createRelayBjtPreset()])).toEqual([]);
     expect(createEstopRelayPreset().components.some((c) => c.id === 'SESTOP')).toBeTrue();
+    expect(overlappingHorizontalRails([createEstopRelayPreset()])).toEqual([]);
     expect(createIndustrial24vPreset().components.find((c) => c.id === 'VB')?.params['v']).toBe(24);
     expect(compileNetlist(createIndustrial24vPreset()).elements.some((e) => e.model === 'relay')).toBeTrue();
+    expect(overlappingHorizontalRails([createIndustrial24vPreset()])).toEqual([]);
   });
 
   it('power-supply sample layouts avoid long rail collisions', () => {
