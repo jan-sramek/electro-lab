@@ -32,7 +32,7 @@ Product principle ([vision.md](vision.md), NFR-11): Learn should feel closer to 
 |---------|---------|
 | **Target curriculum** | Ideal path and topics (this doc’s spine) |
 | **Lab coverage** | `ready` = preset exists · `partial` = related preset · `gap` = needs Lab work / ADR later |
-| **Learn shipping** | `mvp` = show in Phase B · `soon` = after MVP catalog · `later` = with quizzes/account/etc. |
+| **Learn shipping** | `mvp` = in the shipping catalog · `soon` = next curriculum slice · `later` = Account / ADR-gated Lab models |
 
 A topic can be in the **target path** with Lab = `gap` and Learn = `later`. That is intentional.
 
@@ -392,7 +392,7 @@ Named paths over modules, e.g. **“Hobbyist starter”** = A→B→C→E→I→
 
 The Learn catalog in `learn-catalog.ts` now ships the full hands-on path that Lab can support (~80+ units), including challenges UI, quizzes, debounce, multi-slave I²C (conceptual), and series-LEDs / NE555 pot variants.
 
-Challenge mode starts from an empty canvas; **Peek sample** loads the unit’s teaching preset into the isolated challenge tab as a rebuild reference without leaving challenge mode.
+Challenge mode starts from an empty canvas; **Peek sample** loads the unit’s teaching preset into the isolated challenge tab as a rebuild reference, and **Clear canvas** empties it again — both ask for confirm before replacing work.
 
 **Still later / ADR-gated:** certificates, account-linked progress, exotic device models (gates, servo, UART, true multi-slave wiring).
 

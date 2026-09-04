@@ -1087,7 +1087,8 @@ export function specCriteriaForCheck(
   return criteria.map((c, i) => ({
     id: apiCriteria[i]?.id ?? i + 1,
     order: i + 1,
-    labelKey: `learn.challenge.check.${c.type}`,
+    // Prefer seeded per-unit teaching labels when the API has them for this slot.
+    labelKey: apiCriteria[i]?.labelKey ?? `learn.challenge.check.${c.type}`,
     type: c.type,
     paramsJson: c.paramsJson
   }));
