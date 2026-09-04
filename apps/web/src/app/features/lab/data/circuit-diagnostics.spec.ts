@@ -12,6 +12,7 @@ import {
   splitWireAtJunction
 } from './schematic.model';
 import { createLedPreset } from './presets/led-series.preset';
+import { createRcStepPreset } from './presets/rc-step.preset';
 import { EN_FALLBACK } from '../../../core/i18n/en-fallback';
 
 describe('circuit-diagnostics', () => {
@@ -122,6 +123,51 @@ describe('circuit-diagnostics', () => {
     });
     const diags = diagnoseSchematic(doc, 'tran');
     expect(diags.some((d) => d.code === 'ac_source_tran_no_freq')).toBeTrue();
+  });
+
+  it('errors when a battery positives and negatives share one net', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const j = createComponent('junction', 40, 0, 'J1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, j, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'J1', pin: 'j' } },
+        { id: 'W2', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'J1', pin: 'j' } },
+        { id: 'W3', a: { componentId: 'J1', pin: 'j' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    expect(diags.find((d) => d.code === 'shorted_voltage_source')?.componentIds).toContain('V1');
+  });
+
+  it('warns that RC networks need transient in dcOp', () => {
+    const diags = diagnoseSchematic(createRcStepPreset(), 'dcOp');
+    expect(diags.some((d) => d.code === 'dc_rc_needs_tran')).toBeTrue();
+    expect(diags.find((d) => d.code === 'dc_rc_needs_tran')!.severity).toBe('warning');
+  });
+
+  it('warns on capacitor-only islands in dcOp', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const c1 = createComponent('capacitor', 100, 0, 'C1');
+    const c2 = createComponent('capacitor', 200, 0, 'C2');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, c1, c2, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'C1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'C1', pin: 'b' }, b: { componentId: 'C2', pin: 'a' } },
+        { id: 'W3', a: { componentId: 'C2', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W4', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    const island = diags.find((d) => d.code === 'dc_capacitor_island');
+    expect(island).toBeTruthy();
+    expect(island!.componentIds).toContain('C1');
+    expect(island!.componentIds).toContain('C2');
   });
 });
 

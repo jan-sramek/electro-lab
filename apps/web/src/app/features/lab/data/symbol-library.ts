@@ -88,12 +88,14 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         unit: 'Ω'
       }
     ],
+    teachingNote: 'lab.modelNote.battery',
     width: 48,
     height: 36
   },
   ac_source: {
     modelKey: 'ac_source',
     label: 'lab.symbol.ac_source',
+    teachingNote: 'lab.modelNote.ac_source',
     pins: [
       { name: 'p', ox: 40, oy: 0 },
       { name: 'n', ox: -40, oy: 0 }
@@ -101,7 +103,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
     defaultParams: { mag: 1, phase: 0, freq: 50 },
     paramDefs: [
       { key: 'mag', label: 'lab.param.acMag', type: 'number', min: 0, step: 0.1, unit: 'V' },
-      { key: 'phase', label: 'lab.param.acPhase', type: 'number', min: -180, step: 15, unit: '°' },
+      { key: 'phase', label: 'lab.param.acPhase', type: 'number', min: -180, max: 180, step: 15, unit: '°' },
       { key: 'freq', label: 'lab.param.acFreq', type: 'number', min: 0, step: 1, unit: 'Hz' }
     ],
     width: 48,
@@ -271,6 +273,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   voltmeter: {
     modelKey: 'voltmeter',
     label: 'lab.symbol.voltmeter',
+    teachingNote: 'lab.modelNote.voltmeter',
     schematicOnly: true,
     pins: [
       { name: 'p', ox: -40, oy: 0 },
@@ -329,6 +332,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         unit: 'Ω'
       }
     ],
+    teachingNote: 'lab.modelNote.led',
     width: 28,
     height: 48
   },
@@ -458,6 +462,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         unit: 's'
       }
     ],
+    teachingNote: 'lab.modelNote.switch',
     width: 56,
     height: 28
   },
@@ -834,12 +839,14 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
         unit: 'A'
       }
     ],
+    teachingNote: 'lab.modelNote.inductor',
     width: 56,
     height: 28
   },
   potentiometer: {
     modelKey: 'potentiometer',
     label: 'lab.symbol.potentiometer',
+    teachingNote: 'lab.modelNote.potentiometer',
     pins: [
       { name: 'a', ox: -50, oy: 0 },
       { name: 'w', ox: 0, oy: 40 },
@@ -871,6 +878,7 @@ export const SYMBOL_LIBRARY: Record<string, SymbolDef> = {
   pulse_source: {
     modelKey: 'pulse_source',
     label: 'lab.symbol.pulse_source',
+    teachingNote: 'lab.modelNote.pulse_source',
     pins: [
       { name: 'p', ox: 40, oy: 0 },
       { name: 'n', ox: -40, oy: 0 }

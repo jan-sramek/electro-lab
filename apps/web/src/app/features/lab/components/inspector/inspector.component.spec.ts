@@ -46,4 +46,18 @@ describe('InspectorPanelComponent', () => {
     btn.click();
     expect(spy).toHaveBeenCalledWith(wire.a.componentId);
   });
+
+  it('clamps number commits to paramDefs min/max', () => {
+    const doc = createLedPreset();
+    const r = doc.components.find((c) => c.modelKey === 'resistor')!;
+    fixture.componentRef.setInput('doc', doc);
+    fixture.componentRef.setInput('selected', r);
+    fixture.componentRef.setInput('selectionCount', 1);
+    fixture.componentRef.setInput('selectedWireIds', []);
+    fixture.detectChanges();
+    const spy = jasmine.createSpy('paramChange');
+    component.paramChange.subscribe(spy);
+    component.onNumberDraft(r.id, 'r', -50);
+    expect(spy).toHaveBeenCalledWith({ key: 'r', value: 0.1 });
+  });
 });

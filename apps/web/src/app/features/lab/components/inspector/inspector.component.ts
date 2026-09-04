@@ -106,7 +106,7 @@ export class InspectorPanelComponent {
     this.numberDrafts.update((d) => ({ ...d, [dk]: raw ?? '' }));
     // Commit finite values immediately (spinner / valid number) so sim + burnout track the UI.
     if (typeof raw === 'number' && Number.isFinite(raw)) {
-      this.paramChange.emit({ key, value: raw });
+      this.paramChange.emit({ key, value: this.clampParam(key, raw) });
     }
   }
 
@@ -120,7 +120,7 @@ export class InspectorPanelComponent {
     });
     const value = Number(draft);
     if (!Number.isFinite(value)) return;
-    this.paramChange.emit({ key, value });
+    this.paramChange.emit({ key, value: this.clampParam(key, value) });
   }
 
   onEnum(key: string, value: number): void {
@@ -130,7 +130,17 @@ export class InspectorPanelComponent {
   onSlider(key: string, value: number | string): void {
     const n = typeof value === 'number' ? value : Number(value);
     if (!Number.isFinite(n)) return;
-    this.paramChange.emit({ key, value: n });
+    this.paramChange.emit({ key, value: this.clampParam(key, n) });
+  }
+
+  /** Clamp number/slider edits to the symbol paramDefs min/max when defined. */
+  clampParam(key: string, value: number): number {
+    const def = this.params().find((p) => p.key === key);
+    if (!def) return value;
+    let v = value;
+    if (typeof def.min === 'number') v = Math.max(def.min, v);
+    if (typeof def.max === 'number') v = Math.min(def.max, v);
+    return v;
   }
 
   asNumber(value: unknown): number {
