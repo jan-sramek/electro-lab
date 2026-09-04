@@ -60,6 +60,20 @@ function pinNetVoltage(
   return nodes[net];
 }
 
+function pinNetAcMag(
+  doc: SchematicDocument,
+  result: SimulateResponse | null,
+  componentId: string,
+  pin: string
+): number | undefined {
+  const point = result?.ac?.points?.[0];
+  if (!point) return undefined;
+  const comp = doc.components.find((c) => c.id === componentId);
+  const net = comp?.pins[pin]?.net;
+  if (!net || net === doc.groundNet) return undefined;
+  return point.nodeVoltages[net]?.mag;
+}
+
 function branchCurrent(result: SimulateResponse | null, refId: string): number | undefined {
   return result?.dcOp?.branchCurrents?.[refId];
 }
@@ -125,6 +139,16 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       return componentsByModel(ctx.doc, modelKey).some((id) => {
         const v = pinNetVoltage(ctx.doc, ctx.result, id, pin);
         return v !== undefined && v >= minVolts && v <= maxVolts;
+      });
+    }
+    case 'any_pin_ac_mag_between': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const pin = String(params['pin'] ?? '');
+      const minMag = Number(params['minMag'] ?? 0);
+      const maxMag = Number(params['maxMag'] ?? Number.POSITIVE_INFINITY);
+      return componentsByModel(ctx.doc, modelKey).some((id) => {
+        const mag = pinNetAcMag(ctx.doc, ctx.result, id, pin);
+        return mag !== undefined && mag >= minMag && mag <= maxMag;
       });
     }
     case 'any_part_not_burned': {

@@ -219,4 +219,36 @@ describe('lab-challenge-checker', () => {
     );
     expect(results[0].passed).toBeTrue();
   });
+
+  it('checks AC magnitude on a pin net', () => {
+    const doc = assignNets(createRcStepPreset());
+    const cap = doc.components.find((c) => c.modelKey === 'capacitor');
+    const na = cap!.pins['a']?.net!;
+    const results = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'any_pin_ac_mag_between',
+          paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.2, maxMag: 2 })
+        }
+      ],
+      {
+        doc,
+        result: {
+          schemaVersion: 1,
+          ok: true,
+          analysisType: 'ac',
+          errors: [],
+          warnings: [],
+          ac: {
+            points: [{ frequency: 1000, nodeVoltages: { [na]: { mag: 0.7, phaseDeg: -45 } }, branchCurrents: {} }]
+          }
+        },
+        analysisMode: 'ac'
+      }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
 });

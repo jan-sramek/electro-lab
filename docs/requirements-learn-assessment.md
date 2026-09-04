@@ -46,6 +46,7 @@ Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at chec
 | `any_switch_closed` | — (includes pushbutton via switch sim model) |
 | `any_pushbutton_pressed` | — |
 | `any_pin_dc_voltage_between` | `modelKey`, `pin`, `minVolts`, `maxVolts` |
+| `any_pin_ac_mag_between` | `modelKey`, `pin`, `minMag`, `maxMag` |
 | `any_part_not_burned` | `modelKey` |
 | `branch_current_min` | `refId`, `minAmps` |
 | `branch_current_max` | `refId`, `maxAmps` |

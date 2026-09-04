@@ -410,7 +410,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'no_circuit_errors', paramsJson: '{}' },
       { type: 'has_models', paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] }) },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.1, maxMag: 2 })
+      }
     ]
   },
   christmasTree: {
@@ -593,7 +597,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.1, maxMag: 2 })
+      }
     ]
   },
   rcHighPass: {
@@ -606,7 +614,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.05, maxMag: 2 })
+      }
     ]
   },
   rlcSeries: {
@@ -680,7 +692,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.05, maxMag: 5 })
+      }
     ]
   },
   motorPwm: {

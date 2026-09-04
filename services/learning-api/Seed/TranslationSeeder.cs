@@ -1322,6 +1322,7 @@ public static class TranslationSeeder
         ["learn.challenge.check.any_switch_closed"] = "At least one switch is closed (on).",
         ["learn.challenge.check.any_pushbutton_pressed"] = "Pushbutton is pressed (hold to test).",
         ["learn.challenge.check.any_pin_dc_voltage_between"] = "A measured node voltage is in the target range.",
+        ["learn.challenge.check.any_pin_ac_mag_between"] = "AC magnitude at a probed node is in the target range.",
         ["learn.challenge.check.any_part_not_burned"] = "Protected parts remain intact (not burned).",
         ["learn.challenge.check.min_wire_count"] = "Enough wires connect the circuit.",
         ["learn.challenge.check.branch_current_min"] = "Branch current meets the minimum.",
