@@ -206,7 +206,12 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) }
+      { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 4.0, maxVolts: 5.5 })
+      }
     ]
   },
   pot: {
@@ -420,7 +425,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'sim_ok', paramsJson: '{}' },
       {
         type: 'any_pin_ac_mag_between',
-        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.1, maxMag: 2 })
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.4, maxMag: 0.95 })
       }
     ]
   },
@@ -735,7 +740,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'sim_ok', paramsJson: '{}' },
       {
         type: 'any_pin_ac_mag_between',
-        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.05, maxMag: 5 })
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.4, maxMag: 0.95 })
       }
     ]
   },

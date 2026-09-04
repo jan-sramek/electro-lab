@@ -25,6 +25,9 @@ import { createVreg7805Preset } from '../presets/vreg-7805.preset';
 import { createHBridgePreset } from '../presets/h-bridge.preset';
 import { createMotorPwmPreset } from '../presets/motor-pwm.preset';
 import { createFuseProtectPreset } from '../presets/fuse-protect.preset';
+import { createPullUpDownPreset } from '../presets/pull-up-down.preset';
+import { createPwmFilterPreset } from '../presets/pwm-filter.preset';
+import { createDebouncePreset } from '../presets/debounce.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -531,6 +534,66 @@ describe('wire flow coverage on presets', () => {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(`${id} short open`)
         .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Pull-up (switch open) — Rpu→LED path animates; switch branch idle', () => {
+    const doc = createPullUpDownPreset();
+    const Iled = 0.008;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S1') return 0;
+      if (id === 'V1' || id === 'Rpu' || id === 'R1' || id === 'D1') return Iled;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W6', 'W7', 'W8', 'W9', 'W10']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W4', 'W5']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} switch open`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('PWM filter — pulse→R→C charge path animates; voltmeter idle', () => {
+    const doc = createPwmFilterPreset();
+    const I = 0.001;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J') || id === 'VM1') return null;
+      if (id === 'VP1' || id === 'R1' || id === 'C1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W7', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} meter idle`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Debounce (switch open) — pull-up→gate→LED path animates', () => {
+    const doc = createDebouncePreset();
+    const Iled = 0.012;
+    const Igate = 0.00005;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S1' || id === 'C1') return 0;
+      if (id === 'RD' || id === 'D1' || id === 'M1') return Iled;
+      if (id === 'Rpu' || id === 'RG' || id === 'RPD') return Igate;
+      if (id === 'V1') return Iled + Igate;
+      return null;
+    });
+    for (const id of ['W1', 'W8', 'W9', 'W10', 'W14', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
     }
   });
 });
