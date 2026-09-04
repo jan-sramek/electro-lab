@@ -294,6 +294,19 @@ export class LabEditorStore {
     this.learnChallengeMode.set(false);
   }
 
+  /** Empty the isolated challenge tab (undoable) without leaving challenge mode. */
+  clearChallengeCanvas(): void {
+    if (!this.learnChallengeMode()) return;
+    this.history.push(this.doc());
+    this.doc.set(assignNets(emptyDocument()));
+    this.selectedIds.set([]);
+    this.selectedWireIds.set([]);
+    this.activeExamplePreset.set(null);
+    this.syncHistoryFlags();
+    this.persist();
+    this.bump();
+  }
+
   /** Persist current tab, then switch. */
   switchCircuitTab(id: string): void {
     if (id === this.activeSlotId()) return;

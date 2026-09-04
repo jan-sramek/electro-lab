@@ -464,6 +464,15 @@ export class LabPageComponent implements OnInit, OnDestroy {
     this.onLoadPreset(unit.exampleId as ExamplePresetId);
   }
 
+  /** Empty the challenge tab again without leaving challenge mode. */
+  clearChallengeCanvas(): void {
+    if (!this.editor.learnChallengeMode()) return;
+    this.challengeResults.set([]);
+    this.challengePassed.set(false);
+    this.challengeMessage.set(null);
+    this.editor.clearChallengeCanvas();
+  }
+
   learnChallengePath(): string[] | null {
     const unit = this.learnChallengeUnit();
     if (!unit) return null;

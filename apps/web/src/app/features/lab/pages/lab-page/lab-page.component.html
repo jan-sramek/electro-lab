@@ -27,6 +27,9 @@
           <button type="button" class="challenge-btn secondary" (click)="peekChallengeSample()">
             {{ 'lab.challenge.peekSample' | t }}
           </button>
+          <button type="button" class="challenge-btn secondary" (click)="clearChallengeCanvas()">
+            {{ 'lab.challenge.clearCanvas' | t }}
+          </button>
           <p class="challenge-peek-hint">{{ 'lab.challenge.peekHint' | t }}</p>
           @if (challengeMessage(); as msg) {
             <p
