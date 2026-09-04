@@ -60,7 +60,7 @@ flowchart LR
   ce --> sim[CircuitSim]
 ```
 
-Browser talks to two APIs. CircuitEngine has no session state. LearningApi owns translations; catalog/progress may join when ADRs say so.
+Browser talks to two APIs. CircuitEngine has no session state. LearningApi owns translations, Learn catalog seeding, and anonymous session progress.
 
 ## Deployables
 
