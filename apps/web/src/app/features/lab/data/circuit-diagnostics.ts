@@ -86,15 +86,19 @@ export function diagnoseSchematic(
   }
 
   const floating = simParts.filter((c) => !wiredIds.has(c.id));
-  // Two-terminal parts with only one pin wired are also "floating" for teaching purposes.
-  const halfWired = simParts.filter((c) => {
+  // Under-wired terminals: 2-pin parts with one open end, or multi-pin parts missing a required pin.
+  const underWired = simParts.filter((c) => {
     if (!wiredIds.has(c.id)) return false;
     const def = SYMBOL_LIBRARY[c.modelKey];
-    if (!def || def.pins.length !== 2) return false;
+    if (!def?.pins.length) return false;
     const hit = def.pins.filter((p) => pinWired.has(`${c.id}:${p.name}`)).length;
-    return hit === 1;
+    if (def.pins.length === 2) return hit === 1;
+    // Potentiometer may be used as a rheostat (ends only, or end+wiper) — require ≥2 pins.
+    if (c.modelKey === 'potentiometer') return hit < 2;
+    // Transistors / op-amps / relays: every teaching pin must be connected.
+    return hit < def.pins.length;
   });
-  const floatingIds = [...new Set([...floating, ...halfWired].map((c) => c.id))];
+  const floatingIds = [...new Set([...floating, ...underWired].map((c) => c.id))];
   if (floatingIds.length > 0) {
     out.push(diag('floating_component', 'error', floatingIds));
   }

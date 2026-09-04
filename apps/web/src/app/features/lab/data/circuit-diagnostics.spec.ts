@@ -61,6 +61,41 @@ describe('circuit-diagnostics', () => {
     expect(floating!.componentIds).toContain('R1');
   });
 
+  it('reports floating_component when an NMOS is missing the source pin', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const m1 = createComponent('nmos', 100, 0, 'M1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, m1, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'M1', pin: 'd' } },
+        { id: 'W2', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'M1', pin: 'g' } },
+        { id: 'W3', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+        // M1.s dangling
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    expect(diags.find((d) => d.code === 'floating_component')?.componentIds).toContain('M1');
+  });
+
+  it('allows potentiometer rheostat use with only two pins wired', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const pot = createComponent('potentiometer', 100, 0, 'POT1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, pot, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'POT1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'POT1', pin: 'w' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W3', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    expect(diags.find((d) => d.code === 'floating_component')?.componentIds ?? []).not.toContain('POT1');
+  });
+
   it('maps singular matrix and keeps i18n keys in sync with fallback', () => {
     expect(isSingularMatrixMessage('Singular circuit matrix (check ground...)')).toBeTrue();
     expect(SINGULAR_FALLBACK_KEY).toBe('diag.singular_fallback');
