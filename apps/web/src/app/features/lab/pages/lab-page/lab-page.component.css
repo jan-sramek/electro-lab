@@ -83,6 +83,21 @@
   line-height: 1.35;
 }
 
+.challenge-confirm {
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #c5e6d8;
+  border-radius: 6px;
+  background: #e8f5ef;
+}
+
+.challenge-confirm p {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: #12263a;
+  line-height: 1.4;
+}
+
 .challenge-msg { margin: 0.5rem 0 0; font-size: 0.9rem; }
 .challenge-msg.ok { color: #0b6e4f; }
 .challenge-msg.warn { color: #b45309; }

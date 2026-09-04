@@ -57,6 +57,8 @@ export class LabPageComponent implements OnInit, OnDestroy {
   readonly challengePassed = signal(false);
   readonly challengeChecking = signal(false);
   readonly challengeMessage = signal<string | null>(null);
+  /** Inline confirm for Peek / Clear — avoids bare window.confirm. */
+  readonly challengeConfirm = signal<'peek' | 'clear' | null>(null);
   readonly learnUnitPath = learnUnitPath;
 
   readonly challengeCriteria = computed(() => {
@@ -463,27 +465,38 @@ export class LabPageComponent implements OnInit, OnDestroy {
 
   /** Load the unit's teaching sample into the challenge tab as a rebuild reference. */
   peekChallengeSample(): void {
-    const unit = this.learnChallengeUnit();
-    if (!unit?.exampleId) return;
-    if (typeof window !== 'undefined' && !window.confirm(this.i18n.t('lab.challenge.peekConfirm'))) {
-      return;
-    }
-    this.challengeResults.set([]);
-    this.challengePassed.set(false);
-    this.challengeMessage.set(null);
-    this.onLoadPreset(unit.exampleId as ExamplePresetId);
+    if (!this.learnChallengeUnit()?.exampleId) return;
+    this.challengeConfirm.set('peek');
   }
 
   /** Empty the challenge tab again without leaving challenge mode. */
   clearChallengeCanvas(): void {
     if (!this.editor.learnChallengeMode()) return;
-    if (typeof window !== 'undefined' && !window.confirm(this.i18n.t('lab.challenge.clearConfirm'))) {
+    this.challengeConfirm.set('clear');
+  }
+
+  cancelChallengeConfirm(): void {
+    this.challengeConfirm.set(null);
+  }
+
+  confirmChallengeAction(): void {
+    const action = this.challengeConfirm();
+    this.challengeConfirm.set(null);
+    if (action === 'peek') {
+      const unit = this.learnChallengeUnit();
+      if (!unit?.exampleId) return;
+      this.challengeResults.set([]);
+      this.challengePassed.set(false);
+      this.challengeMessage.set(null);
+      this.onLoadPreset(unit.exampleId as ExamplePresetId);
       return;
     }
-    this.challengeResults.set([]);
-    this.challengePassed.set(false);
-    this.challengeMessage.set(null);
-    this.editor.clearChallengeCanvas();
+    if (action === 'clear') {
+      this.challengeResults.set([]);
+      this.challengePassed.set(false);
+      this.challengeMessage.set(null);
+      this.editor.clearChallengeCanvas();
+    }
   }
 
   learnChallengePath(): string[] | null {

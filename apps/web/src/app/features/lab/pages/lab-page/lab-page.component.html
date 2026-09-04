@@ -36,6 +36,22 @@
             {{ 'lab.challenge.clearCanvas' | t }}
           </button>
           <p class="challenge-peek-hint">{{ 'lab.challenge.peekHint' | t }}</p>
+          @if (challengeConfirm(); as confirmAction) {
+            <div class="challenge-confirm" role="alertdialog" aria-live="polite">
+              <p>
+                {{
+                  (confirmAction === 'peek' ? 'lab.challenge.peekConfirm' : 'lab.challenge.clearConfirm')
+                    | t
+                }}
+              </p>
+              <button type="button" class="challenge-btn" (click)="confirmChallengeAction()">
+                {{ 'lab.challenge.confirmAction' | t }}
+              </button>
+              <button type="button" class="challenge-btn secondary" (click)="cancelChallengeConfirm()">
+                {{ 'lab.challenge.cancelAction' | t }}
+              </button>
+            </div>
+          }
           @if (challengeMessage(); as msg) {
             <p
               class="challenge-msg"
