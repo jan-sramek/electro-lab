@@ -29,16 +29,33 @@ Handy Lab anchors: LED / RC fade presets, Arduino-path preset compiles, CircuitS
 4. Docs/ADRs updated if contracts or decisions changed  
 5. No new Lab simulator features unless ADR-001 reopened  
 6. Happy path clicked through locally  
+7. If Learn challenge SPECS changed: `npm run export:challenge-criteria` and `npm run check:challenge-criteria`  
 
 ## What to run before merging
 
 ```bash
 dotnet test
 cd apps/web && npx ng build --configuration=development
-cd apps/web && npx ng test --no-watch --browsers=ChromeHeadless --include=**/preset-contracts.spec.ts
+cd apps/web && npm run check:challenge-criteria
+cd apps/web && npx ng test --no-watch --browsers=ChromeHeadless \
+  --include=**/preset-contracts.spec.ts \
+  --include=**/preset-groups.spec.ts \
+  --include=**/wire-flow-coverage.spec.ts \
+  --include=**/learn-challenge-preset-contract.spec.ts \
+  --include=**/lab-challenge-checker.spec.ts \
+  --include=**/circuit-diagnostics.spec.ts \
+  --include=**/burnout.spec.ts \
+  --include=**/burnout-new-parts.spec.ts \
+  --include=**/learn-catalog.service.spec.ts
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) runs `dotnet test`, `ng build`, and the Lab/Learn contract suite on push/PR.
+### Manual smoke (one deep-link path)
+
+1. Open `/learn/basics/led-series` → complete read + quiz  
+2. Continue to Lab challenge (`?challenge=1`) → Peek sample → Check → Back to unit  
+3. Confirm progress shows lab complete when API is up  
+
+GitHub Actions (`.github/workflows/ci.yml`) runs `dotnet test`, `ng build`, challenge-criteria freshness check, and the Lab/Learn contract suite on push/PR.
 
 ## Logging and ops
 

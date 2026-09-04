@@ -30,6 +30,8 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - name: Install
         run: npm ci
+      - name: Challenge SPECS seed freshness
+        run: npm run check:challenge-criteria
       - name: Build
         run: npx ng build --configuration=development
       - name: Lab + Learn contract tests
@@ -44,3 +46,5 @@ jobs:
           --include=**/burnout.spec.ts
           --include=**/burnout-new-parts.spec.ts
           --include=**/learn-catalog.service.spec.ts
+          --include=**/learn-lab-challenge.service.spec.ts
+          --include=**/lab-editor.store.spec.ts
