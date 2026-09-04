@@ -40,4 +40,23 @@ describe('LabEditorStore challenge sim lock', () => {
     expect(editor.tStop()).toBe(2);
     expect(editor.initFromDc()).toBeTrue();
   });
+
+  it('ignores newSchematic and analysis changes while challenge mode is on', () => {
+    editor.loadLedPreset();
+    const before = editor.doc().components.length;
+    editor.newSchematic();
+    expect(editor.doc().components.length).toBe(before);
+    editor.setAnalysisMode('dcOp');
+    expect(editor.analysisMode()).toBe('tran');
+    editor.setTStop(9);
+    expect(editor.tStop()).toBe(2);
+  });
+
+  it('ignores closeCircuitTab while challenge mode is on', () => {
+    const id = editor.activeSlotId();
+    expect(id).toBeTruthy();
+    editor.closeCircuitTab(id!);
+    expect(editor.activeSlotId()).toBe(id);
+    expect(editor.learnChallengeMode()).toBeTrue();
+  });
 });

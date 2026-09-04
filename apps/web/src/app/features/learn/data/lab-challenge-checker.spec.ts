@@ -7,6 +7,9 @@ import { createVoltageDividerPreset } from '../../lab/data/presets/voltage-divid
 import { createRcStepPreset } from '../../lab/data/presets/rc-step.preset';
 import { createSeriesLedsPreset } from '../../lab/data/presets/series-leds.preset';
 import { createMotorNmosPreset } from '../../lab/data/presets/motor-nmos.preset';
+import { createRelayDiodePreset } from '../../lab/data/presets/relay-diode.preset';
+import { createI2cOledPreset } from '../../lab/data/presets/i2c-oled.preset';
+import { createDebouncePreset } from '../../lab/data/presets/debounce.preset';
 import { checkLabCriteria, modelKeyMatches } from './lab-challenge-checker';
 import { specCriteriaForCheck } from './learn-challenge-spec';
 
@@ -501,5 +504,105 @@ describe('lab-challenge-checker', () => {
     const div = JSON.parse(divBand.paramsJson) as { minVolts: number; maxVolts: number };
     const ref = JSON.parse(refBand.paramsJson) as { minVolts: number; maxVolts: number };
     expect(ref.maxVolts - ref.minVolts).toBeLessThan(div.maxVolts - div.minVolts);
+  });
+
+  it('coil-protection fails when the flyback diode is removed', () => {
+    const full = createRelayDiodePreset();
+    const stripped = {
+      ...full,
+      components: full.components.filter((c) => c.modelKey !== 'diode'),
+      wires: full.wires.filter((w) => w.a.componentId !== 'Dfly' && w.b.componentId !== 'Dfly')
+    };
+    const criteria = specCriteriaForCheck('relay', [], 'coil-protection');
+    const results = checkLabCriteria(criteria, {
+      doc: stripped,
+      result: {
+        schemaVersion: 1,
+        ok: true,
+        analysisType: 'dcOp',
+        errors: [],
+        warnings: [],
+        dcOp: { nodeVoltages: {}, branchCurrents: { D1: 0.01, S1: 0.01 } }
+      },
+      analysisMode: 'dcOp'
+    });
+    const failedTypes = results
+      .filter((r) => !r.passed)
+      .map((r) => criteria.find((c) => c.id === r.criterionId)?.type);
+    expect(failedTypes.some((t) => t === 'has_models' || t === 'any_model_min_count')).toBeTrue();
+  });
+
+  it('i2c-multi-slave fails when wiring is too sparse for its min_wire_count', () => {
+    const full = createI2cOledPreset();
+    const sparse = { ...full, wires: full.wires.slice(0, 8) };
+    const wiring = specCriteriaForCheck('i2cOled', [], 'i2c-wiring');
+    const multi = specCriteriaForCheck('i2cOled', [], 'i2c-multi-slave');
+    const wiringOk = checkLabCriteria(wiring, { doc: sparse, result: null, analysisMode: 'dcOp' });
+    const multiOk = checkLabCriteria(multi, { doc: sparse, result: null, analysisMode: 'dcOp' });
+    const wiringWireFail = wiringOk.some(
+      (r) => !r.passed && wiring.find((c) => c.id === r.criterionId)?.type === 'min_wire_count'
+    );
+    const multiWireFail = multiOk.some(
+      (r) => !r.passed && multi.find((c) => c.id === r.criterionId)?.type === 'min_wire_count'
+    );
+    expect(wiringWireFail).toBeFalse();
+    expect(multiWireFail).toBeTrue();
+  });
+
+  it('debounce-idea fails when the debounce capacitor is removed', () => {
+    const full = createDebouncePreset();
+    const stripped = {
+      ...full,
+      components: full.components.filter((c) => c.modelKey !== 'capacitor'),
+      wires: full.wires.filter((w) => w.a.componentId !== 'C1' && w.b.componentId !== 'C1')
+    };
+    const criteria = specCriteriaForCheck('debounce', [], 'debounce-idea');
+    const results = checkLabCriteria(criteria, {
+      doc: stripped,
+      result: {
+        schemaVersion: 1,
+        ok: true,
+        analysisType: 'dcOp',
+        errors: [],
+        warnings: [],
+        dcOp: { nodeVoltages: {}, branchCurrents: { D1: 0.01 } }
+      },
+      analysisMode: 'dcOp'
+    });
+    expect(
+      results.some(
+        (r) =>
+          !r.passed && criteria.find((c) => c.id === r.criterionId)?.type === 'any_model_min_count'
+      )
+    ).toBeTrue();
+  });
+
+  it('adc-reference fails when midtap is outside the tight band but divider still passes', () => {
+    const doc = createVoltageDividerPreset();
+    // Equal divider mid is ~2.5 V; put mid net at 2.0 V (outside 2.4–2.6, inside 2.0–3.0).
+    const midNet =
+      doc.components.find((c) => c.id === 'R1')?.pins['b']?.net ??
+      doc.components.find((c) => c.modelKey === 'resistor')?.pins['b']?.net;
+    expect(midNet).toBeTruthy();
+    const result = {
+      schemaVersion: 1,
+      ok: true,
+      analysisType: 'dcOp' as const,
+      errors: [] as string[],
+      warnings: [] as string[],
+      dcOp: { nodeVoltages: { [midNet!]: 2.0 }, branchCurrents: {} }
+    };
+    const divider = specCriteriaForCheck('voltageDivider', [], 'voltage-divider');
+    const reference = specCriteriaForCheck('voltageDivider', [], 'adc-reference');
+    const divResults = checkLabCriteria(divider, { doc, result, analysisMode: 'dcOp' });
+    const refResults = checkLabCriteria(reference, { doc, result, analysisMode: 'dcOp' });
+    const divBandPass = divResults.find(
+      (r) => divider.find((c) => c.id === r.criterionId)?.type === 'any_pin_dc_voltage_between'
+    );
+    const refBandPass = refResults.find(
+      (r) => reference.find((c) => c.id === r.criterionId)?.type === 'any_pin_dc_voltage_between'
+    );
+    expect(divBandPass?.passed).toBeTrue();
+    expect(refBandPass?.passed).toBeFalse();
   });
 });

@@ -49,7 +49,6 @@ describe('CircuitSimulationFacade.runAndWait', () => {
 
   it('resolves on empty netlist without hanging', async () => {
     const editor = TestBed.inject(LabEditorStore);
-    spyOn(window, 'confirm').and.returnValue(true);
     editor.newSchematic();
     api.simulate.calls.reset();
     await facade.runAndWait(2000);
