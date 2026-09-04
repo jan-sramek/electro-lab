@@ -227,6 +227,8 @@ export class LabEditorStore {
   readonly activeExamplePreset = signal<ExamplePresetId | null>(null);
   /** Learn path challenge — single isolated tab, empty canvas, no library side effects. */
   readonly learnChallengeMode = signal(false);
+  /** Sim settings locked for the challenge (SPECS), restored after Peek/Clear. */
+  private challengeSim: SlotSimState | null = null;
   readonly revision = signal(0);
 
   readonly selectedId = computed(() => {
@@ -275,6 +277,7 @@ export class LabEditorStore {
       pinned: true,
       sim
     });
+    this.challengeSim = { ...sim };
     this.learnChallengeMode.set(true);
     this.history.clear();
     this.doc.set(assignNets(doc));
@@ -292,6 +295,7 @@ export class LabEditorStore {
     if (!this.learnChallengeMode()) return;
     this.persistence.endIsolatedSession();
     this.learnChallengeMode.set(false);
+    this.challengeSim = null;
   }
 
   /** Empty the isolated challenge tab (undoable) without leaving challenge mode. */
@@ -302,6 +306,7 @@ export class LabEditorStore {
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
+    this.restoreChallengeSim(null);
     this.syncHistoryFlags();
     this.persist();
     this.bump();
@@ -433,12 +438,14 @@ export class LabEditorStore {
   }
 
   setAnalysisMode(mode: AnalysisMode): void {
+    if (this.learnChallengeMode()) return;
     this.analysisMode.set(mode);
     this.persist();
     this.bump();
   }
 
   setTStop(raw: number | string): void {
+    if (this.learnChallengeMode()) return;
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.tStop.set(v);
@@ -447,6 +454,7 @@ export class LabEditorStore {
   }
 
   setDt(raw: number | string): void {
+    if (this.learnChallengeMode()) return;
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.dt.set(v);
@@ -455,6 +463,7 @@ export class LabEditorStore {
   }
 
   setAcFreq(raw: number | string): void {
+    if (this.learnChallengeMode()) return;
     const v = Number(raw);
     if (!Number.isFinite(v) || v <= 0) return;
     this.acFreq.set(v);
@@ -463,6 +472,7 @@ export class LabEditorStore {
   }
 
   setInitFromDc(value: boolean): void {
+    if (this.learnChallengeMode()) return;
     this.initFromDc.set(!!value);
     this.persist();
     this.bump();
@@ -1145,13 +1155,14 @@ export class LabEditorStore {
       initFromDc: this.initFromDc()
     };
 
-    // Challenge mode stays on the isolated tab — load the sample in place as a reference.
+    // Challenge mode stays on the isolated tab — load the sample schematic only.
+    // Keep SPECS analysis settings (Peek openExample timing must not replace them).
     if (this.learnChallengeMode()) {
       this.history.push(this.doc());
       this.doc.set(doc);
       this.selectedIds.set([]);
       this.selectedWireIds.set([]);
-      this.applySlotSim(sim);
+      this.restoreChallengeSim(presetId);
       this.syncHistoryFlags();
       this.persist();
       this.bump();
@@ -1192,6 +1203,18 @@ export class LabEditorStore {
     } else {
       this.activeExamplePreset.set(null);
     }
+  }
+
+  /** Re-apply SPECS analysis settings after Peek/Clear (optionally keep the peeked preset id). */
+  private restoreChallengeSim(examplePreset: ExamplePresetId | null): void {
+    const snap = this.challengeSim;
+    if (!snap) return;
+    this.analysisMode.set(snap.analysisMode);
+    this.tStop.set(snap.tStop);
+    this.dt.set(snap.dt);
+    this.acFreq.set(snap.acFreq);
+    this.initFromDc.set(!!snap.initFromDc);
+    this.activeExamplePreset.set(examplePreset);
   }
 
   private currentSimState(): SlotSimState {
