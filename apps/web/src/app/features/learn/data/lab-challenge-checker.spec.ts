@@ -5,6 +5,7 @@ import { createBuzzerButtonPreset } from '../../lab/data/presets/buzzer-button.p
 import { createPotDividerPreset } from '../../lab/data/presets/pot-divider.preset';
 import { createVoltageDividerPreset } from '../../lab/data/presets/voltage-divider.preset';
 import { createRcStepPreset } from '../../lab/data/presets/rc-step.preset';
+import { createSeriesLedsPreset } from '../../lab/data/presets/series-leds.preset';
 import { checkLabCriteria, modelKeyMatches } from './lab-challenge-checker';
 import { specCriteriaForCheck } from './learn-challenge-spec';
 
@@ -278,6 +279,89 @@ describe('lab-challenge-checker', () => {
             time: [0, 0.005, 0.01],
             nodeVoltages: [{ id: na, values: [0, 2.1, 4.5] }],
             branchCurrents: []
+          }
+        },
+        analysisMode: 'tran'
+      }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
+
+  it('checks model min count', () => {
+    const doc = createSeriesLedsPreset();
+    const results = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'any_model_min_count',
+          paramsJson: JSON.stringify({ modelKey: 'led', min: 2 })
+        }
+      ],
+      { doc, result: null, analysisMode: 'dcOp' }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
+
+  it('checks transient peak-to-peak voltage', () => {
+    const doc = assignNets(createRcStepPreset());
+    const cap = doc.components.find((c) => c.modelKey === 'capacitor');
+    const na = cap!.pins['a']?.net!;
+    const results = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'any_pin_tran_peak_to_peak_min',
+          paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minVolts: 1 })
+        }
+      ],
+      {
+        doc,
+        result: {
+          schemaVersion: 1,
+          ok: true,
+          analysisType: 'tran',
+          errors: [],
+          warnings: [],
+          tran: {
+            time: [0, 0.01, 0.02],
+            nodeVoltages: [{ id: na, values: [4.0, 3.2, 4.5] }],
+            branchCurrents: []
+          }
+        },
+        analysisMode: 'tran'
+      }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
+
+  it('checks transient branch current peak', () => {
+    const doc = createLedPreset();
+    const results = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'any_model_tran_current_peak_min',
+          paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.01 })
+        }
+      ],
+      {
+        doc,
+        result: {
+          schemaVersion: 1,
+          ok: true,
+          analysisType: 'tran',
+          errors: [],
+          warnings: [],
+          tran: {
+            time: [0, 0.001],
+            nodeVoltages: [],
+            branchCurrents: [{ id: 'D1', values: [0, 0.02] }]
           }
         },
         analysisMode: 'tran'

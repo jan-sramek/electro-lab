@@ -22,6 +22,9 @@ import { createRelayDiodePreset } from '../presets/relay-diode.preset';
 import { createOpAmpFollowerPreset } from '../presets/opamp-follower.preset';
 import { createReversePolarityPreset } from '../presets/reverse-polarity.preset';
 import { createVreg7805Preset } from '../presets/vreg-7805.preset';
+import { createHBridgePreset } from '../presets/h-bridge.preset';
+import { createMotorPwmPreset } from '../presets/motor-pwm.preset';
+import { createFuseProtectPreset } from '../presets/fuse-protect.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -465,6 +468,69 @@ describe('wire flow coverage on presets', () => {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('H-bridge forward (S1+S4) — motor path animates; open diagonal idle', () => {
+    const doc = createHBridgePreset();
+    const I = 0.2;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S2' || id === 'S3') return 0;
+      if (id === 'V1' || id === 'S1' || id === 'S4' || id === 'MOT1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W9', 'W10', 'W11', 'W12', 'W13']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W5', 'W6', 'W7', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} open diagonal`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Motor PWM on-phase — supply→motor→FET→return animates; flyback idle', () => {
+    const doc = createMotorPwmPreset();
+    const I = 0.25;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1' || id === 'RG' || id === 'RPD') return 0;
+      if (id === 'Dfly') return 0;
+      if (id === 'V1' || id === 'MOT1' || id === 'M1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W7', 'W8', 'W9', 'W12', 'W13', 'W14']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    // W11 shares the drain node with the motor; W10 is the flyback cathode stub.
+    expect(Math.abs(currents.get('W10') ?? 0))
+      .withContext('W10 flyback cathode idle')
+      .toBeLessThan(1e-6);
+  });
+
+  it('Fuse protect (safe) — fuse→load path animates; short switch idle', () => {
+    const doc = createFuseProtectPreset();
+    const I = 0.022;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S1') return 0;
+      if (id === 'VB' || id === 'F1' || id === 'RL') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W7', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W5', 'W6']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} short open`)
+        .toBeLessThan(1e-6);
     }
   });
 });

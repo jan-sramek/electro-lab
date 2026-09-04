@@ -91,6 +91,33 @@ function pinNetTranPeak(
   return Math.max(...row.values);
 }
 
+function pinNetTranPeakToPeak(
+  doc: SchematicDocument,
+  result: SimulateResponse | null,
+  componentId: string,
+  pin: string
+): number | undefined {
+  const series = result?.tran?.nodeVoltages;
+  if (!series?.length) return undefined;
+  const comp = doc.components.find((c) => c.id === componentId);
+  const net = comp?.pins[pin]?.net;
+  if (!net || net === doc.groundNet) return undefined;
+  const row = series.find((s) => s.id === net);
+  if (!row?.values.length) return undefined;
+  const max = Math.max(...row.values);
+  const min = Math.min(...row.values);
+  return max - min;
+}
+
+function modelTranCurrentPeakAbs(
+  result: SimulateResponse | null,
+  componentId: string
+): number | undefined {
+  const series = result?.tran?.branchCurrents?.find((s) => s.id === componentId);
+  if (!series?.values.length) return undefined;
+  return series.values.reduce((best, v) => (Math.abs(v) > Math.abs(best) ? Math.abs(v) : best), 0);
+}
+
 function branchCurrent(result: SimulateResponse | null, refId: string): number | undefined {
   return result?.dcOp?.branchCurrents?.[refId];
 }
@@ -175,6 +202,28 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       return componentsByModel(ctx.doc, modelKey).some((id) => {
         const peak = pinNetTranPeak(ctx.doc, ctx.result, id, pin);
         return peak !== undefined && peak >= minVolts;
+      });
+    }
+    case 'any_pin_tran_peak_to_peak_min': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const pin = String(params['pin'] ?? '');
+      const minVolts = Number(params['minVolts'] ?? 0);
+      return componentsByModel(ctx.doc, modelKey).some((id) => {
+        const p2p = pinNetTranPeakToPeak(ctx.doc, ctx.result, id, pin);
+        return p2p !== undefined && p2p >= minVolts;
+      });
+    }
+    case 'any_model_min_count': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const min = Number(params['min'] ?? 1);
+      return componentsByModel(ctx.doc, modelKey).length >= min;
+    }
+    case 'any_model_tran_current_peak_min': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const minAmps = Number(params['minAmps'] ?? 0);
+      return componentsByModel(ctx.doc, modelKey).some((id) => {
+        const peak = modelTranCurrentPeakAbs(ctx.result, id);
+        return peak !== undefined && peak >= minAmps;
       });
     }
     case 'any_part_not_burned': {

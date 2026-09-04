@@ -177,7 +177,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'buzzer', 'resistor', 'pushbutton', 'ground'] })
       },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'any_pushbutton_pressed', paramsJson: '{}' }
+      { type: 'any_pushbutton_pressed', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'buzzer', minAmps: 0.005 }) }
     ]
   },
   arduino: {
@@ -259,6 +260,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] })
       },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 2 }) },
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
@@ -272,6 +274,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] })
       },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 2 }) },
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
@@ -569,8 +572,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) },
       {
-        type: 'any_pin_tran_peak_min',
-        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minVolts: 4 })
+        type: 'any_pin_tran_peak_to_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minVolts: 0.3 })
       }
     ]
   },
@@ -750,7 +753,12 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_model_tran_current_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 })
+      },
+      { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
     ]
   },
   hBridge: {
@@ -851,6 +859,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_switch_closed', paramsJson: '{}' },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
@@ -866,6 +875,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_switch_closed', paramsJson: '{}' },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
@@ -904,6 +914,31 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
       type: 'any_pin_dc_voltage_between',
       paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.0, maxVolts: 3.0 })
     }
+  ],
+  'ohm-explore': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.001 }) },
+    { type: 'any_model_current_max', paramsJson: JSON.stringify({ modelKey: 'led', maxAmps: 0.025 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'led' }) }
+  ],
+  'time-constant-estimate': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'capacitor', 'ground'] }) },
+    { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 2.0 }) }
+  ],
+  'inductive-why-diode': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
   ]
 };
 
