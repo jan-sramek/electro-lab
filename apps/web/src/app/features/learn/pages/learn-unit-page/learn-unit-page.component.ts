@@ -296,6 +296,16 @@ export class LearnUnitPageComponent implements OnInit {
   }
 
   goToLab(): void {
+    if (!this.quizPassed()) return;
+    const u = this.unit();
+    if (!u) return;
+    // Optimistic advance when local quiz pass outruns session progress sync.
+    this.patchUnitProgress({
+      readComplete: true,
+      quizPassed: true,
+      labPassed: u.progress.labPassed,
+      complete: u.progress.complete
+    });
   }
 
   onOpenLab(u: LearnUnitDetailResponse): void {
