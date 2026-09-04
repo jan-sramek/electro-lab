@@ -140,12 +140,34 @@
           [challengeMode]="editor.learnChallengeMode()"
           (activate)="editor.switchCircuitTab($event)"
           (add)="editor.addCircuitTab()"
-          (close)="editor.closeCircuitTab($event)"
+          (close)="requestCloseTab($event)"
           (rename)="editor.renameCircuitTab($event.id, $event.name)"
           (togglePin)="editor.toggleCircuitTabPinned($event)"
-          (closeOthers)="editor.closeOtherCircuitTabs()"
+          (closeOthers)="requestCloseOtherTabs()"
           (closeUnpinned)="editor.closeUnpinnedCircuitTabs()"
         />
+        @if (closeTabConfirmId()) {
+          <div class="lab-confirm-banner" role="alertdialog" aria-live="polite">
+            <p>{{ 'lab.tabs.closeConfirm' | t }}</p>
+            <button type="button" class="challenge-btn" (click)="confirmCloseTab()">
+              {{ 'lab.challenge.confirmAction' | t }}
+            </button>
+            <button type="button" class="challenge-btn secondary" (click)="cancelCloseTab()">
+              {{ 'lab.challenge.cancelAction' | t }}
+            </button>
+          </div>
+        }
+        @if (closeOthersConfirm()) {
+          <div class="lab-confirm-banner" role="alertdialog" aria-live="polite">
+            <p>{{ 'lab.tabs.closeOthersConfirm' | t }}</p>
+            <button type="button" class="challenge-btn" (click)="confirmCloseOtherTabs()">
+              {{ 'lab.challenge.confirmAction' | t }}
+            </button>
+            <button type="button" class="challenge-btn secondary" (click)="cancelCloseOtherTabs()">
+              {{ 'lab.challenge.cancelAction' | t }}
+            </button>
+          </div>
+        }
         <div class="status-rail">
           <app-status-banner
             [error]="sim.error()"

@@ -61,6 +61,9 @@ export class LabPageComponent implements OnInit, OnDestroy {
   readonly challengeConfirm = signal<'peek' | 'clear' | null>(null);
   /** Inline confirm for toolbar New schematic. */
   readonly newSchematicConfirm = signal(false);
+  /** Pending tab id to close after in-app confirm. */
+  readonly closeTabConfirmId = signal<string | null>(null);
+  readonly closeOthersConfirm = signal(false);
   readonly learnUnitPath = learnUnitPath;
 
   readonly challengeCriteria = computed(() => {
@@ -515,6 +518,37 @@ export class LabPageComponent implements OnInit, OnDestroy {
     this.editor.newSchematic();
   }
 
+  requestCloseTab(id: string): void {
+    if (this.editor.learnChallengeMode()) return;
+    this.closeOthersConfirm.set(false);
+    this.closeTabConfirmId.set(id);
+  }
+
+  cancelCloseTab(): void {
+    this.closeTabConfirmId.set(null);
+  }
+
+  confirmCloseTab(): void {
+    const id = this.closeTabConfirmId();
+    this.closeTabConfirmId.set(null);
+    if (id) this.editor.closeCircuitTab(id);
+  }
+
+  requestCloseOtherTabs(): void {
+    if (this.editor.learnChallengeMode()) return;
+    this.closeTabConfirmId.set(null);
+    this.closeOthersConfirm.set(true);
+  }
+
+  cancelCloseOtherTabs(): void {
+    this.closeOthersConfirm.set(false);
+  }
+
+  confirmCloseOtherTabs(): void {
+    this.closeOthersConfirm.set(false);
+    this.editor.closeOtherCircuitTabs();
+  }
+
   learnChallengePath(): string[] | null {
     const unit = this.learnChallengeUnit();
     if (!unit) return null;
@@ -582,6 +616,14 @@ export class LabPageComponent implements OnInit, OnDestroy {
       }
       if (this.newSchematicConfirm()) {
         this.cancelNewSchematic();
+        return;
+      }
+      if (this.closeTabConfirmId()) {
+        this.cancelCloseTab();
+        return;
+      }
+      if (this.closeOthersConfirm()) {
+        this.cancelCloseOtherTabs();
         return;
       }
       this.editor.escape();

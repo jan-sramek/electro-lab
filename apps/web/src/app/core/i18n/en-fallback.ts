@@ -180,6 +180,8 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.tabs.unpinCurrent': 'Unpin current tab',
   'lab.tabs.pinned': 'Pinned',
   'lab.tabs.closeOthers': 'Close other tabs',
+  'lab.tabs.closeConfirm': 'Close this circuit tab? Unsaved edits on it will be lost.',
+  'lab.tabs.closeOthersConfirm': 'Close other unpinned tabs? Their unsaved edits will be lost.',
   'lab.tabs.closeUnpinned': 'Close unpinned tabs',
 
   'lab.palette.title': 'Parts',
