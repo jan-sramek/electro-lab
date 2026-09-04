@@ -10,6 +10,18 @@
   color: #64748b;
 }
 
+.wire-ends {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.wire-ends li {
+  margin-bottom: 0.25rem;
+}
+
 .model-note {
   margin: -0.35rem 0 0.75rem;
   padding: 0.4rem 0.5rem;

@@ -1,6 +1,6 @@
 import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SchematicComponent } from '../../data/schematic.model';
+import { SchematicComponent, SchematicDocument } from '../../data/schematic.model';
 import { SYMBOL_LIBRARY, ParamDef } from '../../data/symbol-library';
 import {
   BurnKind,
@@ -20,6 +20,8 @@ import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 export class InspectorPanelComponent {
   readonly selected = input<SchematicComponent | null>(null);
   readonly selectionCount = input(0);
+  readonly selectedWireIds = input<string[]>([]);
+  readonly doc = input<SchematicDocument | null>(null);
   readonly paramChange = output<{ key: string; value: number | boolean }>();
   /** Hold-to-press params (pushbutton) — no undo spam. */
   readonly momentaryPress = output<{ key: string; pressed: boolean }>();
@@ -68,6 +70,25 @@ export class InspectorPanelComponent {
     const c = this.selected();
     if (!c) return [];
     return SYMBOL_LIBRARY[c.modelKey]?.paramDefs ?? [];
+  });
+
+  readonly wireSelection = computed(() => {
+    const ids = this.selectedWireIds();
+    const doc = this.doc();
+    if (!ids.length || !doc) return null;
+    const wires = ids
+      .map((id) => doc.wires.find((w) => w.id === id))
+      .filter((w): w is NonNullable<typeof w> => !!w);
+    if (!wires.length) return null;
+    return {
+      count: wires.length,
+      primary: wires[0]!,
+      endpoints: wires.map((w) => ({
+        id: w.id,
+        a: `${w.a.componentId}.${w.a.pin}`,
+        b: `${w.b.componentId}.${w.b.pin}`
+      }))
+    };
   });
 
   numberDisplay(c: SchematicComponent, key: string): number | string {

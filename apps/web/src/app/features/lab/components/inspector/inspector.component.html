@@ -90,6 +90,28 @@
       </button>
     </div>
   } @else {
-    <p class="muted">{{ 'lab.inspector.empty' | t }}</p>
+    @if (wireSelection(); as wires) {
+      <p class="meta">
+        @if (wires.count === 1) {
+          <code>{{ wires.primary.id }}</code> · {{ 'lab.inspector.wire' | t }}
+        } @else {
+          {{ 'lab.inspector.multiWires' | t: { count: wires.count } }}
+        }
+      </p>
+      <ul class="wire-ends">
+        @for (w of wires.endpoints; track w.id) {
+          <li>
+            <code>{{ w.id }}</code>: {{ w.a }} ↔ {{ w.b }}
+          </li>
+        }
+      </ul>
+      <div class="actions">
+        <button type="button" class="danger" (click)="remove.emit()">
+          {{ 'lab.inspector.delete' | t }}
+        </button>
+      </div>
+    } @else {
+      <p class="muted">{{ 'lab.inspector.empty' | t }}</p>
+    }
   }
 </div>

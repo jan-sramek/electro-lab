@@ -130,6 +130,8 @@
       <app-inspector-panel
         [selected]="editor.selected()"
         [selectionCount]="editor.selectedIds().length"
+        [selectedWireIds]="editor.selectedWireIds()"
+        [doc]="editor.doc()"
         (paramChange)="editor.onParamChange($event)"
         (momentaryPress)="onInspectorMomentary($event)"
         (rotate)="editor.rotateSelected()"

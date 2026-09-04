@@ -322,7 +322,9 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.inspector.rotate': 'Rotate 90°',
   'lab.inspector.delete': 'Delete',
   'lab.inspector.multi': '{count} parts selected',
-  'lab.inspector.empty': 'Select a component to edit its parameters.',
+  'lab.inspector.wire': 'Wire',
+  'lab.inspector.multiWires': '{count} wires selected',
+  'lab.inspector.empty': 'Select a component or wire to inspect.',
 
   'lab.results.title': 'Results',
   'lab.results.nodeVoltages': 'Node voltages',
