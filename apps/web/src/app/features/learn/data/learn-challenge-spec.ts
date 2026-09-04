@@ -1029,6 +1029,54 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'sim_ok', paramsJson: '{}' },
     { type: 'any_switch_closed', paramsJson: '{}' },
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
+  ],
+  'inductive-load': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
+  ],
+  'mosfet-driver': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'led', 'resistor', 'switch', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
+  'debounce-idea': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'resistor', 'switch', 'capacitor', 'nmos', 'led', 'ground']
+      })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'capacitor', min: 1 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+  ],
+  'sensor-threshold': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'op_amp', 'potentiometer', 'resistor', 'led', 'ground']
+      })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: 2.0, maxVolts: 15 })
+    }
   ]
 };
 

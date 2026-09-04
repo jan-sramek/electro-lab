@@ -56,7 +56,7 @@ Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at chec
 | `branch_current_max` | `refId`, `maxAmps` |
 | `switch_state` | `refId`, `closed` |
 
-Per-unit overlays (when several units share one `exampleId`) live in `UNIT_CRITERIA` — e.g. `led-burn-limit`, `divider-design`, `ohm-explore`, `time-constant-estimate`, `fundamentals-loop`, `bjt-vs-mos-compare`, `inductive-why-diode`, `motor-flyback`, `coil-protection`, `pin-input-pulldown`, `motor-control`.
+Per-unit overlays (when several units share one `exampleId`) live in `UNIT_CRITERIA` — e.g. `led-burn-limit`, `divider-design`, `ohm-explore`, `time-constant-estimate`, `fundamentals-loop`, `bjt-vs-mos-compare`, `inductive-why-diode`, `motor-flyback`, `coil-protection`, `pin-input-pulldown`, `motor-control`, `inductive-load`, `mosfet-driver`, `debounce-idea`, `sensor-threshold`.
 
 ## Acceptance
 

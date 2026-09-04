@@ -48,6 +48,7 @@ import { createBandPassPreset } from '../presets/band-pass.preset';
 import { createNotchFilterPreset } from '../presets/notch-filter.preset';
 import { createRlcSeriesPreset } from '../presets/rlc-series.preset';
 import { createI2cOledPreset } from '../presets/i2c-oled.preset';
+import { createOpAmpBufferPreset } from '../presets/opamp-buffer.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -917,6 +918,25 @@ describe('wire flow coverage on presets', () => {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(`${id} bus idle`)
         .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Op-amp inverting (−10×) — input, feedback, and load paths animate', () => {
+    const doc = createOpAmpBufferPreset();
+    const Iin = 0.001;
+    const Iload = 0.005;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'V1' || id === 'RIN') return Iin;
+      if (id === 'RF') return Iin;
+      if (id === 'RL') return Iload;
+      if (id === 'U1') return Iin + Iload;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W13', 'W14']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
     }
   });
 });
