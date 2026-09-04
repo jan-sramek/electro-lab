@@ -74,6 +74,23 @@ function pinNetAcMag(
   return point.nodeVoltages[net]?.mag;
 }
 
+/** Peak (max) sample on a pin's net over the transient — for rectifiers / pulsed loads. */
+function pinNetTranPeak(
+  doc: SchematicDocument,
+  result: SimulateResponse | null,
+  componentId: string,
+  pin: string
+): number | undefined {
+  const series = result?.tran?.nodeVoltages;
+  if (!series?.length) return undefined;
+  const comp = doc.components.find((c) => c.id === componentId);
+  const net = comp?.pins[pin]?.net;
+  if (!net || net === doc.groundNet) return undefined;
+  const row = series.find((s) => s.id === net);
+  if (!row?.values.length) return undefined;
+  return Math.max(...row.values);
+}
+
 function branchCurrent(result: SimulateResponse | null, refId: string): number | undefined {
   return result?.dcOp?.branchCurrents?.[refId];
 }
@@ -149,6 +166,15 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       return componentsByModel(ctx.doc, modelKey).some((id) => {
         const mag = pinNetAcMag(ctx.doc, ctx.result, id, pin);
         return mag !== undefined && mag >= minMag && mag <= maxMag;
+      });
+    }
+    case 'any_pin_tran_peak_min': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const pin = String(params['pin'] ?? '');
+      const minVolts = Number(params['minVolts'] ?? 0);
+      return componentsByModel(ctx.doc, modelKey).some((id) => {
+        const peak = pinNetTranPeak(ctx.doc, ctx.result, id, pin);
+        return peak !== undefined && peak >= minVolts;
       });
     }
     case 'any_part_not_burned': {

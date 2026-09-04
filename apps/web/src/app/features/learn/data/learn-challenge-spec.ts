@@ -205,7 +205,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 4 }) }
+      { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) }
     ]
   },
   pot: {
@@ -449,7 +449,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'diode', 'resistor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_tran_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minVolts: 5 })
+      }
     ]
   },
   bridge: {
@@ -464,7 +468,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'diode', 'resistor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_tran_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minVolts: 5 })
+      }
     ]
   },
   filterCap: {
@@ -480,7 +488,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) }
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) },
+      {
+        type: 'any_pin_tran_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minVolts: 4 })
+      }
     ]
   },
   zener: {
@@ -554,7 +566,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) }
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) },
+      {
+        type: 'any_pin_tran_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minVolts: 4 })
+      }
     ]
   },
   buck: {
@@ -571,7 +587,9 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) },
+      { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
     ]
   },
   boost: {
@@ -588,7 +606,9 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) },
+      { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
     ]
   },
   rcLowPass: {

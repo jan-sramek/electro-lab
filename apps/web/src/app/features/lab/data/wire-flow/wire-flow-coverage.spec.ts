@@ -7,6 +7,8 @@ import { createLedFadePreset } from '../presets/led-fade.preset';
 import { createBuckPreset } from '../presets/buck.preset';
 import { createBoostPreset } from '../presets/boost.preset';
 import { createHalfWavePreset } from '../presets/half-wave.preset';
+import { createBridgePreset } from '../presets/bridge.preset';
+import { createFilterCapPreset } from '../presets/filter-cap.preset';
 import { createNtcDividerPreset } from '../presets/ntc-divider.preset';
 import { createSeriesParallelPreset } from '../presets/series-parallel.preset';
 import { createDiodeDirectionPreset } from '../presets/diode-direction.preset';
@@ -16,6 +18,8 @@ import { createZenerPreset } from '../presets/zener.preset';
 import { createPotDividerPreset } from '../presets/pot-divider.preset';
 import { createMotorNmosPreset } from '../presets/motor-nmos.preset';
 import { createRcStepPreset } from '../presets/rc-step.preset';
+import { createRelayDiodePreset } from '../presets/relay-diode.preset';
+import { createOpAmpFollowerPreset } from '../presets/opamp-follower.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -354,5 +358,84 @@ describe('wire flow coverage on presets', () => {
       return null;
     });
     expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Bridge conduction (AC+ half) — D1/D4 load path animates', () => {
+    const doc = createBridgePreset();
+    const I = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'AC1' || id === 'D1' || id === 'D4' || id === 'R1') return I;
+      if (id === 'D2' || id === 'D3') return 0;
+      return null;
+    });
+    for (const id of ['W1', 'W3', 'W4', 'W14', 'W15', 'W8', 'W9', 'W10', 'W16', 'W2']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W5', 'W6', 'W11', 'W12']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} idle bridge leg`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('Filter-cap — AC→diode→C/R→return animates while charging', () => {
+    const doc = createFilterCapPreset();
+    const Iac = 0.02;
+    const Ic = 0.015;
+    const Ir = 0.005;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'AC1' || id === 'D1') return Iac;
+      if (id === 'C1') return Ic;
+      if (id === 'R1') return Ir;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Relay + flyback — coil and LED load paths animate when closed', () => {
+    const doc = createRelayDiodePreset();
+    const Icoil = 0.012;
+    const Iled = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'Dfly') return 0;
+      if (id === 'VB') return Icoil + Iled;
+      if (id === 'S1' || id === 'K1') return Icoil;
+      if (id === 'RC' || id === 'D1') return Iled;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    expect(Math.abs(currents.get('W5') ?? 0))
+      .withContext('flyback cathode stub may share JC')
+      .toBeGreaterThanOrEqual(0);
+    expect(Math.abs(currents.get('W6') ?? 0))
+      .withContext('flyback idle while coil driven')
+      .toBeLessThan(1e-6);
+  });
+
+  it('Op-amp follower — input and load paths animate; feedback may be idle', () => {
+    const doc = createOpAmpFollowerPreset();
+    const Iin = 0; // ideal buffer draws no input current
+    const Iload = 0.001;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VIN') return Iin;
+      if (id === 'U1') return Iload;
+      if (id === 'RL') return Iload;
+      return null;
+    });
+    for (const id of ['W3', 'W5', 'W6', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
   });
 });

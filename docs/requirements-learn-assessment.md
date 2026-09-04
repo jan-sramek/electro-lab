@@ -47,6 +47,7 @@ Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at chec
 | `any_pushbutton_pressed` | — |
 | `any_pin_dc_voltage_between` | `modelKey`, `pin`, `minVolts`, `maxVolts` |
 | `any_pin_ac_mag_between` | `modelKey`, `pin`, `minMag`, `maxMag` |
+| `any_pin_tran_peak_min` | `modelKey`, `pin`, `minVolts` (max sample over transient) |
 | `any_part_not_burned` | `modelKey` |
 | `branch_current_min` | `refId`, `minAmps` |
 | `branch_current_max` | `refId`, `maxAmps` |
