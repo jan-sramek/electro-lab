@@ -351,7 +351,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
       { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'op_amp', 'resistor', 'ground'] }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: -2.0, maxVolts: -1.0 })
+      }
     ]
   },
   opampIntegrator: {
@@ -366,7 +370,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['pulse_source', 'op_amp', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.2 }) }
     ]
   },
   opampDifferentiator: {
@@ -381,7 +386,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['pulse_source', 'op_amp', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.05 }) }
     ]
   },
   opampActiveFilter: {

@@ -14,6 +14,8 @@ import { createSeriesLedsPreset } from '../presets/series-leds.preset';
 import { createVoltageDividerPreset } from '../presets/voltage-divider.preset';
 import { createZenerPreset } from '../presets/zener.preset';
 import { createPotDividerPreset } from '../presets/pot-divider.preset';
+import { createMotorNmosPreset } from '../presets/motor-nmos.preset';
+import { createRcStepPreset } from '../presets/rc-step.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -324,5 +326,33 @@ describe('wire flow coverage on presets', () => {
         .withContext(id)
         .toBeGreaterThan(1e-6);
     }
+  });
+
+  it('Motor NMOS — supply→motor→FET→return animates when on', () => {
+    const doc = createMotorNmosPreset();
+    const I = 0.2;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S1' || id === 'RG' || id === 'RPD') return 0;
+      if (id === 'V1' || id === 'MOT1' || id === 'M1') return I;
+      if (id === 'Dfly') return 0;
+      return null;
+    });
+    for (const id of ['W1', 'W8', 'W9', 'W10', 'W13', 'W14', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('RC step — charge path animates', () => {
+    const doc = createRcStepPreset();
+    const I = 0.001;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'V1' || id === 'R1' || id === 'C1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
   });
 });
