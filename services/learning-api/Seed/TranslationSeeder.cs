@@ -1292,6 +1292,8 @@ public static class TranslationSeeder
         ["lab.challenge.peekHint"] = "Peek loads the teaching sample as a reference. Clear returns to an empty canvas — you can still edit and check.",
         ["lab.challenge.peekConfirm"] = "Replace your challenge circuit with the teaching sample?",
         ["lab.challenge.clearConfirm"] = "Clear the challenge canvas? Your current wiring will be removed.",
+        ["lab.challenge.confirmAction"] = "Continue",
+        ["lab.challenge.cancelAction"] = "Cancel",
         ["lab.challenge.passed"] = "Challenge passed — return to Learn to continue.",
         ["lab.challenge.verifyUnavailable"] = "Circuit looks good locally, but progress could not be saved — check your connection and try Check again.",
         ["lab.challenge.failed"] = "Not yet — adjust the circuit or run again, then check once more.",
