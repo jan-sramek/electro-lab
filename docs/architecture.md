@@ -7,9 +7,9 @@ How the pieces fit — **today** and **target**. Module inventory: [modules.md](
 | Area | Today (Phase A) | Target (mature product) |
 |------|-----------------|-------------------------|
 | Lab | Shipped, frozen | Same scope unless ADR |
-| Learn | Template + i18n strings | Full catalog, modules/units, quizzes later |
+| Learn | Catalog + quizzes + lab challenges | Account cloud progress; optional CMS |
 | Learn URLs | Mostly `/learn` | `/learn/{module}/{unit}` indexable |
-| Catalog storage | TS in repo (Phase B) | Optional Postgres via LearningApi |
+| Catalog storage | TS catalog + LearningApi seed/progress | Optional author CMS |
 | Progress | Optional local | Server with Account |
 | Public rendering | CSR Angular | Prerender/SSR for Learn + home ([ADR-007](adr/007-seo.md)) |
 | Account | Stub | Auth + profile |
@@ -69,7 +69,7 @@ Browser talks to two APIs. CircuitEngine has no session state. LearningApi owns 
 | Web | `apps/web` | Lab / Learn / Account stub | Grow Learn; don’t grow Lab features |
 | CircuitEngine | `services/circuit-engine` | Validate JSON, run CircuitSim | Stable contract |
 | CircuitSim | `src/ElectroLab.CircuitSim` | Solver | Stable contract |
-| LearningApi | `services/learning-api` | i18n; catalog/progress later | |
+| LearningApi | `services/learning-api` | i18n, Learn catalog seed, session progress | |
 | Postgres | Compose `db` | Translations (+ future Learn tables) | |
 | Proxy | `deploy/proxy` | Compose routing | |
 

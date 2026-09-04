@@ -44,21 +44,24 @@
     <button
       type="button"
       [class.active]="analysisMode() === 'dcOp'"
-      (click)="analysisModeChange.emit('dcOp')"
+      [disabled]="challengeMode()"
+      (click)="!challengeMode() && analysisModeChange.emit('dcOp')"
     >
       {{ 'lab.toolbar.dc' | t }}
     </button>
     <button
       type="button"
       [class.active]="analysisMode() === 'tran'"
-      (click)="analysisModeChange.emit('tran')"
+      [disabled]="challengeMode()"
+      (click)="!challengeMode() && analysisModeChange.emit('tran')"
     >
       {{ 'lab.toolbar.transient' | t }}
     </button>
     <button
       type="button"
       [class.active]="analysisMode() === 'ac'"
-      (click)="analysisModeChange.emit('ac')"
+      [disabled]="challengeMode()"
+      (click)="!challengeMode() && analysisModeChange.emit('ac')"
     >
       {{ 'lab.toolbar.ac' | t }}
     </button>
@@ -69,6 +72,7 @@
           type="number"
           [ngModel]="tStop()"
           (ngModelChange)="tStopChange.emit($event)"
+          [disabled]="challengeMode()"
           step="0.001"
           min="0.0001"
         />
@@ -79,6 +83,7 @@
           type="number"
           [ngModel]="dt()"
           (ngModelChange)="dtChange.emit($event)"
+          [disabled]="challengeMode()"
           step="0.00001"
           min="0.000001"
         />
@@ -88,6 +93,7 @@
           type="checkbox"
           [ngModel]="initFromDc()"
           (ngModelChange)="initFromDcChange.emit(!!$event)"
+          [disabled]="challengeMode()"
         />
         {{ 'lab.toolbar.initFromDc' | t }}
       </label>
@@ -99,6 +105,7 @@
           type="number"
           [ngModel]="acFreq()"
           (ngModelChange)="acFreqChange.emit($event)"
+          [disabled]="challengeMode()"
           step="10"
           min="0.1"
         />

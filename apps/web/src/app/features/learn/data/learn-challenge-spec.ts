@@ -274,6 +274,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] })
       },
       { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 2 }) },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
@@ -288,6 +289,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] })
       },
       { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 2 }) },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 1 }) },
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
@@ -459,7 +461,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 6 }) },
-      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+      {
+        type: 'any_pin_tran_peak_to_peak_min',
+        paramsJson: JSON.stringify({ modelKey: 'led', pin: 'a', minVolts: 1.0 })
+      }
     ]
   },
   halfWave: {
@@ -473,6 +479,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['ac_source', 'diode', 'resistor', 'ground'] })
       },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' },
       {
@@ -492,6 +499,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['ac_source', 'diode', 'resistor', 'ground'] })
       },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 4 }) },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' },
       {
@@ -562,6 +570,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'diode', 'led', 'resistor', 'ground'] })
       },
       { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 4 }) },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
@@ -1084,12 +1093,15 @@ export function specCriteriaForCheck(
   const spec = getLearnChallengeSpec(exampleId);
   const criteria = overlay ?? spec?.criteria;
   if (!criteria) return apiCriteria;
-  return criteria.map((c, i) => ({
-    id: apiCriteria[i]?.id ?? i + 1,
-    order: i + 1,
-    // Prefer seeded per-unit teaching labels when the API has them for this slot.
-    labelKey: apiCriteria[i]?.labelKey ?? `learn.challenge.check.${c.type}`,
-    type: c.type,
-    paramsJson: c.paramsJson
-  }));
+  return criteria.map((c, i) => {
+    const api = apiCriteria[i];
+    return {
+      id: api?.id ?? i + 1,
+      order: i + 1,
+      // Only reuse seeded labels when the API row is the same criterion type.
+      labelKey: api && api.type === c.type ? api.labelKey : `learn.challenge.check.${c.type}`,
+      type: c.type,
+      paramsJson: c.paramsJson
+    };
+  });
 }

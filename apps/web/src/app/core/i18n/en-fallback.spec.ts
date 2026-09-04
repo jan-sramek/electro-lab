@@ -42,7 +42,9 @@ describe('i18n catalog', () => {
       'lab.canvas.',
       'lab.probe.',
       'lab.sim.',
+      'lab.challenge.',
       'learn.',
+      'learn.challenge.',
       'account.'
     ];
     for (const prefix of prefixes) {
