@@ -637,7 +637,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.05, maxMag: 20 })
+      }
     ]
   },
   bandPass: {
@@ -652,7 +656,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.02, maxMag: 20 })
+      }
     ]
   },
   notchFilter: {
@@ -667,7 +675,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minMag: 0.02, maxMag: 5 })
+      }
     ]
   },
   voltageDivider: {
@@ -802,7 +814,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['pulse_source', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 1.0 }) }
     ]
   },
   relayBjt: {
