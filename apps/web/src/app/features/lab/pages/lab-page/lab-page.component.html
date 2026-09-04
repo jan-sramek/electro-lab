@@ -1,13 +1,15 @@
 <section class="lab">
   @if (learnContext(); as ctx) {
     <aside class="learn-context" aria-label="Learn project">
-      <span class="learn-context-label">
-        {{ 'lab.fromLearn' | t }}
-        <strong>{{ ctx.i18nKeyPrefix + '.title' | t }}</strong>
-      </span>
-      <a class="learn-context-back" [routerLink]="learnUnitPath(ctx)">
-        {{ 'lab.backToLearnSteps' | t }}
-      </a>
+      <div class="learn-context-label-row">
+        <span class="learn-context-label">
+          {{ 'lab.fromLearn' | t }}
+          <strong>{{ ctx.i18nKeyPrefix + '.title' | t }}</strong>
+        </span>
+        <a class="learn-context-back" [routerLink]="learnUnitPath(ctx)">
+          {{ 'lab.backToLearnSteps' | t }}
+        </a>
+      </div>
 
       @if (learnChallengeUnit(); as challenge) {
         <div class="learn-challenge">

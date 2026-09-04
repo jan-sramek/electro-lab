@@ -427,6 +427,13 @@ export class LabPageComponent implements OnInit, OnDestroy {
     const unit = this.learnChallengeUnit();
     if (!unit) return;
 
+    // Always re-run so criteria see a fresh result (avoids racing the auto-run debounce).
+    this.sim.run();
+    const deadline = Date.now() + 15000;
+    while (this.sim.busy() && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 40));
+    }
+
     const criteria = this.challengeCriteria();
     const results = this.learnChallenge.evaluate(criteria, {
       doc: this.editor.doc(),
