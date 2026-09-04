@@ -185,6 +185,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...pinInputAssessment(),
   ...i2cAddressAssessment(),
   ...spiVsI2cAssessment(),
+  ...i2cMultiSlaveAssessment(),
   ...bjtVsMosAssessment(),
   ...inductiveWhyDiodeAssessment()
 };
@@ -1869,6 +1870,45 @@ function spiVsI2cAssessment() {
         'No shared bus ever',
         'Few pins and many addressable devices',
         'Addressing trades speed for wiring simplicity.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Wiring passes circuit checks.')
+  };
+}
+
+
+function i2cMultiSlaveAssessment() {
+  const p = 'learn.project.i2cMultiSlave';
+  return {
+    ...lessonKeys(
+      p,
+      'One bus, many chips',
+      'SDA and SCL stay shared. Each slave listens for its own 7-bit address — wiring does not fork a new bus per chip.',
+      'Collision rules',
+      'Two devices with the same address fight. Unique addresses (or an address translator) keep the shared wires peaceful.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'Adding a second I²C slave usually…',
+        'Reuses the same SDA/SCL wires',
+        'Needs a second battery ground only',
+        'Removes all pull-ups',
+        'The bus is shared; addresses distinguish chips.'
+      ],
+      [
+        'Identical addresses on one bus…',
+        'Are fine forever',
+        'Cause collisions / unreliable replies',
+        'Increase VCC automatically',
+        'Both chips may respond to the same ID.'
+      ],
+      [
+        'Pull-ups on a multi-slave bus…',
+        'Are still required for open-drain lines',
+        'Must be deleted',
+        'Replace chip addresses',
+        'Idle SDA/SCL still need to float high.'
       ]
     ),
     ...challengeKeys(p, 'Simulation completes without errors.', 'Wiring passes circuit checks.')

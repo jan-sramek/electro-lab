@@ -13,6 +13,7 @@ import { createDiodeDirectionPreset } from '../presets/diode-direction.preset';
 import { createSeriesLedsPreset } from '../presets/series-leds.preset';
 import { createVoltageDividerPreset } from '../presets/voltage-divider.preset';
 import { createZenerPreset } from '../presets/zener.preset';
+import { createPotDividerPreset } from '../presets/pot-divider.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -304,6 +305,21 @@ describe('wire flow coverage on presets', () => {
       return null;
     });
     for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Pot divider — ends animate; wiper may be idle until loaded', () => {
+    const doc = createPotDividerPreset();
+    const I = 0.0005;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id === 'J1') return null;
+      if (id === 'V1' || id === 'POT1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);

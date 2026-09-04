@@ -2006,6 +2006,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.spiVsI2c.step4': 'Decide: few pins + many sensors → I²C; speed + CS available → SPI.',
   'learn.project.spiVsI2c.openLab': 'Open in Lab',
 
+  'learn.project.i2cMultiSlave.title': 'Two devices on one I²C bus',
+  'learn.project.i2cMultiSlave.summary':
+    'Shared SDA/SCL with unique addresses — the idea of multi-slave wiring without a second bus.',
+  'learn.project.i2cMultiSlave.step1': 'Open the I2C OLED sample and trace SDA/SCL + pull-ups.',
+  'learn.project.i2cMultiSlave.step2': 'Imagine a second sensor on the same two wires.',
+  'learn.project.i2cMultiSlave.step3': 'Each chip needs a different address — same wiring, different ID.',
+  'learn.project.i2cMultiSlave.step4': 'Run DC — the teaching wiring still has to solve cleanly.',
+  'learn.project.i2cMultiSlave.openLab': 'Open in Lab',
+
   'learn.project.bjtVsMos.title': 'BJT vs MOSFET switch',
   'learn.project.bjtVsMos.summary':
     'Compare current-driven BJT switching with voltage-driven NMOS switching using the Lab examples.',

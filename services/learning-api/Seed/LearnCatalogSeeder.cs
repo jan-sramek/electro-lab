@@ -478,6 +478,9 @@ public static class LearnCatalogSeeder
             DcSimOk("learn.project.i2cAddress")),
         new("buses", "spi-vs-i2c", "i2cOled", "learn.project.spiVsI2c", 3,
             StandardLessons("learn.project.spiVsI2c"), StandardQuiz("learn.project.spiVsI2c"),
-            DcSimOk("learn.project.spiVsI2c"))
+            DcSimOk("learn.project.spiVsI2c")),
+        new("buses", "i2c-multi-slave", "i2cOled", "learn.project.i2cMultiSlave", 4,
+            StandardLessons("learn.project.i2cMultiSlave"), StandardQuiz("learn.project.i2cMultiSlave"),
+            DcSimOk("learn.project.i2cMultiSlave"))
     ];
 }

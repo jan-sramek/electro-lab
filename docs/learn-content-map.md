@@ -219,7 +219,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `i2c-oled-wiring` | SSD1306 + pull-ups | ready (`i2cOled`) | **mvp** |
 | `i2c-address-idea` | 0x3C vs 0x3D | ready (`i2cOled`) | **mvp** |
-| `i2c-multi-slave` | Two devices idea | gap | later |
+| `i2c-multi-slave` | Two devices idea | ready (`i2cOled`) | **mvp** |
 | `spi-vs-i2c` | Comparison (mostly text) | ready (`i2cOled`) | **mvp** |
 
 **Quiz L (later):** Why pull-ups; what happens if one is missing.
