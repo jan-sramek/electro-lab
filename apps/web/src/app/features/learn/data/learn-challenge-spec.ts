@@ -550,7 +550,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'fuse', 'switch', 'resistor', 'ground'] })
       },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'fuse' }) }
+      { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'fuse' }) },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'resistor', minAmps: 0.01 }) }
     ]
   },
   ripple: {

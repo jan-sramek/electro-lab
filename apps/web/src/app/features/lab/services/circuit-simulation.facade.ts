@@ -223,6 +223,8 @@ export class CircuitSimulationFacade {
   /** Debounced auto-sim after schematic edits (no Run-button flicker). */
   private readonly autoRun$ = new Subject<void>();
   private showBusyForRequest = false;
+  /** Resolvers waiting for the next explicit `run()` / `runAndWait()` to settle. */
+  private runSettleWaiters: Array<() => void> = [];
 
   readonly result = signal<SimulateResponse | null>(null);
   /** True only for an explicit toolbar Run — keeps the label from jumping on auto-sim. */
@@ -365,6 +367,7 @@ export class CircuitSimulationFacade {
             map((res) => ({ res, job })),
             catchError((err) => {
               if (this.showBusyForRequest) this.busy.set(false);
+              this.notifyRunSettled();
               const rawErrors: string[] =
                 err?.error?.errors ??
                 (err?.message ? [err.message] : [this.i18n.t('lab.sim.requestFailed')]);
@@ -387,6 +390,7 @@ export class CircuitSimulationFacade {
         const priorScrub = this.scrubIndex();
         this.result.set(res);
         if (this.showBusyForRequest) this.busy.set(false);
+        this.notifyRunSettled();
         const warn = [...(res.warnings ?? [])];
         const doc = this.editor.doc();
         const storedBefore = this.energyStore.maxCapVoltageAbs();
@@ -749,9 +753,39 @@ export class CircuitSimulationFacade {
     this.runInternal(true);
   }
 
+  /**
+   * Explicit Run that resolves when the simulation pipeline settles
+   * (success, engine error, or sync diagnostic reject). Avoids racing the busy flag.
+   */
+  runAndWait(timeoutMs = 15000): Promise<void> {
+    return new Promise((resolve) => {
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(finish, timeoutMs);
+      this.runSettleWaiters.push(finish);
+      this.run();
+      // Sync early-exit paths never raise busy — settle on the next macrotask if still idle.
+      setTimeout(() => {
+        if (!this.busy()) finish();
+      }, 0);
+    });
+  }
+
   /** Quiet re-solve after interactive edits (pushbutton hold). */
   runLive(): void {
     this.runInternal(false);
+  }
+
+  private notifyRunSettled(): void {
+    if (!this.runSettleWaiters.length) return;
+    const waiters = this.runSettleWaiters;
+    this.runSettleWaiters = [];
+    for (const w of waiters) w();
   }
 
   /** One-shot client note shown through the next simulation result. */
@@ -808,6 +842,7 @@ export class CircuitSimulationFacade {
       if (showBusy) this.busy.set(false);
       this.error.set(errors.map((e) => formatDiag(e)).join(' '));
       this.result.set(null);
+      if (showBusy) this.notifyRunSettled();
       return;
     }
 
@@ -821,6 +856,7 @@ export class CircuitSimulationFacade {
       this.result.set(null);
       this.error.set(null);
       if (showBusy) this.busy.set(false);
+      if (showBusy) this.notifyRunSettled();
       return;
     }
 

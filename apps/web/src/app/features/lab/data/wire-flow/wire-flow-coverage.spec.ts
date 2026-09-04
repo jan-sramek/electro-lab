@@ -20,6 +20,8 @@ import { createMotorNmosPreset } from '../presets/motor-nmos.preset';
 import { createRcStepPreset } from '../presets/rc-step.preset';
 import { createRelayDiodePreset } from '../presets/relay-diode.preset';
 import { createOpAmpFollowerPreset } from '../presets/opamp-follower.preset';
+import { createReversePolarityPreset } from '../presets/reverse-polarity.preset';
+import { createVreg7805Preset } from '../presets/vreg-7805.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -433,6 +435,33 @@ describe('wire flow coverage on presets', () => {
       return null;
     });
     for (const id of ['W3', 'W5', 'W6', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Reverse-polarity protection — series diode + LED path animates', () => {
+    const doc = createReversePolarityPreset();
+    const I = 0.015;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VB' || id === 'Dprot' || id === 'R1' || id === 'D1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('7805 regulator — input, output load, and ground pins animate', () => {
+    const doc = createVreg7805Preset();
+    const Iout = 0.005;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VB' || id === 'U1') return Iout;
+      if (id === 'RL') return Iout;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);
