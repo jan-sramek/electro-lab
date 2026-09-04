@@ -280,6 +280,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'divider-design',
+    moduleSlug: 'filters',
+    exampleId: 'voltageDivider',
+    i18nKeyPrefix: 'learn.project.dividerDesign',
+    stepCount: 4
+  },
+  {
     unitSlug: 'pot-divider',
     moduleSlug: 'filters',
     exampleId: 'pot',

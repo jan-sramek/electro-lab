@@ -61,7 +61,7 @@ export class LabPageComponent implements OnInit, OnDestroy {
   readonly challengeCriteria = computed(() => {
     const unit = this.learnChallengeUnit();
     if (!unit) return [];
-    return specCriteriaForCheck(unit.exampleId, unit.labChallenge.criteria);
+    return specCriteriaForCheck(unit.exampleId, unit.labChallenge.criteria, unit.unitSlug);
   });
 
   /** Context hint under the canvas: tool mode first, then example preset, else generic. */

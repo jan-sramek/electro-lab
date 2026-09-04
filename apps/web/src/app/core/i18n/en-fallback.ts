@@ -1863,6 +1863,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.motorControl.step4': 'Compare with the buzzer sample — same switch-a-load idea, different actuator.',
   'learn.project.motorControl.openLab': 'Open in Lab',
 
+  'learn.project.dividerDesign.title': 'Design a divider',
+  'learn.project.dividerDesign.summary':
+    'Choose two resistors so the mid voltage lands where you predict — then prove it with a probe.',
+  'learn.project.dividerDesign.step1': 'Open the voltage divider sample and note R1, R2, and V1.',
+  'learn.project.dividerDesign.step2': 'Predict Vmid = V1 · R2/(R1+R2) before you Run.',
+  'learn.project.dividerDesign.step3': 'Run DC and probe the mid node — compare to your prediction.',
+  'learn.project.dividerDesign.step4': 'Change one resistor to hit a new target mid, then re-check.',
+  'learn.project.dividerDesign.openLab': 'Open in Lab',
+
   'learn.project.motorSpeed.title': 'Motor speed via PWM',
   'learn.project.motorSpeed.summary':
     'Same PWM motor drive — focus on duty cycle as the speed knob.',

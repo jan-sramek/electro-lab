@@ -36,6 +36,7 @@
 /learn/filters/band-pass
 /learn/filters/notch-filter
 /learn/filters/voltage-divider
+/learn/filters/divider-design
 /learn/filters/pot-divider
 /learn/filters/measure-freq-amp
 /learn/motors/motor-mosfet

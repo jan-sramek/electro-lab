@@ -233,7 +233,7 @@ export class LearnUnitPageComponent implements OnInit {
   }
 
   labChallengeCriteria(u: LearnUnitDetailResponse) {
-    return specCriteriaForCheck(u.exampleId, u.labChallenge.criteria);
+    return specCriteriaForCheck(u.exampleId, u.labChallenge.criteria, u.unitSlug);
   }
 
   quizResult(questionId: number): boolean | null {

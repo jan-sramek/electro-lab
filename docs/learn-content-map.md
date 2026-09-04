@@ -77,7 +77,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
-| `led-series` | LED + series R | ready (`led`) | **mvp** *(add if missing)* |
+| `led-series` | LED + series R | ready (`led`) | **mvp** |
 | `diode-direction` | Diode orientation / blocking | ready (`diodeDirection`) | **mvp** |
 | `led-burn-limit` | What “too much current” means in Lab | ready (`led`) | **mvp** |
 
@@ -89,8 +89,8 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
-| `rc-charge` | Capacitor charge curve | ready (`rc`) | **mvp** *(add if missing)* |
-| `led-fade` | Store and release energy (fade) | ready (`ledFade`) | **mvp** *(add if missing)* |
+| `rc-charge` | Capacitor charge curve | ready (`rc`) | **mvp** |
+| `led-fade` | Store and release energy (fade) | ready (`ledFade`) | **mvp** |
 | `pulse-rc` | Edges and RC | ready (`pulse`) | **mvp** |
 | `time-constant-estimate` | τ ≈ R·C by eye on the scope | ready (`rc`) | **mvp** |
 
@@ -122,7 +122,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `pot-divider` | Wiper sets mid voltage | ready (`pot`) | **mvp** |
-| `divider-design` | Two resistors, predict Vmid | gap / partial | later |
+| `divider-design` | Two resistors, predict Vmid | ready (`voltageDivider`) | **mvp** |
 
 **Quiz D (later):** Estimate mid-point for equal resistors.
 

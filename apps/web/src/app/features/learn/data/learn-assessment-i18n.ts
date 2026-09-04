@@ -144,6 +144,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...bandPassAssessment(),
   ...notchFilterAssessment(),
   ...voltageDividerAssessment(),
+  ...dividerDesignAssessment(),
   ...potDividerAssessment(),
   ...measureAcAssessment(),
   ...motorMosfetAssessment(),
@@ -1030,7 +1031,45 @@ function voltageDividerAssessment() {
       ["Equal resistors give…", "Zero volts", "Half the source (ideal)", "Twice the source", "R2/(R1+R2) = 1/2."],
       ["A heavy load on the mid node…", "Raises Vmid", "Does nothing", "Pulls Vmid down", "Load parallels Rbottom."]
     ),
-    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+    ...challengeKeys(p, "Simulation completes without errors.", "Mid-node voltage is near half supply.")
+  };
+}
+
+function dividerDesignAssessment() {
+  const p = 'learn.project.dividerDesign';
+  return {
+    ...lessonKeys(
+      p,
+      'Design the ratio',
+      'Pick R1 and R2 so Vmid lands where you need it. Equal resistors → half supply; larger Rbottom → higher mid.',
+      'Check with a probe',
+      'After you set values, Run DC and probe the mid node — prediction first, measurement second.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'To raise unloaded Vmid you can…',
+        'Increase Rbottom relative to Rtop',
+        'Only remove ground',
+        'Always lower both R to zero',
+        'Larger bottom share raises the tap.'
+      ],
+      [
+        'Best design habit…',
+        'Guess forever without probing',
+        'Predict, then probe Vmid',
+        'Delete the battery first',
+        'Close the loop between math and Lab.'
+      ],
+      [
+        'Equal 10 kΩ on 5 V should give about…',
+        '0 V',
+        '5 V',
+        '2.5 V',
+        'Half the source when R1 = R2.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Mid voltage is near half of 5 V.')
   };
 }
 
@@ -1453,9 +1492,10 @@ function ledBurnLimitAssessment() {
       ['After a burn you should…', 'Ignore it', 'Replace the LED and raise R', 'Delete ground', 'Recover the part and reduce current.'],
       ['Safer LED current in these labs is often…', 'Hundreds of amps', 'Zero always', 'Around 10–20 mA', 'Typical indicator current range.']
     ),
-    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED stays intact below ~25 mA.')
   };
 }
+
 
 function diodeDirectionAssessment() {
   const p = 'learn.project.diodeDirection';

@@ -462,7 +462,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'zener', 'resistor', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'zener', pin: 'c', minVolts: 4.5, maxVolts: 5.7 })
+      }
     ]
   },
   vreg7805: {
@@ -474,7 +478,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'vreg_7805', 'resistor', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'vreg_7805', pin: 'out', minVolts: 4.7, maxVolts: 5.3 })
+      }
     ]
   },
   reversePolarity: {
@@ -790,6 +798,26 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
   }
 };
 
+/** Per-unit criteria when several units share one exampleId (e.g. LED path). */
+const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
+  'led-burn-limit': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_current_max', paramsJson: JSON.stringify({ modelKey: 'led', maxAmps: 0.025 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'led' }) }
+  ],
+  'divider-design': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.0, maxVolts: 3.0 })
+    }
+  ]
+};
+
 export function getLearnChallengeSpec(exampleId: string): LearnChallengeLabSpec | null {
   return (SPECS as Record<string, LearnChallengeLabSpec>)[exampleId] ?? null;
 }
@@ -797,11 +825,14 @@ export function getLearnChallengeSpec(exampleId: string): LearnChallengeLabSpec 
 /** Map spec criteria to DTOs for the checker (stable ids for API submit). */
 export function specCriteriaForCheck(
   exampleId: string,
-  apiCriteria: LearnLabCriterionDto[]
+  apiCriteria: LearnLabCriterionDto[],
+  unitSlug?: string | null
 ): LearnLabCriterionDto[] {
+  const overlay = unitSlug ? UNIT_CRITERIA[unitSlug] : undefined;
   const spec = getLearnChallengeSpec(exampleId);
-  if (!spec) return apiCriteria;
-  return spec.criteria.map((c, i) => ({
+  const criteria = overlay ?? spec?.criteria;
+  if (!criteria) return apiCriteria;
+  return criteria.map((c, i) => ({
     id: apiCriteria[i]?.id ?? i + 1,
     order: i + 1,
     labelKey: `learn.challenge.check.${c.type}`,

@@ -9,6 +9,10 @@ import { createBoostPreset } from '../presets/boost.preset';
 import { createHalfWavePreset } from '../presets/half-wave.preset';
 import { createNtcDividerPreset } from '../presets/ntc-divider.preset';
 import { createSeriesParallelPreset } from '../presets/series-parallel.preset';
+import { createDiodeDirectionPreset } from '../presets/diode-direction.preset';
+import { createSeriesLedsPreset } from '../presets/series-leds.preset';
+import { createVoltageDividerPreset } from '../presets/voltage-divider.preset';
+import { createZenerPreset } from '../presets/zener.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -252,5 +256,57 @@ describe('wire flow coverage on presets', () => {
     expect(Math.abs(currents.get('W10') ?? 0))
       .withContext('VM− idle')
       .toBeLessThan(1e-6);
+  });
+
+  it('Diode direction — forward path animates', () => {
+    const doc = createDiodeDirectionPreset();
+    const I = 0.012;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id === 'J1') return null;
+      if (id === 'V1' || id === 'S1' || id === 'R1' || id === 'D1' || id === 'LED1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Series LEDs — one loop current animates all wires', () => {
+    const doc = createSeriesLedsPreset();
+    const I = 0.01;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id === 'J1') return null;
+      if (id === 'V1' || id === 'S1' || id === 'R1' || id === 'D1' || id === 'D2') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Voltage divider — string current animates; mid is shared', () => {
+    const doc = createVoltageDividerPreset();
+    const I = 0.00025;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id === 'JM' || id === 'J1') return null;
+      if (id === 'VB' || id === 'R1' || id === 'R2') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Zener shunt — supply and load branch animate', () => {
+    const doc = createZenerPreset();
+    const Irs = 0.015;
+    const Irl = 0.005;
+    const Idz = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id === 'JM' || id === 'J1') return null;
+      if (id === 'VB' || id === 'RS') return Irs;
+      if (id === 'RL') return Irl;
+      if (id === 'DZ1') return Idz;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
   });
 });
