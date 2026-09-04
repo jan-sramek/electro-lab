@@ -28,6 +28,8 @@ export class InspectorPanelComponent {
   readonly rotate = output<void>();
   readonly remove = output<void>();
   readonly replaceBurned = output<void>();
+  /** Jump from a wire endpoint label to that part. */
+  readonly selectPart = output<string>();
 
   /** In-progress number field text — committed on blur/Enter only (avoids sim on "8" while typing "800"). */
   private readonly numberDrafts = signal<Record<string, number | string>>({});
@@ -86,7 +88,9 @@ export class InspectorPanelComponent {
       endpoints: wires.map((w) => ({
         id: w.id,
         a: `${w.a.componentId}.${w.a.pin}`,
-        b: `${w.b.componentId}.${w.b.pin}`
+        b: `${w.b.componentId}.${w.b.pin}`,
+        aId: w.a.componentId,
+        bId: w.b.componentId
       }))
     };
   });

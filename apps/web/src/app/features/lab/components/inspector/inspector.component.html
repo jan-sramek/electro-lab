@@ -101,7 +101,10 @@
       <ul class="wire-ends">
         @for (w of wires.endpoints; track w.id) {
           <li>
-            <code>{{ w.id }}</code>: {{ w.a }} ↔ {{ w.b }}
+            <code>{{ w.id }}</code>:
+            <button type="button" class="end-link" (click)="selectPart.emit(w.aId)">{{ w.a }}</button>
+            ↔
+            <button type="button" class="end-link" (click)="selectPart.emit(w.bId)">{{ w.b }}</button>
           </li>
         }
       </ul>

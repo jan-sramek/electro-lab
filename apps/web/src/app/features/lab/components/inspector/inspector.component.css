@@ -22,6 +22,24 @@
   margin-bottom: 0.25rem;
 }
 
+.end-link {
+  display: inline;
+  padding: 0;
+  margin: 0 0.1rem;
+  border: none;
+  background: none;
+  color: #0b6e4f;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.end-link:hover {
+  color: #095c42;
+}
+
 .model-note {
   margin: -0.35rem 0 0.75rem;
   padding: 0.4rem 0.5rem;

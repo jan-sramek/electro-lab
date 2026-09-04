@@ -141,6 +141,7 @@
         (rotate)="editor.rotateSelected()"
         (remove)="editor.deleteSelected()"
         (replaceBurned)="onReplaceBurned()"
+        (selectPart)="onStatusSelectPart($event)"
       />
       <app-results-panel [result]="sim.result()" />
       @if (editor.analysisMode() === 'tran') {

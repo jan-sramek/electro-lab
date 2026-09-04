@@ -628,7 +628,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'sim_ok', paramsJson: '{}' },
       {
         type: 'any_pin_ac_mag_between',
-        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.1, maxMag: 2 })
+        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.4, maxMag: 0.95 })
       }
     ]
   },
@@ -645,7 +645,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'sim_ok', paramsJson: '{}' },
       {
         type: 'any_pin_ac_mag_between',
-        paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.05, maxMag: 2 })
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'a', minMag: 0.4, maxMag: 0.95 })
       }
     ]
   },
@@ -812,6 +812,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'capacitor', min: 1 }) },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
