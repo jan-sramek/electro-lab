@@ -24,6 +24,7 @@ public static class TranslationSeeder
         ["diag.ac_nonlinear_open"] = "Nonlinear / switching parts are treated as open in AC ({ids}). Use Transient for LEDs, diodes, transistors, relays, motors, and MCU pins.",
         ["diag.ac_source_tran_no_freq"] = "AC source needs Frequency (Hz) > 0 for a sine wave in Transient. Without it the source is 0 V.",
         ["diag.switch_inductor_spike"] = "Switching an inductor can make large voltage spikes (ideal teaching model). Use care with openAt/closeAt timing.",
+        ["diag.inductive_missing_flyback"] = "Relay coils and motors need a flyback diode across the inductive load — without it, switching can spike the rail.",
         ["diag.dc_rc_needs_tran"] = "Capacitors need Transient analysis for charge and discharge — switch to Transient and set tStop long enough (e.g. 6 s for LED fade).",
         ["lab.title"] = "Circuit Lab",
         ["lab.fromLearn"] = "From Learn:",

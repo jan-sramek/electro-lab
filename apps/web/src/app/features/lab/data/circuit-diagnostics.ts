@@ -12,6 +12,7 @@ export type DiagnosticCode =
   | 'ac_nonlinear_open'
   | 'ac_source_tran_no_freq'
   | 'switch_inductor_spike'
+  | 'inductive_missing_flyback'
   | 'dc_rc_needs_tran';
 
 export interface CircuitDiagnostic {
@@ -195,6 +196,15 @@ export function diagnoseSchematic(
         ])
       );
     }
+  }
+
+  // Teaching hint: relay coils / DC motors need a flyback diode (any mode).
+  const inductiveLoads = simParts.filter(
+    (c) => c.modelKey === 'relay' || c.modelKey === 'dc_motor'
+  );
+  const hasFlybackDiode = simParts.some((c) => c.modelKey === 'diode');
+  if (inductiveLoads.length > 0 && !hasFlybackDiode) {
+    out.push(diag('inductive_missing_flyback', 'warning', inductiveLoads.map((c) => c.id)));
   }
 
   return out;

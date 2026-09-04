@@ -105,6 +105,7 @@ describe('circuit-diagnostics', () => {
     expect(EN_FALLBACK[diagnosticMessageKey('ac_nonlinear_open')]).toContain('AC');
     expect(EN_FALLBACK[diagnosticMessageKey('ac_source_tran_no_freq')]).toContain('Frequency');
     expect(EN_FALLBACK[diagnosticMessageKey('switch_inductor_spike')]).toContain('inductor');
+    expect(EN_FALLBACK[diagnosticMessageKey('inductive_missing_flyback')]).toContain('flyback');
   });
 
   it('warns when nonlinear devices are present in AC mode', () => {
@@ -187,6 +188,43 @@ describe('circuit-diagnostics', () => {
     });
     const diags = diagnoseSchematic(doc, 'tran');
     expect(diags.some((d) => d.code === 'switch_inductor_spike')).toBeTrue();
+  });
+
+  it('warns when a motor or relay has no flyback diode', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const mot = createComponent('dc_motor', 120, 0, 'MOT1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, mot, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'MOT1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'MOT1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W3', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    expect(diags.some((d) => d.code === 'inductive_missing_flyback')).toBeTrue();
+  });
+
+  it('does not warn for inductive flyback when a diode is present', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const mot = createComponent('dc_motor', 120, 0, 'MOT1');
+    const d1 = createComponent('diode', 120, 40, 'D1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, mot, d1, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'MOT1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'MOT1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W3', a: { componentId: 'D1', pin: 'c' }, b: { componentId: 'V1', pin: 'p' } },
+        { id: 'W4', a: { componentId: 'D1', pin: 'a' }, b: { componentId: 'MOT1', pin: 'b' } },
+        { id: 'W5', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    expect(diags.some((d) => d.code === 'inductive_missing_flyback')).toBeFalse();
   });
 });
 

@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       - name: CircuitSim + LearningApi tests
         run: dotnet test --nologo -v q
 
@@ -36,7 +36,11 @@ jobs:
         run: >
           npx ng test --no-watch --browsers=ChromeHeadless
           --include=**/preset-contracts.spec.ts
+          --include=**/preset-groups.spec.ts
           --include=**/wire-flow-coverage.spec.ts
           --include=**/learn-challenge-preset-contract.spec.ts
           --include=**/lab-challenge-checker.spec.ts
           --include=**/circuit-diagnostics.spec.ts
+          --include=**/burnout.spec.ts
+          --include=**/burnout-new-parts.spec.ts
+          --include=**/learn-catalog.service.spec.ts
