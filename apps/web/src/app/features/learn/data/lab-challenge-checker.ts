@@ -1,6 +1,7 @@
 import { SchematicDocument } from '../../lab/data/schematic.model';
 import { diagnoseSchematic } from '../../lab/data/circuit-diagnostics';
 import { SimulateResponse } from '../../lab/api/circuit-api.types';
+import { simModelOf } from '../../lab/data/symbol-library';
 import { LearnLabCriterionDto } from '../api/learning-api.types';
 
 export interface LabChallengeContext {
@@ -28,8 +29,34 @@ export function allCriteriaPassed(results: CriterionCheckResult[]): boolean {
   return results.length > 0 && results.every((r) => r.passed);
 }
 
+/** Match palette part ids (bc547) and sim/engine keys (bjt_npn), including pushbutton↔switch. */
+export function modelKeyMatches(componentKey: string, required: string): boolean {
+  if (componentKey === required) return true;
+  const simC = simModelOf(componentKey);
+  const simR = simModelOf(required);
+  return simC === required || componentKey === simR || simC === simR;
+}
+
 function componentsByModel(doc: SchematicDocument, modelKey: string): string[] {
-  return doc.components.filter((c) => c.modelKey === modelKey).map((c) => c.id);
+  return doc.components.filter((c) => modelKeyMatches(c.modelKey, modelKey)).map((c) => c.id);
+}
+
+function docHasModel(doc: SchematicDocument, required: string): boolean {
+  return doc.components.some((c) => modelKeyMatches(c.modelKey, required));
+}
+
+function pinNetVoltage(
+  doc: SchematicDocument,
+  result: SimulateResponse | null,
+  componentId: string,
+  pin: string
+): number | undefined {
+  const nodes = result?.dcOp?.nodeVoltages;
+  if (!nodes) return undefined;
+  const comp = doc.components.find((c) => c.id === componentId);
+  const net = comp?.pins[pin]?.net;
+  if (!net || net === doc.groundNet) return undefined;
+  return nodes[net];
 }
 
 function branchCurrent(result: SimulateResponse | null, refId: string): number | undefined {
@@ -47,7 +74,7 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       return ctx.analysisMode === String(params['mode'] ?? '');
     case 'has_models': {
       const models = Array.isArray(params['models']) ? (params['models'] as string[]) : [];
-      return models.every((m) => ctx.doc.components.some((c) => c.modelKey === m));
+      return models.every((m) => docHasModel(ctx.doc, m));
     }
     case 'min_wire_count': {
       const min = Number(params['min'] ?? 1);
@@ -85,12 +112,31 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
     }
     case 'any_switch_closed':
       return ctx.doc.components.some(
-        (c) => c.modelKey === 'switch' && c.params?.['closed'] === true
+        (c) => modelKeyMatches(c.modelKey, 'switch') && c.params?.['closed'] === true
       );
     case 'any_pushbutton_pressed':
       return ctx.doc.components.some(
         (c) => c.modelKey === 'pushbutton' && c.params?.['closed'] === true
       );
+    case 'any_pin_dc_voltage_between': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const pin = String(params['pin'] ?? '');
+      const minVolts = Number(params['minVolts'] ?? Number.NEGATIVE_INFINITY);
+      const maxVolts = Number(params['maxVolts'] ?? Number.POSITIVE_INFINITY);
+      return componentsByModel(ctx.doc, modelKey).some((id) => {
+        const v = pinNetVoltage(ctx.doc, ctx.result, id, pin);
+        return v !== undefined && v >= minVolts && v <= maxVolts;
+      });
+    }
+    case 'any_part_not_burned': {
+      const modelKey = String(params['modelKey'] ?? '');
+      const parts = componentsByModel(ctx.doc, modelKey);
+      if (!parts.length) return false;
+      return parts.every((id) => {
+        const c = ctx.doc.components.find((x) => x.id === id);
+        return c?.params?.['burned'] !== true;
+      });
+    }
     case 'branch_current_min': {
       const refId = String(params['refId'] ?? '');
       const minAmps = Number(params['minAmps'] ?? 0);

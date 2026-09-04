@@ -46,7 +46,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'no_circuit_errors', paramsJson: '{}' },
       { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'capacitor', 'ground'] }) },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) }
     ]
   },
   bjt: {
@@ -98,7 +99,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'no_circuit_errors', paramsJson: '{}' },
       {
         type: 'has_models',
-        paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'motor', 'switch', 'ground'] })
+        paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'switch', 'ground'] })
       },
       { type: 'sim_ok', paramsJson: '{}' },
       { type: 'any_switch_closed', paramsJson: '{}' }
@@ -116,7 +117,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'ne555', 'resistor', 'capacitor', 'led', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   ne555Pot: {
@@ -133,7 +135,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   pushbutton: {
@@ -170,10 +173,10 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       { type: 'no_circuit_errors', paramsJson: '{}' },
       {
         type: 'has_models',
-        paramsJson: JSON.stringify({ models: ['battery', 'buzzer', 'resistor', 'switch', 'ground'] })
+        paramsJson: JSON.stringify({ models: ['battery', 'buzzer', 'resistor', 'pushbutton', 'ground'] })
       },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'any_switch_closed', paramsJson: '{}' }
+      { type: 'any_pushbutton_pressed', paramsJson: '{}' }
     ]
   },
   arduino: {
@@ -209,8 +212,12 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     analysisMode: 'dcOp',
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
-      { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'pot', 'ground'] }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'potentiometer', 'ground'] }) },
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'potentiometer', pin: 'w', minVolts: 0.5, maxVolts: 4.5 })
+      }
     ]
   },
   pulse: {
@@ -225,7 +232,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['pulse_source', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.2 }) }
     ]
   },
   diodeDirection: {
@@ -379,7 +387,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     analysisMode: 'ac',
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
-      { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'capacitor', 'ground'] }) },
+      { type: 'has_models', paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] }) },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
       { type: 'sim_ok', paramsJson: '{}' }
     ]
@@ -391,7 +399,13 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     dt: 5e-5,
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
-      { type: 'sim_ok', paramsJson: '{}' }
+      {
+        type: 'has_models',
+        paramsJson: JSON.stringify({ models: ['battery', 'ne555', 'resistor', 'capacitor', 'led', 'ground'] })
+      },
+      { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   halfWave: {
@@ -485,7 +499,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'fuse', 'switch', 'resistor', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'fuse' }) }
     ]
   },
   ripple: {
@@ -617,7 +632,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.0, maxVolts: 3.0 })
+      }
     ]
   },
   measureAc: {
