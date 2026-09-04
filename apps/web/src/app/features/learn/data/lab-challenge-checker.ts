@@ -2,6 +2,7 @@ import { SchematicDocument } from '../../lab/data/schematic.model';
 import { diagnoseSchematic } from '../../lab/data/circuit-diagnostics';
 import { SimulateResponse } from '../../lab/api/circuit-api.types';
 import { simModelOf } from '../../lab/data/symbol-library';
+import { extractEnergyState } from '../../lab/data/tran-continuation';
 import { LearnLabCriterionDto } from '../api/learning-api.types';
 
 export interface LabChallengeContext {
@@ -101,14 +102,12 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       const minVolts = Number(params['minVolts'] ?? 0);
       const caps = componentsByModel(ctx.doc, modelKey);
       if (!caps.length || !ctx.result?.tran) return false;
-      for (const id of caps) {
-        const series = ctx.result.tran.nodeVoltages.find((s) => s.id === id);
-        const values = series?.values;
-        if (!values?.length) continue;
-        const v = values[values.length - 1];
-        if (v >= minVolts) return true;
-      }
-      return false;
+      // Engine series are net ids — Vc is Va−Vb at the last transient sample.
+      const energy = extractEnergyState(ctx.doc, ctx.result);
+      return caps.some((id) => {
+        const v = energy.caps.get(id);
+        return v !== undefined && Math.abs(v) >= minVolts;
+      });
     }
     case 'any_switch_closed':
       return ctx.doc.components.some(

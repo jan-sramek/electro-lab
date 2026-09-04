@@ -4,6 +4,7 @@ import { createBjtSwitchPreset } from '../../lab/data/presets/bjt-switch.preset'
 import { createBuzzerButtonPreset } from '../../lab/data/presets/buzzer-button.preset';
 import { createPotDividerPreset } from '../../lab/data/presets/pot-divider.preset';
 import { createVoltageDividerPreset } from '../../lab/data/presets/voltage-divider.preset';
+import { createRcStepPreset } from '../../lab/data/presets/rc-step.preset';
 import { checkLabCriteria, modelKeyMatches } from './lab-challenge-checker';
 import { specCriteriaForCheck } from './learn-challenge-spec';
 
@@ -177,5 +178,45 @@ describe('lab-challenge-checker', () => {
     expect(criteria.some((c) => c.type === 'any_model_current_max')).toBeTrue();
     expect(criteria.some((c) => c.type === 'any_part_not_burned')).toBeTrue();
     expect(criteria.some((c) => c.type === 'any_model_current_min')).toBeFalse();
+  });
+
+  it('checks capacitor final voltage from pin nets (not component id)', () => {
+    const doc = assignNets(createRcStepPreset());
+    const cap = doc.components.find((c) => c.modelKey === 'capacitor');
+    expect(cap).toBeTruthy();
+    const na = cap!.pins['a']?.net;
+    const nb = cap!.pins['b']?.net;
+    expect(na && nb).toBeTruthy();
+    const results = checkLabCriteria(
+      [
+        {
+          id: 1,
+          order: 1,
+          labelKey: 'x',
+          type: 'any_cap_voltage_final_min',
+          paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 })
+        }
+      ],
+      {
+        doc,
+        result: {
+          schemaVersion: 1,
+          ok: true,
+          analysisType: 'tran',
+          errors: [],
+          warnings: [],
+          tran: {
+            time: [0, 0.01],
+            nodeVoltages: [
+              { id: na!, values: [0, 4.2] },
+              ...(nb === doc.groundNet ? [] : [{ id: nb!, values: [0, 0] }])
+            ],
+            branchCurrents: []
+          }
+        },
+        analysisMode: 'tran'
+      }
+    );
+    expect(results[0].passed).toBeTrue();
   });
 });

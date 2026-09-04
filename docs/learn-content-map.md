@@ -68,6 +68,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | `fundamentals-loop` | Battery, resistor, current, ground | ready (`led`) | **mvp** |
 | `ohm-explore` | Change R, see I (probe) | ready (`led`) | **mvp** |
 | `series-parallel-intro` | Series vs parallel intuition | ready (`seriesParallel`) | **mvp** |
+| `series-leds` | Series LED string | ready (`seriesLeds`) | **mvp** |
 
 **Quiz A (later):** Identify which change raises current; pick a safe ballpark resistor for an LED given Vf (teaching numbers).
 
@@ -175,6 +176,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `ne555-astable` | 555 blinker | ready (`ne555`) | **mvp** |
+| `ne555-pot-blink` | Pot sets blink rate | ready (`ne555Pot`) | **mvp** |
 | `ne555-play` | Richer LED load / tree | ready (`christmasTree`) | **mvp** |
 
 **Quiz H (later):** Which parts set period (qualitative).
@@ -387,26 +389,13 @@ Named paths over modules, e.g. **“Hobbyist starter”** = A→B→C→E→I→
 
 ---
 
-## MVP subset (what Phase B should prioritise)
+## MVP subset (catalog status)
 
-Ship Learn catalog structure + modules that already have strong Lab coverage, **without pretending the curriculum ends there**.
+The Learn catalog in `learn-catalog.ts` now ships the full hands-on path that Lab can support (~80+ units), including challenges UI, quizzes, debounce, multi-slave I²C (conceptual), and series-LEDs / NE555 pot variants.
 
-**Include in MVP catalog (grouped by module):**
+**Still later / ADR-gated:** certificates, account-linked progress, exotic device models (gates, servo, UART, true multi-slave wiring).
 
-- B: `led-series` (wire up Learn if not present)  
-- C: `rc-charge`, `led-fade` (same)  
-- E: `bjt-switch`, `nmos-switch`  
-- F: `relay-flyback`, `motor-lowside`  
-- G: `opamp-follower`, `opamp-invert`, `opamp-noninv`, `opamp-comparator`, `opamp-schmitt`, `opamp-summing`, `opamp-integrator`, `opamp-differentiator`, `opamp-active-filter`  
-- H: `ne555-astable`  
-- I: `pushbutton-led`, `ldr-nightlight`  
-- J: `buzzer-button`  
-- K: `arduino-dio-led`  
-- L: `i2c-oled-wiring`  
-
-**Explicitly not MVP:** quiz engine, challenges UI, multi-slave I2C, debounce lab, certificates.
-
-The **target path above** remains the north star when prioritising post-MVP content and any future Lab unfreeze ADR.
+The **target path above** remains the north star when prioritising any future Lab unfreeze ADR.
 
 ---
 

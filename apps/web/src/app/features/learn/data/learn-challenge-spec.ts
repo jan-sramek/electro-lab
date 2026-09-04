@@ -282,7 +282,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
       { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'op_amp', 'resistor', 'ground'] }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: -11, maxVolts: -9 })
+      }
     ]
   },
   opampFollower: {
@@ -740,7 +744,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
           models: ['battery', 'resistor', 'switch', 'capacitor', 'nmos', 'led', 'ground']
         })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   ntcDivider: {
@@ -752,7 +757,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'potentiometer', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 1.5, maxVolts: 3.5 })
+      }
     ]
   },
   pwmFilter: {
