@@ -182,7 +182,7 @@
         <div class="status-rail">
           <app-status-banner
             [error]="sim.error()"
-            [warnings]="sim.warnings()"
+            [warnings]="statusWarnings()"
             [probe]="sim.probeSummary()"
             [info]="sim.capIcStatus()"
             [highlightIds]="sim.highlightedIds()"
@@ -210,6 +210,8 @@
           (placeAt)="editor.onPlaceAt($event)"
           (dropPlace)="editor.placeModelAt($event.modelKey, $event.x, $event.y)"
           (pushbuttonPress)="onPushbuttonPress($event)"
+          (gestureStart)="editor.beginGesture()"
+          (gestureEnd)="editor.endGesture()"
         />
       </div>
       <p class="hint">{{ hintKey() | t }}</p>

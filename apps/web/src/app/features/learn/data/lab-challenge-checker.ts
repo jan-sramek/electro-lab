@@ -143,19 +143,23 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       return ctx.doc.wires.length >= min;
     }
     case 'any_model_current_min': {
+      // Current magnitude: branch sign depends on pin orientation, not on how much flows.
       const modelKey = String(params['modelKey'] ?? '');
       const minAmps = Number(params['minAmps'] ?? 0);
       return componentsByModel(ctx.doc, modelKey).some((id) => {
         const amps = branchCurrent(ctx.result, id);
-        return amps !== undefined && amps >= minAmps;
+        return amps !== undefined && Math.abs(amps) >= minAmps;
       });
     }
     case 'any_model_current_max': {
+      // No matching part or no measured current is a failed check, not a vacuous pass.
       const modelKey = String(params['modelKey'] ?? '');
       const maxAmps = Number(params['maxAmps'] ?? 0);
-      return componentsByModel(ctx.doc, modelKey).every((id) => {
+      const parts = componentsByModel(ctx.doc, modelKey);
+      if (!parts.length) return false;
+      return parts.every((id) => {
         const amps = branchCurrent(ctx.result, id);
-        return amps === undefined || Math.abs(amps) <= maxAmps;
+        return amps !== undefined && Math.abs(amps) <= maxAmps;
       });
     }
     case 'any_cap_voltage_final_min': {
@@ -242,13 +246,13 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
       const refId = String(params['refId'] ?? '');
       const minAmps = Number(params['minAmps'] ?? 0);
       const amps = branchCurrent(ctx.result, refId);
-      return amps !== undefined && amps >= minAmps;
+      return amps !== undefined && Math.abs(amps) >= minAmps;
     }
     case 'branch_current_max': {
       const refId = String(params['refId'] ?? '');
       const maxAmps = Number(params['maxAmps'] ?? 0);
       const amps = branchCurrent(ctx.result, refId);
-      return amps !== undefined && amps <= maxAmps;
+      return amps !== undefined && Math.abs(amps) <= maxAmps;
     }
     case 'switch_state': {
       const refId = String(params['refId'] ?? '');

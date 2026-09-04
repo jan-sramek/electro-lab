@@ -23,11 +23,8 @@ import { LearnSeoService } from '../../services/learn-seo.service';
             <article class="project" [class.locked]="unit.availability === 'locked'">
               <div class="project-head">
                 <h3>
-                  @if (unit.availability === 'locked') {
-                    <span>{{ unit.i18nKeyPrefix + '.title' | t }}</span>
-                  } @else {
-                    <a [routerLink]="unitPath(unit)">{{ unit.i18nKeyPrefix + '.title' | t }}</a>
-                  }
+                  <!-- Always a real link so crawlers discover every unit; the badge conveys lock state. -->
+                  <a [routerLink]="unitPath(unit)">{{ unit.i18nKeyPrefix + '.title' | t }}</a>
                 </h3>
                 <span class="status" [attr.data-status]="unit.availability">
                   {{ statusKey(unit.availability) | t }}

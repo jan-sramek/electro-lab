@@ -1,4 +1,5 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { LearningApiClient } from '../api/learning-api.client';
 import {
@@ -16,6 +17,8 @@ import { specCriteriaForCheck } from '../data/learn-challenge-spec';
 @Injectable({ providedIn: 'root' })
 export class LearnCatalogService {
   private readonly api = inject(LearningApiClient);
+  /** Prerender/SSR never shows a login/progress wall — public Learn pages must render for crawlers. */
+  private readonly isServer = isPlatformServer(inject(PLATFORM_ID));
 
   private readonly catalog = signal<LearnCatalogResponse | null>(null);
   private readonly unitCache = new Map<string, LearnUnitDetailResponse>();
@@ -128,6 +131,8 @@ export class LearnCatalogService {
     if (row?.complete) return 'complete';
     if (row && (row.readComplete || row.quizPassed || row.labPassed)) return 'inProgress';
     if (globalIdx <= 0) return 'available';
+    // No progress exists during prerender (API unreachable) — never emit a locked state there.
+    if (this.isServer) return 'available';
     const prev = orderedUnits[globalIdx - 1];
     const prevKey = `${prev.moduleSlug}/${prev.unitSlug}`;
     if (progressByKey?.[prevKey]?.complete) return 'available';

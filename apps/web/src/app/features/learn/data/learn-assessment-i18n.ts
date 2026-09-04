@@ -1,6 +1,8 @@
 /** Assessment copy for Learn units (lessons, quizzes, lab challenge labels). */
 export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.locked': 'Finish the previous project first to unlock this one.',
+  'learn.unit.offlineSaved': 'You are offline — progress is saved on this device and will sync when the Learning API is reachable.',
+  'learn.unit.quizRejected': 'The Learning API did not accept this submission. Finish the previous project and reload, then try again.',
   'learn.unit.phase.read': 'Read',
   'learn.unit.phase.quiz': 'Quiz',
   'learn.unit.phase.lab': 'Lab',
@@ -27,6 +29,8 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.hub.status.complete': 'Complete',
   'lab.challenge.heading': 'Learn challenge',
   'lab.challenge.check': 'Check my work',
+  'lab.challenge.rejected':
+    'The Learning API did not accept this challenge result — read the lesson and pass the quiz first, then check again.',
   'lab.challenge.peekSample': 'Peek sample',
   'lab.challenge.clearCanvas': 'Clear canvas',
   'lab.challenge.peekHint':

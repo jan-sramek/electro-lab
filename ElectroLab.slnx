@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/ElectroLab.CircuitSim.Tests/ElectroLab.CircuitSim.Tests.csproj" />
+    <Project Path="src/ElectroLab.LearningApi.Tests/ElectroLab.LearningApi.Tests.csproj" />
     <Project Path="src/ElectroLab.CircuitSim/ElectroLab.CircuitSim.csproj" />
   </Folder>
 </Solution>

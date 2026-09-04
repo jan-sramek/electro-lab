@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import {
   AnalysisMode,
   EditorTool,
@@ -7,9 +7,11 @@ import {
   SchematicWire,
   assignNets,
   createComponent,
+  createComponentIn,
   emptyDocument,
-  nextId
+  nextFreeId
 } from '../data/schematic.model';
+import { SYMBOL_LIBRARY } from '../data/symbol-library';
 import { createLedPreset } from '../data/presets/led-series.preset';
 import { createLedFadePreset } from '../data/presets/led-fade.preset';
 import { createRcStepPreset } from '../data/presets/rc-step.preset';
@@ -73,8 +75,12 @@ import {
   CircuitSlot,
   SchematicHistory,
   SchematicPersistence,
-  SlotSimState
+  SlotSimState,
+  normalizeSchematicDoc
 } from './schematic-persistence';
+
+/** Trailing debounce for localStorage writes during drags (flushed on tab switch / unload). */
+export const PERSIST_DEBOUNCE_MS = 300;
 
 export type ExamplePresetId =
   | 'led'
@@ -203,8 +209,12 @@ export function isExamplePresetId(value: string): value is ExamplePresetId {
 export class LabEditorStore {
   private readonly persistence = inject(SchematicPersistence);
   private readonly history = new SchematicHistory();
-  private dragHistoryPushed = false;
+  /** Explicit canvas gesture (drag) — history is pushed once for the whole gesture. */
+  private gestureActive = false;
+  private gestureHistoryPushed = false;
   private clipboard: SchematicDocument | null = null;
+  private persistTimer: ReturnType<typeof setTimeout> | null = null;
+  private persistDirty = false;
 
   readonly doc = signal<SchematicDocument>(createLedPreset());
   readonly tool = signal<EditorTool>('select');
@@ -241,6 +251,10 @@ export class LabEditorStore {
     if (!id) return null;
     return this.doc().components.find((c) => c.id === id) ?? null;
   });
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.flushPersist());
+  }
 
   initFromStorage(): void {
     const ensured = this.persistence.ensureLibrary(this.doc());
@@ -293,6 +307,8 @@ export class LabEditorStore {
 
   endLearnChallenge(): void {
     if (!this.learnChallengeMode()) return;
+    // A pending debounced write belongs to the isolated tab — never let it land in the real library.
+    this.cancelPendingPersist();
     this.persistence.endIsolatedSession();
     this.learnChallengeMode.set(false);
     this.challengeSim = null;
@@ -315,7 +331,7 @@ export class LabEditorStore {
   /** Persist current tab, then switch. */
   switchCircuitTab(id: string): void {
     if (id === this.activeSlotId()) return;
-    this.persist();
+    this.flushPersist();
     const doc = this.persistence.activate(id);
     if (!doc) return;
     this.history.clear();
@@ -331,7 +347,7 @@ export class LabEditorStore {
 
   addCircuitTab(): void {
     if (this.learnChallengeMode()) return;
-    this.persist();
+    this.flushPersist();
     const lib = this.persistence.loadLibrary();
     const name = this.persistence.nextDefaultName(lib.slots);
     this.history.clear();
@@ -357,9 +373,19 @@ export class LabEditorStore {
     const lib = this.persistence.loadLibrary();
     const slot = lib.slots.find((s) => s.id === id);
     if (!slot || slot.pinned || lib.slots.length <= 1) return;
-    if (id === this.activeSlotId()) this.persist();
+    const wasActive = id === this.activeSlotId();
+    // Neighbour in displayed (pinned-first) order: previous tab, else next.
+    const ordered = this.slots().length ? this.slots() : lib.slots;
+    const idx = ordered.findIndex((s) => s.id === id);
+    const neighbour = idx >= 0 ? (ordered[idx - 1] ?? ordered[idx + 1]) : undefined;
+    this.flushPersist();
     if (!this.persistence.deleteSlot(id)) return;
-    this.activateAfterTabClose();
+    if (!wasActive) {
+      // Closing a background tab must not touch the active document or its undo stack.
+      this.refreshSlots(this.activeSlotId());
+      return;
+    }
+    this.activateAfterTabClose(neighbour?.id ?? null);
   }
 
   toggleCircuitTabPinned(id: string): void {
@@ -374,7 +400,7 @@ export class LabEditorStore {
   closeOtherCircuitTabs(): void {
     const keepId = this.activeSlotId();
     if (!keepId) return;
-    this.persist();
+    this.flushPersist();
     const nextId = this.persistence.deleteOthers(keepId);
     if (!nextId) return;
     if (nextId !== keepId) {
@@ -387,7 +413,7 @@ export class LabEditorStore {
 
   /** Close all unpinned tabs (keeps pinned; always leaves ≥1 tab). */
   closeUnpinnedCircuitTabs(): void {
-    this.persist();
+    this.flushPersist();
     const nextId = this.persistence.deleteUnpinned();
     if (!nextId) return;
     this.activateAfterTabClose(nextId);
@@ -492,29 +518,25 @@ export class LabEditorStore {
   placeModelAt(modelKey: string, x: number, y: number): void {
     this.commit((doc) => ({
       ...doc,
-      components: [...doc.components, createComponent(modelKey, x, y)]
+      components: [...doc.components, createComponentIn(doc, modelKey, x, y)]
     }));
     this.setTool('select');
   }
 
+  /**
+   * Canvas document edit. Outside a gesture every change is its own undo step
+   * (wire added, waypoint reset, junction split). Inside a gesture (symbol or
+   * wire-waypoint drag) history is pushed once, on the first change.
+   */
   onDocChange(next: SchematicDocument): void {
     const prev = this.doc();
-    const structural =
-      prev.components.length !== next.components.length ||
-      prev.wires.length !== next.wires.length ||
-      prev.wires.some((w, i) => w.id !== next.wires[i]?.id);
-
-    if (structural) {
-      this.history.push(prev);
-    } else {
-      const moved = prev.components.some((c) => {
-        const n = next.components.find((x) => x.id === c.id);
-        return n && (n.x !== c.x || n.y !== c.y);
-      });
-      if (moved && !this.dragHistoryPushed) {
+    if (this.gestureActive) {
+      if (!this.gestureHistoryPushed) {
         this.history.push(prev);
-        this.dragHistoryPushed = true;
+        this.gestureHistoryPushed = true;
       }
+    } else {
+      this.history.push(prev);
     }
 
     this.doc.set(assignNets(next));
@@ -523,8 +545,18 @@ export class LabEditorStore {
     this.bump();
   }
 
+  /** Start a pointer gesture (drag). All doc changes until endGesture() form one undo step. */
+  beginGesture(): void {
+    this.gestureActive = true;
+    this.gestureHistoryPushed = false;
+  }
+
+  endGesture(): void {
+    this.gestureActive = false;
+    this.gestureHistoryPushed = false;
+  }
+
   onSelect(id: string | null, additive = false): void {
-    this.dragHistoryPushed = false;
     if (!id) {
       this.selectedIds.set([]);
       return;
@@ -542,7 +574,6 @@ export class LabEditorStore {
 
   /** Replace or union the component selection (marquee / box select). */
   setSelection(ids: string[], additive = false): void {
-    this.dragHistoryPushed = false;
     this.selectedWireIds.set([]);
     if (additive) {
       const set = new Set([...this.selectedIds(), ...ids]);
@@ -553,7 +584,6 @@ export class LabEditorStore {
   }
 
   onSelectWire(id: string | null, additive = false): void {
-    this.dragHistoryPushed = false;
     if (!id) {
       this.selectedWireIds.set([]);
       return;
@@ -733,11 +763,13 @@ export class LabEditorStore {
     const idSet = new Set(ids);
     const map = new Map<string, string>();
     const copies: SchematicComponent[] = [];
+    const used: string[] = [];
     for (const c of doc.components) {
       if (!idSet.has(c.id)) continue;
       const copy = structuredClone(c) as SchematicComponent;
       const prefix = c.id.replace(/\d+$/, '') || 'X';
-      copy.id = nextId(prefix);
+      copy.id = nextFreeId(doc, prefix, used);
+      used.push(copy.id);
       copy.x += 40;
       copy.y += 40;
       map.set(c.id, copy.id);
@@ -745,11 +777,15 @@ export class LabEditorStore {
     }
     const wires: SchematicWire[] = doc.wires
       .filter((w) => idSet.has(w.a.componentId) && idSet.has(w.b.componentId))
-      .map((w) => ({
-        id: nextId('W'),
-        a: { componentId: map.get(w.a.componentId)!, pin: w.a.pin },
-        b: { componentId: map.get(w.b.componentId)!, pin: w.b.pin }
-      }));
+      .map((w) => {
+        const id = nextFreeId(doc, 'W', used);
+        used.push(id);
+        return {
+          id,
+          a: { componentId: map.get(w.a.componentId)!, pin: w.a.pin },
+          b: { componentId: map.get(w.b.componentId)!, pin: w.b.pin }
+        };
+      });
     this.commit((d) => ({
       ...d,
       components: [...d.components, ...copies],
@@ -774,21 +810,28 @@ export class LabEditorStore {
   pasteClipboard(): void {
     const clip = this.clipboard;
     if (!clip?.components.length) return;
+    const doc = this.doc();
     const map = new Map<string, string>();
+    const used: string[] = [];
     const copies: SchematicComponent[] = clip.components.map((c) => {
       const copy = structuredClone(c) as SchematicComponent;
       const prefix = c.id.replace(/\d+$/, '') || 'X';
-      copy.id = nextId(prefix);
+      copy.id = nextFreeId(doc, prefix, used);
+      used.push(copy.id);
       copy.x += 40;
       copy.y += 40;
       map.set(c.id, copy.id);
       return copy;
     });
-    const wires: SchematicWire[] = clip.wires.map((w) => ({
-      id: nextId('W'),
-      a: { componentId: map.get(w.a.componentId)!, pin: w.a.pin },
-      b: { componentId: map.get(w.b.componentId)!, pin: w.b.pin }
-    }));
+    const wires: SchematicWire[] = clip.wires.map((w) => {
+      const id = nextFreeId(doc, 'W', used);
+      used.push(id);
+      return {
+        id,
+        a: { componentId: map.get(w.a.componentId)!, pin: w.a.pin },
+        b: { componentId: map.get(w.b.componentId)!, pin: w.b.pin }
+      };
+    });
     this.commit((d) => ({
       ...d,
       components: [...d.components, ...copies],
@@ -809,19 +852,15 @@ export class LabEditorStore {
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Import a schematic JSON file. The document is validated and normalized
+   * BEFORE history is touched, so an invalid file never leaves a phantom undo entry.
+   * @throws Error('Invalid schematic JSON') when the file cannot be imported.
+   */
   async importJson(file: File): Promise<void> {
     const text = await file.text();
-    const parsed = JSON.parse(text) as SchematicDocument;
-    if (!parsed?.components || !Array.isArray(parsed.components)) {
-      throw new Error('Invalid schematic JSON');
-    }
-    this.commit(() =>
-      assignNets({
-        groundNet: parsed.groundNet || 'gnd',
-        components: parsed.components,
-        wires: parsed.wires ?? []
-      })
-    );
+    const doc = LabEditorStore.parseImportedDoc(text);
+    this.commit(() => doc);
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
     this.activeExamplePreset.set(null);
@@ -1166,7 +1205,7 @@ export class LabEditorStore {
       return;
     }
 
-    this.persist();
+    this.flushPersist();
     const id = this.persistence.saveAs(tabName, doc, { ...sim, initFromDc: false });
     this.history.clear();
     this.doc.set(doc);
@@ -1235,8 +1274,78 @@ export class LabEditorStore {
     this.bump();
   }
 
+  /** Schedule a trailing-debounced save (called per pointermove frame during drags). */
   private persist(): void {
+    this.persistDirty = true;
+    if (this.persistTimer !== null) return;
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      this.flushPersist();
+    }, PERSIST_DEBOUNCE_MS);
+  }
+
+  /** Write the active document now (tab switch / close, unload, visibility change). */
+  flushPersist(): void {
+    if (this.persistTimer !== null) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+    if (!this.persistDirty) return;
+    this.persistDirty = false;
     this.persistence.save(this.doc(), this.activeSlotId(), this.currentSimState());
+  }
+
+  private cancelPendingPersist(): void {
+    if (this.persistTimer !== null) {
+      clearTimeout(this.persistTimer);
+      this.persistTimer = null;
+    }
+    this.persistDirty = false;
+  }
+
+  /** Validate + normalize imported JSON; throws on anything the canvas could not render. */
+  static parseImportedDoc(text: string): SchematicDocument {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new Error('Invalid schematic JSON');
+    }
+    const raw = parsed as Partial<SchematicDocument> | null;
+    if (!raw || typeof raw !== 'object' || !Array.isArray(raw.components)) {
+      throw new Error('Invalid schematic JSON');
+    }
+    const normalized = normalizeSchematicDoc(raw);
+    const ids = new Set<string>();
+    const components = normalized.components.map((c) => {
+      if (
+        !c ||
+        typeof c.id !== 'string' ||
+        !c.id ||
+        ids.has(c.id) ||
+        typeof c.modelKey !== 'string' ||
+        !SYMBOL_LIBRARY[c.modelKey] ||
+        !Number.isFinite(c.x) ||
+        !Number.isFinite(c.y)
+      ) {
+        throw new Error('Invalid schematic JSON');
+      }
+      ids.add(c.id);
+      // Missing / partial pins: rebuild from the symbol definition so nets can be assigned.
+      const template = createComponent(c.modelKey, c.x, c.y, c.id);
+      const pins = { ...template.pins, ...(c.pins ?? {}) };
+      return { ...c, pins };
+    });
+    const wires = normalized.wires.filter(
+      (w) =>
+        w &&
+        typeof w.id === 'string' &&
+        w.a?.componentId &&
+        w.b?.componentId &&
+        ids.has(w.a.componentId) &&
+        ids.has(w.b.componentId)
+    );
+    return assignNets({ ...normalized, components, wires });
   }
 
   private syncHistoryFlags(): void {

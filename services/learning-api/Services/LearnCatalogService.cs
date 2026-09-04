@@ -16,12 +16,14 @@ public sealed class LearnCatalogService(LearningDbContext db)
 
         var moduleDtos = modules
             .OrderBy(m => m.SortOrder)
+            .ThenBy(m => m.Id)
             .Select(m => new LearnModuleDto(
                 m.Slug,
                 m.TitleKey,
                 m.SortOrder,
                 m.Units
                     .OrderBy(u => u.SortOrder)
+                    .ThenBy(u => u.Id)
                     .Select(u => ToSummary(u, progress, orderedUnits))
                     .ToList()))
             .ToList();
@@ -38,10 +40,7 @@ public sealed class LearnCatalogService(LearningDbContext db)
         var unit = await FindUnitAsync(moduleSlug, unitSlug, ct);
         if (unit is null) return null;
 
-        var modules = await LoadModulesAsync(ct);
-        var progress = await LoadProgressMapAsync(sessionId, ct);
-        var orderedUnits = FlattenUnits(modules);
-        var row = progress.GetValueOrDefault(unit.Id);
+        var (row, availability) = await LoadAvailabilityAsync(unit, sessionId, ct);
 
         return new LearnUnitDetailResponse(
             unit.Module.Slug,
@@ -51,7 +50,7 @@ public sealed class LearnCatalogService(LearningDbContext db)
             unit.SortOrder,
             unit.NextUnit?.Module.Slug,
             unit.NextUnit?.Slug,
-            ResolveAvailability(unit, progress, orderedUnits),
+            availability,
             unit.LessonBlocks
                 .OrderBy(b => b.SortOrder)
                 .Select(b => new LearnLessonBlockDto(b.Id, b.SortOrder, b.TitleKey, b.BodyKey))
@@ -61,24 +60,78 @@ public sealed class LearnCatalogService(LearningDbContext db)
             ToProgressDto(unit, row));
     }
 
+    /// <summary>
+    /// Availability of a single unit for a session, loading only the unit's predecessor id and the
+    /// two relevant progress rows. Shared with <see cref="LearnProgressService"/> for server-side gating.
+    /// </summary>
+    public async Task<UnitAvailability> GetAvailabilityAsync(LearnUnit unit, Guid sessionId, CancellationToken ct = default)
+    {
+        var (_, availability) = await LoadAvailabilityAsync(unit, sessionId, ct);
+        return availability;
+    }
+
+    private async Task<(LearnProgressRow? Row, UnitAvailability Availability)> LoadAvailabilityAsync(
+        LearnUnit unit,
+        Guid sessionId,
+        CancellationToken ct)
+    {
+        var predecessorId = await FindPredecessorIdAsync(unit, ct);
+
+        var ids = predecessorId is int p ? new[] { unit.Id, p } : [unit.Id];
+        var rows = await db.LearnProgress
+            .AsNoTracking()
+            .Where(r => r.SessionId == sessionId && ids.Contains(r.UnitId))
+            .ToListAsync(ct);
+
+        var row = rows.FirstOrDefault(r => r.UnitId == unit.Id);
+        var prevRow = predecessorId is int pid ? rows.FirstOrDefault(r => r.UnitId == pid) : null;
+        return (row, ResolveAvailability(row, predecessorId.HasValue, prevRow));
+    }
+
+    /// <summary>The unit immediately before <paramref name="unit"/> in global (module order, unit order) sequence.</summary>
+    private async Task<int?> FindPredecessorIdAsync(LearnUnit unit, CancellationToken ct)
+    {
+        var moduleOrder = unit.Module?.SortOrder
+            ?? await db.LearnModules.AsNoTracking()
+                .Where(m => m.Id == unit.ModuleId)
+                .Select(m => m.SortOrder)
+                .FirstAsync(ct);
+        var moduleId = unit.ModuleId;
+        var unitOrder = unit.SortOrder;
+        var unitId = unit.Id;
+
+        return await db.LearnUnits
+            .AsNoTracking()
+            .Where(u =>
+                u.Module.SortOrder < moduleOrder
+                || (u.Module.SortOrder == moduleOrder && u.ModuleId < moduleId)
+                || (u.ModuleId == moduleId && u.SortOrder < unitOrder)
+                || (u.ModuleId == moduleId && u.SortOrder == unitOrder && u.Id < unitId))
+            .OrderByDescending(u => u.Module.SortOrder)
+            .ThenByDescending(u => u.ModuleId)
+            .ThenByDescending(u => u.SortOrder)
+            .ThenByDescending(u => u.Id)
+            .Select(u => (int?)u.Id)
+            .FirstOrDefaultAsync(ct);
+    }
+
+    // Catalog summaries only need unit scalars plus the next unit's module slug; lesson/quiz/criteria
+    // collections are deliberately not loaded here (they caused a cartesian explosion).
     private async Task<List<LearnModule>> LoadModulesAsync(CancellationToken ct) =>
         await db.LearnModules
             .AsNoTracking()
-            .Include(m => m.Units.OrderBy(u => u.SortOrder))
+            .AsSplitQuery()
+            .Include(m => m.Units.OrderBy(u => u.SortOrder).ThenBy(u => u.Id))
                 .ThenInclude(u => u.NextUnit!)
                     .ThenInclude(n => n.Module)
-            .Include(m => m.Units)
-                .ThenInclude(u => u.LessonBlocks)
-            .Include(m => m.Units)
-                .ThenInclude(u => u.QuizQuestions)
-            .Include(m => m.Units)
-                .ThenInclude(u => u.LabCriteria)
             .OrderBy(m => m.SortOrder)
+            .ThenBy(m => m.Id)
             .ToListAsync(ct);
 
     private async Task<LearnUnit?> FindUnitAsync(string moduleSlug, string unitSlug, CancellationToken ct) =>
         await db.LearnUnits
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(u => u.Module)
             .Include(u => u.NextUnit!)
                 .ThenInclude(n => n.Module)
@@ -99,7 +152,8 @@ public sealed class LearnCatalogService(LearningDbContext db)
     private static List<LearnUnit> FlattenUnits(IEnumerable<LearnModule> modules) =>
         modules
             .OrderBy(m => m.SortOrder)
-            .SelectMany(m => m.Units.OrderBy(u => u.SortOrder))
+            .ThenBy(m => m.Id)
+            .SelectMany(m => m.Units.OrderBy(u => u.SortOrder).ThenBy(u => u.Id))
             .ToList();
 
     private static LearnUnitSummaryDto ToSummary(
@@ -121,12 +175,6 @@ public sealed class LearnCatalogService(LearningDbContext db)
         IReadOnlyDictionary<int, LearnProgressRow> progress,
         IReadOnlyList<LearnUnit> orderedUnits)
     {
-        if (progress.TryGetValue(unit.Id, out var row))
-        {
-            if (row.IsComplete) return UnitAvailability.Complete;
-            if (row.ReadComplete || row.QuizPassed || row.LabPassed) return UnitAvailability.InProgress;
-        }
-
         var index = -1;
         for (var i = 0; i < orderedUnits.Count; i++)
         {
@@ -137,13 +185,22 @@ public sealed class LearnCatalogService(LearningDbContext db)
             }
         }
 
-        if (index <= 0) return UnitAvailability.Available;
+        var row = progress.GetValueOrDefault(unit.Id);
+        var prevRow = index > 0 ? progress.GetValueOrDefault(orderedUnits[index - 1].Id) : null;
+        return ResolveAvailability(row, hasPredecessor: index > 0, prevRow);
+    }
 
-        var prev = orderedUnits[index - 1];
-        if (progress.TryGetValue(prev.Id, out var prevRow) && prevRow.IsComplete)
-            return UnitAvailability.Available;
+    /// <summary>Single source of truth for the unlock rule: first unit is open, later units need the previous one complete.</summary>
+    public static UnitAvailability ResolveAvailability(LearnProgressRow? row, bool hasPredecessor, LearnProgressRow? predecessorRow)
+    {
+        if (row is not null)
+        {
+            if (row.IsComplete) return UnitAvailability.Complete;
+            if (row.ReadComplete || row.QuizPassed || row.LabPassed) return UnitAvailability.InProgress;
+        }
 
-        return UnitAvailability.Locked;
+        if (!hasPredecessor) return UnitAvailability.Available;
+        return predecessorRow?.IsComplete == true ? UnitAvailability.Available : UnitAvailability.Locked;
     }
 
     private static LearnQuizDto BuildQuiz(LearnUnit unit)

@@ -29,6 +29,9 @@ services:
   web:
     build:
       context: ./apps/web
+      args:
+        # Public site origin for SEO tags/sitemap (set SITE_ORIGIN=https://your.domain in the environment or .env).
+        SITE_ORIGIN: ${SITE_ORIGIN:-http://localhost:8080}
     expose:
       - "80"
 

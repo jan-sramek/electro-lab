@@ -1,7 +1,7 @@
 import { Component, computed, HostListener, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { LabEditorStore, ExamplePresetId } from '../../services/lab-editor.store';
+import { LabEditorStore, ExamplePresetId, isExamplePresetId } from '../../services/lab-editor.store';
 import { CircuitSimulationFacade } from '../../services/circuit-simulation.facade';
 import { SchematicPersistence } from '../../services/schematic-persistence';
 import { ComponentPaletteComponent } from '../../components/palette/palette.component';
@@ -17,10 +17,12 @@ import { LearnSeoService } from '../../../learn/services/learn-seo.service';
 import { parseLearnFromSlug } from '../../../learn/data/learn-catalog';
 import { learnUnitPath, LearnUnit } from '../../../learn/data/learn-catalog.model';
 import { LearnLabChallengeService } from '../../../learn/services/learn-lab-challenge.service';
+import { LearnProgressService } from '../../../learn/services/learn-progress.service';
 import { LearnUnitDetailResponse } from '../../../learn/api/learning-api.types';
 import { CriterionCheckResult } from '../../../learn/data/lab-challenge-checker';
 import { getLearnChallengeSpec, specCriteriaForCheck } from '../../../learn/data/learn-challenge-spec';
 import { I18nService } from '../../../../core/i18n/i18n.service';
+import { labMessage } from '../../data/lab-messages';
 
 @Component({
   selector: 'app-lab-page',
@@ -48,7 +50,9 @@ export class LabPageComponent implements OnInit, OnDestroy {
   private readonly meta = inject(Meta);
   private readonly learnSeo = inject(LearnSeoService);
   private readonly learnChallenge = inject(LearnLabChallengeService);
+  private readonly learnProgress = inject(LearnProgressService);
   private readonly i18n = inject(I18nService);
+  private readonly persistence = inject(SchematicPersistence);
 
   /** Learn unit when opened via `?from=module/unit`. */
   readonly learnContext = signal<LearnUnit | null>(null);
@@ -66,6 +70,18 @@ export class LabPageComponent implements OnInit, OnDestroy {
   readonly closeOthersConfirm = signal(false);
   readonly closeUnpinnedConfirm = signal(false);
   readonly learnUnitPath = learnUnitPath;
+  /** Page-level notice key (import failure, refused challenge) shown in the status banner. */
+  readonly pageNotice = signal<string | null>(null);
+
+  /** Sim warnings plus page-level notices (storage quota, import, challenge gating). */
+  readonly statusWarnings = computed(() => {
+    const extra: string[] = [];
+    const storage = this.persistence.storageError();
+    if (storage) extra.push(labMessage(this.i18n, storage));
+    const notice = this.pageNotice();
+    if (notice) extra.push(labMessage(this.i18n, notice));
+    return extra.length ? [...extra, ...this.sim.warnings()] : this.sim.warnings();
+  });
 
   readonly challengeCriteria = computed(() => {
     const unit = this.learnChallengeUnit();
@@ -220,7 +236,19 @@ export class LabPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Flush before leaving isolation: in challenge mode this lands in the in-memory library.
+    this.editor.flushPersist();
     this.editor.endLearnChallenge();
+  }
+
+  @HostListener('window:beforeunload')
+  onBeforeUnload(): void {
+    this.editor.flushPersist();
+  }
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (document.visibilityState === 'hidden') this.editor.flushPersist();
   }
 
   onLoadPreset(id: ExamplePresetId): void {
@@ -416,10 +444,11 @@ export class LabPageComponent implements OnInit, OnDestroy {
   }
 
   async onImport(file: File): Promise<void> {
+    this.pageNotice.set(null);
     try {
       await this.editor.importJson(file);
     } catch {
-      /* invalid file */
+      this.pageNotice.set('lab.import.invalid');
     }
   }
 
@@ -472,12 +501,14 @@ export class LabPageComponent implements OnInit, OnDestroy {
   /** Load the unit's teaching sample into the challenge tab as a rebuild reference. */
   peekChallengeSample(): void {
     if (!this.learnChallengeUnit()?.exampleId) return;
+    this.clearPendingConfirms();
     this.challengeConfirm.set('peek');
   }
 
   /** Empty the challenge tab again without leaving challenge mode. */
   clearChallengeCanvas(): void {
     if (!this.editor.learnChallengeMode()) return;
+    this.clearPendingConfirms();
     this.challengeConfirm.set('clear');
   }
 
@@ -505,8 +536,18 @@ export class LabPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Only one inline confirm may be open at a time. */
+  private clearPendingConfirms(): void {
+    this.challengeConfirm.set(null);
+    this.newSchematicConfirm.set(false);
+    this.closeTabConfirmId.set(null);
+    this.closeOthersConfirm.set(false);
+    this.closeUnpinnedConfirm.set(false);
+  }
+
   requestNewSchematic(): void {
     if (this.editor.learnChallengeMode()) return;
+    this.clearPendingConfirms();
     this.newSchematicConfirm.set(true);
   }
 
@@ -521,7 +562,7 @@ export class LabPageComponent implements OnInit, OnDestroy {
 
   requestCloseTab(id: string): void {
     if (this.editor.learnChallengeMode()) return;
-    this.closeOthersConfirm.set(false);
+    this.clearPendingConfirms();
     this.closeTabConfirmId.set(id);
   }
 
@@ -537,7 +578,7 @@ export class LabPageComponent implements OnInit, OnDestroy {
 
   requestCloseOtherTabs(): void {
     if (this.editor.learnChallengeMode()) return;
-    this.closeTabConfirmId.set(null);
+    this.clearPendingConfirms();
     this.closeOthersConfirm.set(true);
   }
 
@@ -552,8 +593,7 @@ export class LabPageComponent implements OnInit, OnDestroy {
 
   requestCloseUnpinnedTabs(): void {
     if (this.editor.learnChallengeMode()) return;
-    this.closeTabConfirmId.set(null);
-    this.closeOthersConfirm.set(false);
+    this.clearPendingConfirms();
     this.closeUnpinnedConfirm.set(true);
   }
 
@@ -584,6 +624,27 @@ export class LabPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Gate on the unit response (merged with locally-held progress, exactly like the unit page):
+    // a locked unit or an unpassed quiz cannot start the challenge via deep link / stale URL.
+    // Fall back to the plain example and say why.
+    const local = this.learnProgress.progressFor(moduleSlug, unitSlug);
+    const refusal = LabPageComponent.challengeRefusalKey({
+      ...detail,
+      progress: {
+        ...detail.progress,
+        quizPassed: !!detail.progress?.quizPassed || local.quizPassed,
+        labPassed: !!detail.progress?.labPassed || local.labPassed,
+        complete: !!detail.progress?.complete || local.complete
+      }
+    });
+    if (refusal) {
+      this.pageNotice.set(refusal);
+      this.editor.initFromStorage();
+      const exampleId = detail.exampleId;
+      if (isExamplePresetId(exampleId)) this.onLoadPreset(exampleId);
+      return;
+    }
+
     this.learnChallengeUnit.set(detail);
     const spec = getLearnChallengeSpec(detail.exampleId);
     const tabNameKey = spec?.tabNameKey ?? 'learn.challenge.tab.default';
@@ -596,17 +657,26 @@ export class LabPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Why a Learn challenge may not start for this unit, or null when allowed. */
+  static challengeRefusalKey(detail: LearnUnitDetailResponse): string | null {
+    if (detail.availability === 'locked') return 'lab.challenge.locked';
+    const p = detail.progress;
+    if (p?.quizPassed || p?.labPassed || p?.complete) return null;
+    return 'lab.challenge.quizRequired';
+  }
+
   @HostListener('window:keydown', ['$event'])
   onKey(ev: KeyboardEvent): void {
     const tag = (ev.target as HTMLElement)?.tagName;
     const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
     const mod = ev.ctrlKey || ev.metaKey;
 
-    if (mod && ev.key.toLowerCase() === 'z' && !ev.shiftKey) {
+    if (mod && ev.key.toLowerCase() === 'z' && !ev.shiftKey && !inField) {
       ev.preventDefault();
       this.editor.undo();
     } else if (
       mod &&
+      !inField &&
       (ev.key.toLowerCase() === 'y' || (ev.key.toLowerCase() === 'z' && ev.shiftKey))
     ) {
       ev.preventDefault();

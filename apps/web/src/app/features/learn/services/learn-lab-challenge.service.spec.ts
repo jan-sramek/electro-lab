@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { LearningApiClient } from '../api/learning-api.client';
 import { LearnLabCriterionDto } from '../api/learning-api.types';
@@ -68,6 +69,19 @@ describe('LearnLabChallengeService.submitResults', () => {
     expect(progress.applyProgress).not.toHaveBeenCalled();
   });
 
+  it('returns rejected (not verify_unavailable) when the server refuses with 409', async () => {
+    api.verifyLab.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
+    const outcome = await service.submitResults('basics', 'led', apiCriteria, passedLocal);
+    expect(outcome).toBe('rejected');
+    expect(progress.applyProgress).not.toHaveBeenCalled();
+  });
+
+  it('still returns verify_unavailable for 5xx', async () => {
+    api.verifyLab.and.returnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+    const outcome = await service.submitResults('basics', 'led', apiCriteria, passedLocal);
+    expect(outcome).toBe('verify_unavailable');
+  });
+
   it('maps aligned SPECS results onto seeded API criterion ids by order', async () => {
     const seeded: LearnLabCriterionDto[] = [
       { id: 10, order: 1, labelKey: 'a', type: 'sim_ok', paramsJson: '{}' },
@@ -76,6 +90,71 @@ describe('LearnLabChallengeService.submitResults', () => {
     const local: CriterionCheckResult[] = [
       { criterionId: 1, passed: true },
       { criterionId: 2, passed: true }
+    ];
+    api.verifyLab.and.returnValue(
+      of({
+        passed: true,
+        progress: {
+          moduleSlug: 'basics',
+          unitSlug: 'led',
+          readComplete: true,
+          quizPassed: true,
+          labPassed: true,
+          complete: true
+        }
+      })
+    );
+    await service.submitResults('basics', 'led', seeded, local);
+    expect(api.verifyLab).toHaveBeenCalledWith('basics', 'led', {
+      results: [
+        { criterionId: 10, passed: true },
+        { criterionId: 11, passed: true }
+      ]
+    });
+  });
+
+  it('never fabricates passes: unmatched seeded criteria are sent as failed when lengths differ', async () => {
+    const seeded: LearnLabCriterionDto[] = [
+      { id: 10, order: 1, labelKey: 'a', type: 'sim_ok', paramsJson: '{}' },
+      { id: 11, order: 2, labelKey: 'b', type: 'has_models', paramsJson: '{}' },
+      { id: 12, order: 3, labelKey: 'c', type: 'branch_current_min', paramsJson: '{}' }
+    ];
+    const local: CriterionCheckResult[] = [
+      { criterionId: 10, passed: true },
+      { criterionId: 11, passed: true }
+    ];
+    api.verifyLab.and.returnValue(
+      of({
+        passed: false,
+        progress: {
+          moduleSlug: 'basics',
+          unitSlug: 'led',
+          readComplete: true,
+          quizPassed: true,
+          labPassed: false,
+          complete: false
+        }
+      })
+    );
+    const outcome = await service.submitResults('basics', 'led', seeded, local);
+    expect(outcome).toBe('failed');
+    expect(api.verifyLab).toHaveBeenCalledWith('basics', 'led', {
+      results: [
+        { criterionId: 10, passed: true },
+        { criterionId: 11, passed: true },
+        { criterionId: 12, passed: false }
+      ]
+    });
+  });
+
+  it('matches by criterion id before falling back to position', async () => {
+    const seeded: LearnLabCriterionDto[] = [
+      { id: 10, order: 1, labelKey: 'a', type: 'sim_ok', paramsJson: '{}' },
+      { id: 11, order: 2, labelKey: 'b', type: 'has_models', paramsJson: '{}' }
+    ];
+    const local: CriterionCheckResult[] = [
+      { criterionId: 11, passed: true },
+      { criterionId: 10, passed: true }
     ];
     api.verifyLab.and.returnValue(
       of({

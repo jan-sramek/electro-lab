@@ -146,19 +146,11 @@ export function polylineToPath(pts: { x: number; y: number }[]): string {
   return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 }
 
-export function createComponent(
-  modelKey: string,
-  x: number,
-  y: number,
-  id?: string
-): SchematicComponent {
+/** Schematic id prefix for a symbol (R, D, V, …). */
+export function idPrefixFor(modelKey: string): string {
   const def = symbolOf(modelKey);
-  const pins: Record<string, SchematicPin> = {};
-  for (const p of def.pins) {
-    pins[p.name] = { net: '', ox: p.ox, oy: p.oy };
-  }
   const sim = simModelOf(def.modelKey);
-  const prefix =
+  return (
     sim === 'battery'
       ? 'V'
       : sim === 'resistor'
@@ -213,9 +205,40 @@ export function createComponent(
                                         ? 'GND'
                                         : def.modelKey === 'junction'
                                           ? 'J'
-                                          : 'X';
+                                          : 'X'
+  );
+}
+
+/**
+ * Smallest unused `${prefix}N` id in `doc` (N ≥ max existing + 1).
+ * Scans component AND wire ids so generated ids never collide after tab switch, import, paste or reload.
+ */
+export function nextFreeId(doc: SchematicDocument, prefix: string, reserved?: Iterable<string>): string {
+  const re = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)$`);
+  let max = 0;
+  const consider = (id: string) => {
+    const m = re.exec(id);
+    if (m) max = Math.max(max, Number(m[1]));
+  };
+  for (const c of doc.components) consider(c.id);
+  for (const w of doc.wires) consider(w.id);
+  if (reserved) for (const id of reserved) consider(id);
+  return `${prefix}${max + 1}`;
+}
+
+export function createComponent(
+  modelKey: string,
+  x: number,
+  y: number,
+  id?: string
+): SchematicComponent {
+  const def = symbolOf(modelKey);
+  const pins: Record<string, SchematicPin> = {};
+  for (const p of def.pins) {
+    pins[p.name] = { net: '', ox: p.ox, oy: p.oy };
+  }
   return {
-    id: id ?? nextId(prefix),
+    id: id ?? nextId(idPrefixFor(modelKey)),
     modelKey: def.modelKey,
     x,
     y,
@@ -223,6 +246,16 @@ export function createComponent(
     params: { ...def.defaultParams },
     pins
   };
+}
+
+/** Create a component whose id is guaranteed unique within `doc`. */
+export function createComponentIn(
+  doc: SchematicDocument,
+  modelKey: string,
+  x: number,
+  y: number
+): SchematicComponent {
+  return createComponent(modelKey, x, y, nextFreeId(doc, idPrefixFor(modelKey)));
 }
 
 /** Union-find net assignment from wires + ground symbols. */

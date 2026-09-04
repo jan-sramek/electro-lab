@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { AnalysisMode, SchematicDocument, cloneDoc } from '../data/schematic.model';
 import { isBjtNpnPart } from '../data/symbol-library';
 
@@ -19,6 +19,35 @@ function migrateLegacyBjtRb(doc: SchematicDocument): SchematicDocument {
     return { ...c, params: { ...c.params, rb: 10 } };
   });
   return changed ? { ...doc, components } : doc;
+}
+
+/** Unique slot id — `Date.now()` alone collides when two tabs are created in the same millisecond. */
+function newSlotId(existing: readonly { id: string }[]): string {
+  const taken = new Set(existing.map((s) => s.id));
+  const base = `slot_${Date.now()}`;
+  if (!taken.has(base)) return base;
+  let n = 1;
+  while (taken.has(`${base}_${n}`)) n += 1;
+  return `${base}_${n}`;
+}
+
+/** Fill missing fields of a stored / imported schematic so the editor can render it. */
+export function normalizeSchematicDoc(
+  parsed: Partial<SchematicDocument> | null | undefined
+): SchematicDocument {
+  if (!parsed?.components || !Array.isArray(parsed.components)) {
+    return { groundNet: 'gnd', components: [], wires: [] };
+  }
+  return {
+    groundNet: parsed.groundNet || 'gnd',
+    components: parsed.components.map((c) => ({
+      ...c,
+      rotation: (c.rotation ?? 0) as 0 | 90 | 180 | 270,
+      params: c.params ?? {},
+      pins: c.pins ?? {}
+    })),
+    wires: Array.isArray(parsed.wires) ? parsed.wires : []
+  };
 }
 
 /** Per-tab analysis settings — survive F5 so examples like LED fade keep Transient + tStop. */
@@ -58,6 +87,11 @@ export interface StoredCapIc {
 export class SchematicPersistence {
   /** In-memory library for Learn challenges — never touches localStorage. */
   private isolatedLibrary: CircuitLibrary | null = null;
+  /**
+   * Message key of the last failed localStorage write (quota / disabled storage), null when
+   * the most recent write succeeded. Surfaced once in the status banner instead of throwing.
+   */
+  readonly storageError = signal<string | null>(null);
 
   isIsolated(): boolean {
     return this.isolatedLibrary !== null;
@@ -76,27 +110,23 @@ export class SchematicPersistence {
   }
 
   save(doc: SchematicDocument, activeId?: string | null, sim?: SlotSimState): void {
-    try {
-      const lib = this.loadLibrary();
-      const id = activeId ?? lib.activeId;
-      if (id) {
-        const slots = lib.slots.map((s) =>
-          s.id === id
-            ? {
-                ...s,
-                doc: cloneDoc(doc),
-                updatedAt: Date.now(),
-                sim: sim ?? s.sim
-              }
-            : s
-        );
-        this.writeLibrary({ ...lib, activeId: id, slots });
-      } else {
-        // Autosave unnamed working copy into legacy key for mid-edit safety.
-        localStorage.setItem(LEGACY_KEY, JSON.stringify(doc));
-      }
-    } catch {
-      /* ignore quota */
+    const lib = this.loadLibrary();
+    const id = activeId ?? lib.activeId;
+    if (id) {
+      const slots = lib.slots.map((s) =>
+        s.id === id
+          ? {
+              ...s,
+              doc: cloneDoc(doc),
+              updatedAt: Date.now(),
+              sim: sim ?? s.sim
+            }
+          : s
+      );
+      this.writeLibrary({ ...lib, activeId: id, slots });
+    } else {
+      // Autosave unnamed working copy into legacy key for mid-edit safety.
+      this.safeSetItem(LEGACY_KEY, JSON.stringify(doc));
     }
   }
 
@@ -107,11 +137,7 @@ export class SchematicPersistence {
   }
 
   saveCapIc(data: StoredCapIc): void {
-    try {
-      localStorage.setItem(CAP_IC_KEY, JSON.stringify(data));
-    } catch {
-      /* ignore */
-    }
+    this.safeSetItem(CAP_IC_KEY, JSON.stringify(data));
   }
 
   loadCapIc(): StoredCapIc | null {
@@ -127,7 +153,7 @@ export class SchematicPersistence {
   }
 
   clearCapIc(): void {
-    localStorage.removeItem(CAP_IC_KEY);
+    this.safeRemoveItem(CAP_IC_KEY);
   }
 
   /** Load active circuit, migrating legacy single-key storage if needed. */
@@ -177,7 +203,7 @@ export class SchematicPersistence {
 
     const legacy = this.loadLegacy();
     if (legacy) {
-      const id = `slot_${Date.now()}`;
+      const id = newSlotId([]);
       const lib: CircuitLibrary = {
         schemaVersion: 1,
         activeId: id,
@@ -191,7 +217,7 @@ export class SchematicPersistence {
         ]
       };
       this.writeLibrary(lib);
-      localStorage.removeItem(LEGACY_KEY);
+      this.safeRemoveItem(LEGACY_KEY);
       return lib;
     }
 
@@ -208,7 +234,7 @@ export class SchematicPersistence {
 
   saveAs(name: string, doc: SchematicDocument, sim?: SlotSimState): string {
     const lib = this.loadLibrary();
-    const id = `slot_${Date.now()}`;
+    const id = newSlotId(lib.slots);
     const slot: CircuitSlot = {
       id,
       name: name.trim() || this.nextDefaultName(lib.slots),
@@ -221,7 +247,7 @@ export class SchematicPersistence {
       activeId: id,
       slots: [...lib.slots, slot]
     });
-    localStorage.removeItem(LEGACY_KEY);
+    this.safeRemoveItem(LEGACY_KEY);
     return id;
   }
 
@@ -237,7 +263,7 @@ export class SchematicPersistence {
       const doc = migrateLegacyBjtRb(cloneDoc(slot.doc));
       return { activeId: slot.id, doc };
     }
-    const id = `slot_${Date.now()}`;
+    const id = newSlotId(lib.slots);
     const slot: CircuitSlot = {
       id,
       name: 'Circuit 1',
@@ -245,7 +271,7 @@ export class SchematicPersistence {
       updatedAt: Date.now()
     };
     this.writeLibrary({ schemaVersion: 1, activeId: id, slots: [slot] });
-    localStorage.removeItem(LEGACY_KEY);
+    this.safeRemoveItem(LEGACY_KEY);
     return { activeId: id, doc: migrateLegacyBjtRb(cloneDoc(seed)) };
   }
 
@@ -336,7 +362,7 @@ export class SchematicPersistence {
   }
 
   clear(): void {
-    localStorage.removeItem(LEGACY_KEY);
+    this.safeRemoveItem(LEGACY_KEY);
     const lib = this.loadLibrary();
     if (lib.activeId) {
       this.writeLibrary({
@@ -359,7 +385,31 @@ export class SchematicPersistence {
       this.isolatedLibrary = lib;
       return;
     }
-    localStorage.setItem(SLOTS_KEY, JSON.stringify(lib));
+    this.safeSetItem(SLOTS_KEY, JSON.stringify(lib));
+  }
+
+  /**
+   * Single guarded localStorage write path. A QuotaExceededError (or disabled storage)
+   * becomes a user-visible status message instead of an exception escaping a click handler.
+   * @returns true when the write succeeded
+   */
+  private safeSetItem(key: string, value: string): boolean {
+    try {
+      localStorage.setItem(key, value);
+      if (this.storageError() !== null) this.storageError.set(null);
+      return true;
+    } catch {
+      this.storageError.set('lab.storage.saveFailed');
+      return false;
+    }
+  }
+
+  private safeRemoveItem(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      /* removing never needs quota; storage may simply be unavailable */
+    }
   }
 
   private loadLegacy(): SchematicDocument | null {
@@ -373,19 +423,7 @@ export class SchematicPersistence {
   }
 
   private normalizeDoc(parsed: Partial<SchematicDocument> | null | undefined): SchematicDocument {
-    if (!parsed?.components || !Array.isArray(parsed.components)) {
-      return { groundNet: 'gnd', components: [], wires: [] };
-    }
-    return {
-      groundNet: parsed.groundNet || 'gnd',
-      components: parsed.components.map((c) => ({
-        ...c,
-        rotation: (c.rotation ?? 0) as 0 | 90 | 180 | 270,
-        params: c.params ?? {},
-        pins: c.pins ?? {}
-      })),
-      wires: Array.isArray(parsed.wires) ? parsed.wires : []
-    };
+    return normalizeSchematicDoc(parsed);
   }
 
   private normalizeSim(sim: SlotSimState | undefined): SlotSimState | undefined {

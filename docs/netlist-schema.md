@@ -37,8 +37,17 @@
 | type | fields | Notes |
 |------|--------|--------|
 | `dcOp` | — | DC operating point |
-| `tran` | `tStop`, `dt`, optional `initFromDc` | Fixed-step Backward Euler; defaults `tStop=0.005`, `dt=5e-5`. `initFromDc` seeds C/L from a DC solve at t=0 (overrides `params.ic`). The first plotted sample at t=0 is already one BE companion step from the IC (not a pure algebraic snapshot). |
-| `ac` | `freq`, or `fStart`/`fStop`/`pointsPerDecade` | Phasor / small-signal; default `freq=1000` Hz. Nonlinear devices (LED, diode, BJT) treated as open with a warning |
+| `tran` | `tStop`, `dt`, optional `initFromDc` | Fixed-step Backward Euler; defaults `tStop=0.005`, `dt=5e-5` apply only when the field is absent (a supplied value ≤ 0, non-finite, or `dt > tStop` → 400). `ceil(tStop/dt)` ≤ 20 000. `initFromDc` seeds C/L from a DC solve at t=0 (overrides `params.ic`) using exactly the dcOp bias rules (incl. zener / 7805). The first plotted sample at t=0 is already one BE companion step from the IC (not a pure algebraic snapshot). |
+| `ac` | `freq`, or `fStart`/`fStop`/`pointsPerDecade` | Phasor / small-signal; default `freq=1000` Hz. Log sweep: `pointsPerDecade` ≤ 200 and `round(decades·ppd)+1` ≤ 2 000 total points, else 400. Nonlinear devices (LED, diode, BJT) treated as open with a warning |
+
+### Limits (400 on violation)
+
+- ≤ 500 elements, ≤ 600 distinct nodes, request body ≤ 1 MB.
+- Every pin must name a non-empty node; every numeric param must be finite (`"NaN"` / `"Infinity"` strings rejected).
+- Node ids containing `__` are reserved for engine-internal nodes (e.g. `V1__mid`) and are omitted from `nodeVoltages` in responses.
+- `branchCurrents` sign convention: passives report current from the first pin to the second (`a→b`, `a→c`);
+  sources report delivered current (flowing `n→p` inside the source). An ideal-short inductor whose own
+  reading is below 1 µA takes its current from the series neighbour, orientation-corrected to `a→b`.
 
 ### Models (teaching pack)
 

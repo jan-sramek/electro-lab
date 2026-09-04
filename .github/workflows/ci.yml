@@ -32,6 +32,8 @@ jobs:
         run: npm ci
       - name: Challenge SPECS seed freshness
         run: npm run check:challenge-criteria
+      - name: i18n seeder parity (EN_FALLBACK vs TranslationSeeder.cs)
+        run: npm run check:i18n-seeder
       - name: Build
         run: npx ng build --configuration=development
       - name: Lab + Learn contract tests

@@ -18,6 +18,8 @@ import { LearnSeoService } from '../../services/learn-seo.service';
 import { findLearnUnit } from '../../data/learn-catalog';
 import { specCriteriaForCheck } from '../../data/learn-challenge-spec';
 import { firstValueFrom } from 'rxjs';
+import { gradeQuizLocally } from '../../data/learn-quiz-grading';
+import { isApiUnreachable } from '../../services/learn-api-errors';
 
 @Component({
   selector: 'app-learn-unit-page',
@@ -30,35 +32,38 @@ import { firstValueFrom } from 'rxjs';
           <a routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
         </p>
 
-        @if (u.availability === 'locked') {
-          <div class="locked">
-            <h1>{{ u.i18nKeyPrefix + '.title' | t }}</h1>
-            <p>{{ 'learn.unit.locked' | t }}</p>
-            <a routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
-          </div>
-        } @else {
-          <header class="unit-header">
-            <h1>{{ u.i18nKeyPrefix + '.title' | t }}</h1>
-            <p class="summary">{{ u.i18nKeyPrefix + '.summary' | t }}</p>
+        <header class="unit-header">
+          <h1>{{ u.i18nKeyPrefix + '.title' | t }}</h1>
+          <p class="summary">{{ u.i18nKeyPrefix + '.summary' | t }}</p>
+          @if (isLocked(u)) {
+            <p class="locked" role="note">{{ 'learn.unit.locked' | t }}</p>
+          } @else {
             <nav class="phase-nav" aria-label="Unit progress">
               <span [class.active]="phase() === 'read'">{{ 'learn.unit.phase.read' | t }}</span>
               <span [class.active]="phase() === 'quiz'">{{ 'learn.unit.phase.quiz' | t }}</span>
               <span [class.active]="phase() === 'lab'">{{ 'learn.unit.phase.lab' | t }}</span>
               <span [class.active]="phase() === 'complete'">{{ 'learn.unit.phase.done' | t }}</span>
             </nav>
-          </header>
+          }
+          @if (progress.savedLocally()) {
+            <p class="notice offline" role="status">{{ 'learn.unit.offlineSaved' | t }}</p>
+          }
+        </header>
 
-          @if (phase() === 'read') {
-            <section class="panel">
-              <h2>{{ 'learn.unit.readHeading' | t }}</h2>
-              @for (block of u.lessonBlocks; track block.id) {
-                <div class="lesson-block">
-                  @if (block.titleKey) {
-                    <h3>{{ block.titleKey | t }}</h3>
-                  }
-                  <p>{{ block.bodyKey | t }}</p>
-                </div>
-              }
+        @if (phase() === 'read') {
+          <section class="panel">
+            <h2>{{ 'learn.unit.readHeading' | t }}</h2>
+            @for (block of u.lessonBlocks; track block.id) {
+              <div class="lesson-block">
+                @if (block.titleKey) {
+                  <h3>{{ block.titleKey | t }}</h3>
+                }
+                <p>{{ block.bodyKey | t }}</p>
+              </div>
+            }
+            @if (isLocked(u)) {
+              <a class="cta secondary" routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
+            } @else {
               <label class="read-confirm">
                 <input type="checkbox" [checked]="readConfirmed()" (change)="onReadConfirm($event)" />
                 <span>{{ 'learn.unit.readConfirm' | t }}</span>
@@ -66,81 +71,84 @@ import { firstValueFrom } from 'rxjs';
               <button class="cta" type="button" [disabled]="!readConfirmed()" (click)="continueToQuiz()">
                 {{ 'learn.unit.continueToQuiz' | t }}
               </button>
-            </section>
-          }
+            }
+          </section>
+        }
 
-          @if (phase() === 'quiz') {
-            <section class="panel">
-              <h2>{{ 'learn.unit.quizHeading' | t }}</h2>
-              <p class="hint">{{ 'learn.unit.quizHint' | t }}</p>
-              @for (q of u.quiz.questions; track q.id) {
-                <fieldset class="quiz-q" [class.correct]="quizResult(q.id) === true" [class.wrong]="quizResult(q.id) === false">
-                  <legend>{{ q.promptKey | t }}</legend>
-                  @for (opt of q.options; track opt.id) {
-                    <label class="quiz-opt">
-                      <input
-                        type="radio"
-                        [name]="'q' + q.id"
-                        [value]="opt.id"
-                        [checked]="answers()[q.id] === opt.id"
-                        (change)="setAnswer(q.id, opt.id)"
-                      />
-                      <span>{{ opt.labelKey | t }}</span>
-                    </label>
-                  }
-                  @if (quizFeedback(q.id); as fb) {
-                    <p class="quiz-feedback" [class.ok]="fb.correct">{{ fb.explanationKey | t }}</p>
-                  }
-                </fieldset>
-              }
-              <button class="cta" type="button" [disabled]="!canSubmitQuiz()" (click)="submitQuiz()">
-                {{ quizSubmitted() ? ('learn.unit.retryQuiz' | t) : ('learn.unit.submitQuiz' | t) }}
-              </button>
-              @if (quizPassed()) {
-                <button class="cta secondary" type="button" (click)="goToLab()">
-                  {{ 'learn.unit.continueToLab' | t }}
-                </button>
-              }
-            </section>
-          }
-
-          @if (phase() === 'lab') {
-            <section class="panel">
-              <h2>{{ 'learn.unit.labHeading' | t }}</h2>
-              <p class="hint">{{ 'learn.unit.labHint' | t }}</p>
-              <ul class="criteria">
-                @for (c of labChallengeCriteria(u); track c.id) {
-                  <li>{{ c.labelKey | t }}</li>
+        @if (phase() === 'quiz') {
+          <section class="panel">
+            <h2>{{ 'learn.unit.quizHeading' | t }}</h2>
+            <p class="hint">{{ 'learn.unit.quizHint' | t }}</p>
+            @for (q of u.quiz.questions; track q.id) {
+              <fieldset class="quiz-q" [class.correct]="quizResult(q.id) === true" [class.wrong]="quizResult(q.id) === false">
+                <legend>{{ q.promptKey | t }}</legend>
+                @for (opt of q.options; track opt.id) {
+                  <label class="quiz-opt">
+                    <input
+                      type="radio"
+                      [name]="'q' + q.id"
+                      [value]="opt.id"
+                      [checked]="answers()[q.id] === opt.id"
+                      (change)="setAnswer(q.id, opt.id)"
+                    />
+                    <span>{{ opt.labelKey | t }}</span>
+                  </label>
                 }
-              </ul>
+                @if (quizFeedback(q.id); as fb) {
+                  <p class="quiz-feedback" [class.ok]="fb.correct">{{ fb.explanationKey | t }}</p>
+                }
+              </fieldset>
+            }
+            @if (quizRejected()) {
+              <p class="notice rejected" role="alert">{{ 'learn.unit.quizRejected' | t }}</p>
+            }
+            <button class="cta" type="button" [disabled]="!canSubmitQuiz()" (click)="submitQuiz()">
+              {{ quizSubmitted() ? ('learn.unit.retryQuiz' | t) : ('learn.unit.submitQuiz' | t) }}
+            </button>
+            @if (quizPassed()) {
+              <button class="cta secondary" type="button" (click)="goToLab()">
+                {{ 'learn.unit.continueToLab' | t }}
+              </button>
+            }
+          </section>
+        }
+
+        @if (phase() === 'lab') {
+          <section class="panel">
+            <h2>{{ 'learn.unit.labHeading' | t }}</h2>
+            <p class="hint">{{ 'learn.unit.labHint' | t }}</p>
+            <ul class="criteria">
+              @for (c of labChallengeCriteria(u); track c.id) {
+                <li>{{ c.labelKey | t }}</li>
+              }
+            </ul>
+            <a
+              class="cta"
+              routerLink="/lab"
+              [queryParams]="labQueryParams(u)"
+              (click)="onOpenLab(u)"
+            >
+              {{ u.i18nKeyPrefix + '.openLab' | t }}
+            </a>
+            <p class="hint small">{{ 'learn.unit.labReturnHint' | t }}</p>
+          </section>
+        }
+
+        @if (phase() === 'complete') {
+          <section class="panel complete">
+            <h2>{{ 'learn.unit.completeHeading' | t }}</h2>
+            <p>{{ 'learn.unit.completeBody' | t }}</p>
+            @if (u.nextModuleSlug && u.nextUnitSlug) {
               <a
                 class="cta"
-                routerLink="/lab"
-                [queryParams]="labQueryParams(u)"
-                (click)="onOpenLab(u)"
+                [routerLink]="['/learn', u.nextModuleSlug, u.nextUnitSlug]"
               >
-                {{ u.i18nKeyPrefix + '.openLab' | t }}
+                {{ 'learn.unit.continueNext' | t }}
               </a>
-              <p class="hint small">{{ 'learn.unit.labReturnHint' | t }}</p>
-            </section>
-          }
-
-          @if (phase() === 'complete') {
-            <section class="panel complete">
-              <h2>{{ 'learn.unit.completeHeading' | t }}</h2>
-              <p>{{ 'learn.unit.completeBody' | t }}</p>
-              @if (u.nextModuleSlug && u.nextUnitSlug) {
-                <a
-                  class="cta"
-                  [routerLink]="['/learn', u.nextModuleSlug, u.nextUnitSlug]"
-                >
-                  {{ 'learn.unit.continueNext' | t }}
-                </a>
-              } @else {
-                <a class="cta" routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
-              }
-            </section>
-          }
+            } @else {
+              <a class="cta" routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
+            }
+          </section>
         }
       </article>
     }
@@ -179,7 +187,9 @@ import { firstValueFrom } from 'rxjs';
     .cta:hover { background: #095c42; }
     .cta:disabled { opacity: 0.5; cursor: not-allowed; }
     .cta.secondary { background: #1e4d7b; }
-    .locked { padding: 1rem 0; color: #5a6b7d; }
+    .locked { margin: 0 0 1rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #eef2f6; color: #5a6b7d; }
+    .notice.offline { margin: 0 0 1rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #fff7ed; color: #9a3412; font-size: 0.92rem; }
+    .notice.rejected { margin: 0 0 1rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #fef2f2; color: #991b1b; font-size: 0.92rem; }
     .complete p { color: #334155; line-height: 1.5; }
   `
 })
@@ -190,7 +200,7 @@ export class LearnUnitPageComponent implements OnInit {
   private readonly seo = inject(LearnSeoService);
   private readonly analytics = inject(LearnAnalyticsService);
   private readonly catalog = inject(LearnCatalogService);
-  private readonly progress = inject(LearnProgressService);
+  readonly progress = inject(LearnProgressService);
   private readonly api = inject(LearningApiClient);
 
   readonly unit = signal<LearnUnitDetailResponse | null>(null);
@@ -199,6 +209,8 @@ export class LearnUnitPageComponent implements OnInit {
   readonly quizResults = signal<QuizQuestionResultDto[]>([]);
   readonly quizSubmitted = signal(false);
   readonly quizPassed = signal(false);
+  /** Server definitively rejected the submission (locked unit / prerequisites) — not an offline case. */
+  readonly quizRejected = signal(false);
 
   readonly phase = computed((): LearnUnitPhase => {
     const u = this.unit();
@@ -209,11 +221,22 @@ export class LearnUnitPageComponent implements OnInit {
 
   readonly learnUnitPath = learnUnitPath;
 
+  /** Bumped on every navigation so a slow earlier bootstrap cannot overwrite the current unit. */
+  private bootstrapGeneration = 0;
+
   ngOnInit(): void {
-    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.resetUnitState();
-      void this.bootstrap();
+      void this.bootstrap(
+        ++this.bootstrapGeneration,
+        params.get('moduleSlug') ?? '',
+        params.get('unitSlug') ?? ''
+      );
     });
+  }
+
+  isLocked(u: LearnUnitDetailResponse): boolean {
+    return u.availability === 'locked';
   }
 
   private resetUnitState(): void {
@@ -257,15 +280,24 @@ export class LearnUnitPageComponent implements OnInit {
     this.readConfirmed.set(input.checked);
     const u = this.unit();
     if (!u) return;
-    const row = await this.progress.markRead(u.moduleSlug, u.unitSlug, input.checked);
-    this.patchUnitProgress(row);
+    await this.markReadSafely(u, input.checked);
   }
 
   async continueToQuiz(): Promise<void> {
     const u = this.unit();
     if (!u || !this.readConfirmed()) return;
-    const row = await this.progress.markRead(u.moduleSlug, u.unitSlug, true);
-    this.patchUnitProgress(row);
+    await this.markReadSafely(u, true);
+  }
+
+  /** markRead rethrows definitive 4xx rejections (e.g. locked unit); reflect them instead of crashing the handler. */
+  private async markReadSafely(u: LearnUnitDetailResponse, complete: boolean): Promise<void> {
+    try {
+      const row = await this.progress.markRead(u.moduleSlug, u.unitSlug, complete);
+      this.patchUnitProgress(row);
+    } catch {
+      this.readConfirmed.set(false);
+      this.patchUnitProgress(this.progress.progressFor(u.moduleSlug, u.unitSlug));
+    }
   }
 
   setAnswer(questionId: number, optionId: string): void {
@@ -277,10 +309,10 @@ export class LearnUnitPageComponent implements OnInit {
   async submitQuiz(): Promise<void> {
     const u = this.unit();
     if (!u || !this.canSubmitQuiz()) return;
+    const answers = this.answers();
+    this.quizRejected.set(false);
     try {
-      const result = await firstValueFrom(
-        this.api.submitQuiz(u.moduleSlug, u.unitSlug, { answers: this.answers() })
-      );
+      const result = await firstValueFrom(this.api.submitQuiz(u.moduleSlug, u.unitSlug, { answers }));
       this.quizResults.set(result.results);
       this.quizSubmitted.set(true);
       this.quizPassed.set(result.passed);
@@ -289,9 +321,24 @@ export class LearnUnitPageComponent implements OnInit {
         const p = this.progress.progressFor(u.moduleSlug, u.unitSlug);
         this.patchUnitProgress(p);
       }
-    } catch {
+    } catch (err) {
+      if (!isApiUnreachable(err)) {
+        // Definitive server rejection (e.g. 409 unit-locked / quiz-required): do not grade locally.
+        this.quizResults.set([]);
+        this.quizSubmitted.set(false);
+        this.quizPassed.set(false);
+        this.quizRejected.set(true);
+        return;
+      }
+      // API unreachable: grade with the client answer key and keep progress on this device.
+      const graded = gradeQuizLocally(u, answers);
+      this.quizResults.set(graded.results);
       this.quizSubmitted.set(true);
-      this.quizPassed.set(false);
+      this.quizPassed.set(graded.passed);
+      if (graded.passed) {
+        const row = this.progress.recordLocalQuizPass(u.moduleSlug, u.unitSlug, answers);
+        this.patchUnitProgress(row);
+      }
     }
   }
 
@@ -318,15 +365,17 @@ export class LearnUnitPageComponent implements OnInit {
     });
   }
 
-  private async bootstrap(): Promise<void> {
-    const moduleSlug = this.route.snapshot.paramMap.get('moduleSlug') ?? '';
-    const unitSlug = this.route.snapshot.paramMap.get('unitSlug') ?? '';
+  private async bootstrap(generation: number, moduleSlug: string, unitSlug: string): Promise<void> {
+    const stale = () => generation !== this.bootstrapGeneration;
 
     await this.progress.sync();
+    if (stale()) return;
     await this.catalog.reloadCatalog();
+    if (stale()) return;
     this.catalog.applyFallbackAvailability(this.progress.progressSnapshot());
 
     const detail = await this.catalog.getUnitDetail(moduleSlug, unitSlug, { refresh: true });
+    if (stale()) return;
     if (!detail) {
       void this.router.navigateByUrl('/learn');
       return;

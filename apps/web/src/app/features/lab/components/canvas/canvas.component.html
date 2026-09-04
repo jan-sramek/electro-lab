@@ -36,6 +36,7 @@
       (pointerdown)="onWirePointerDown($event, w.id)"
       (pointermove)="onWirePointerMove($event)"
       (pointerup)="onWirePointerUp($event)"
+      (lostpointercapture)="onWireLostPointerCapture()"
     />
     <path
       class="wire"

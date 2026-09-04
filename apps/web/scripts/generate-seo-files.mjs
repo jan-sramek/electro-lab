@@ -1,6 +1,8 @@
 /**
  * Writes robots.txt, sitemap.xml, and build-site-origin.ts before ng build.
- * Usage: SITE_ORIGIN=https://your.domain npm run prebuild
+ * Invoked by scripts/build.mjs (npm run build) with the ng build arguments; fails a
+ * production build when SITE_ORIGIN is unset or still the example.com placeholder.
+ * Usage: SITE_ORIGIN=https://your.domain node scripts/generate-seo-files.mjs --configuration production
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,7 +14,36 @@ const routesFile = path.join(webRoot, 'prerender-routes.txt');
 const publicDir = path.join(webRoot, 'public');
 const originFile = path.join(webRoot, 'src/app/core/build-site-origin.ts');
 
-const origin = (process.env.SITE_ORIGIN || 'https://example.com').replace(/\/$/, '');
+const PLACEHOLDER_ORIGIN = 'https://example.com';
+
+/** True for `--configuration production`, `--configuration=production`, `-c production`, or `--prod`. */
+function isProductionBuild(argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--prod') return true;
+    if (arg === '--configuration' || arg === '-c') return argv[i + 1] === 'production';
+    if (arg.startsWith('--configuration=') || arg.startsWith('-c=')) {
+      return arg.split('=')[1] === 'production';
+    }
+  }
+  return false;
+}
+
+const production = isProductionBuild(process.argv.slice(2));
+const rawOrigin = (process.env.SITE_ORIGIN || '').trim().replace(/\/$/, '');
+if (production && (!rawOrigin || rawOrigin === PLACEHOLDER_ORIGIN)) {
+  console.error(
+    '\nERROR: SITE_ORIGIN is not set for a production build.\n' +
+      'Canonical URLs, Open Graph tags, JSON-LD and sitemap.xml would point at the https://example.com placeholder.\n' +
+      'Set the public origin, e.g. SITE_ORIGIN=https://electro-lab.example npm run build -- --configuration production\n' +
+      '(docker: --build-arg SITE_ORIGIN=..., compose: SITE_ORIGIN in the environment).\n'
+  );
+  process.exit(1);
+}
+if (!production && !rawOrigin) {
+  console.warn(`SEO: SITE_ORIGIN unset — using placeholder ${PLACEHOLDER_ORIGIN} (development build only).`);
+}
+const origin = rawOrigin || PLACEHOLDER_ORIGIN;
 
 const routes = fs
   .readFileSync(routesFile, 'utf8')

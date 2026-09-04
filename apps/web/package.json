@@ -4,13 +4,12 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "prebuild": "node scripts/generate-seo-files.mjs",
-    "build": "ng build",
+    "build": "node scripts/build.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "export:challenge-criteria": "node scripts/run-export-challenge-criteria.mjs",
     "check:challenge-criteria": "node scripts/check-challenge-criteria-count.mjs",
-    "serve:ssr:web": "node dist/web/server/server.mjs"
+    "check:i18n-seeder": "node ../../scripts/check-i18n-seeder-sync.mjs"
   },
   "private": true,
   "dependencies": {

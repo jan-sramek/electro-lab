@@ -19,7 +19,27 @@ public sealed class AcAnalysis : IAnalysis
 {
     private static readonly string[] NonlinearModels = ["led", "diode", "bjt_npn", "nmos", "ne555", "relay"];
 
+    /// <summary>Hard cap on sweep density.</summary>
+    public const int MaxPointsPerDecade = 200;
+
+    /// <summary>Hard cap on total swept frequencies (each point is a dense complex solve).</summary>
+    public const int MaxTotalPoints = 2000;
+
     public string Type => "ac";
+
+    /// <summary>
+    /// Number of points a log sweep would produce (computed in double, so it cannot overflow),
+    /// or -1 when the arguments are invalid.
+    /// </summary>
+    public static double SweepPointCount(double fStart, double fStop, int pointsPerDecade)
+    {
+        if (!double.IsFinite(fStart) || !double.IsFinite(fStop) || fStart <= 0 || fStop <= 0 || fStop < fStart || pointsPerDecade <= 0)
+            return -1;
+        if (Math.Abs(fStop - fStart) < 1e-12)
+            return 1;
+        var decades = Math.Log10(fStop / fStart);
+        return Math.Max(2, Math.Round(decades * pointsPerDecade) + 1);
+    }
 
     public SimulationResult Run(Circuit circuit, DeviceModelRegistry registry, AnalysisOptions? options = null)
     {
@@ -44,7 +64,7 @@ public sealed class AcAnalysis : IAnalysis
         if (freqs.Count == 0)
             return SimulationResult.Fail(Type, "ac requires options.freq > 0, or fStart/fStop > 0.");
 
-        var nodes = CollectNodes(circuit, models);
+        var nodes = PiecewiseBias.CollectNodes(circuit, models);
 
         var warnings = new List<string>();
         foreach (var (el, _) in models)
@@ -110,9 +130,9 @@ public sealed class AcAnalysis : IAnalysis
     {
         if (opts.FStart is double fStart && opts.FStop is double fStop)
         {
-            if (fStart <= 0 || fStop <= 0)
+            if (!double.IsFinite(fStart) || !double.IsFinite(fStop) || fStart <= 0 || fStop <= 0)
             {
-                errors.Add("ac requires fStart > 0 and fStop > 0.");
+                errors.Add("ac requires finite fStart > 0 and fStop > 0.");
                 return [];
             }
 
@@ -126,8 +146,21 @@ public sealed class AcAnalysis : IAnalysis
                 return [fStart];
 
             var pointsPerDecade = opts.PointsPerDecade > 0 ? opts.PointsPerDecade : 10;
+            if (pointsPerDecade > MaxPointsPerDecade)
+            {
+                errors.Add($"ac pointsPerDecade {pointsPerDecade} exceeds the limit of {MaxPointsPerDecade}.");
+                return [];
+            }
+
             var decades = Math.Log10(fStop / fStart);
-            var totalPoints = Math.Max(2, (int)Math.Round(decades * pointsPerDecade) + 1);
+            var requested = SweepPointCount(fStart, fStop, pointsPerDecade);
+            if (requested > MaxTotalPoints)
+            {
+                errors.Add($"ac sweep would produce {requested.ToString("0", System.Globalization.CultureInfo.InvariantCulture)} points; the limit is {MaxTotalPoints}. Narrow fStart/fStop or lower pointsPerDecade.");
+                return [];
+            }
+
+            var totalPoints = (int)requested;
 
             var freqs = new List<double>(totalPoints);
             for (var i = 0; i < totalPoints; i++)
@@ -136,24 +169,6 @@ public sealed class AcAnalysis : IAnalysis
             return freqs;
         }
 
-        return opts.Freq > 0 ? [opts.Freq] : [];
-    }
-
-    private static HashSet<string> CollectNodes(Circuit circuit, List<(ElementInstance el, IDeviceModel model)> models)
-    {
-        var nodes = new HashSet<string>(StringComparer.Ordinal) { circuit.Ground };
-        foreach (var el in circuit.Elements)
-        {
-            foreach (var n in el.Pins.Values)
-                nodes.Add(n);
-        }
-
-        foreach (var (el, model) in models)
-        {
-            foreach (var n in model.ExtraNodes(el))
-                nodes.Add(n);
-        }
-
-        return nodes;
+        return double.IsFinite(opts.Freq) && opts.Freq > 0 ? [opts.Freq] : [];
     }
 }

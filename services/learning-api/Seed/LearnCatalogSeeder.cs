@@ -40,10 +40,15 @@ public static class LearnCatalogSeeder
         await db.SaveChangesAsync();
 
         var moduleIdToSlug = modulesBySlug.ToDictionary(kv => kv.Value.Id, kv => kv.Key);
-        var units = await db.LearnUnits.Include(u => u.LabCriteria).ToListAsync();
+        var units = await db.LearnUnits
+            .Include(u => u.LessonBlocks)
+            .Include(u => u.QuizQuestions)
+            .Include(u => u.LabCriteria)
+            .AsSplitQuery()
+            .ToListAsync();
         var unitsByKey = units.ToDictionary(u => $"{moduleIdToSlug[u.ModuleId]}/{u.Slug}");
 
-        var orderedUnitIds = new List<int>();
+        var orderedUnits = new List<LearnUnit>();
         foreach (var def in UnitDefs)
         {
             var key = $"{def.ModuleSlug}/{def.UnitSlug}";
@@ -59,33 +64,6 @@ public static class LearnCatalogSeeder
                 };
                 db.LearnUnits.Add(unit);
                 await db.SaveChangesAsync();
-
-                foreach (var (order, titleKey, bodyKey) in def.Lessons)
-                {
-                    db.LearnLessonBlocks.Add(new LearnLessonBlock
-                    {
-                        UnitId = unit.Id,
-                        SortOrder = order,
-                        TitleKey = titleKey,
-                        BodyKey = bodyKey
-                    });
-                }
-
-                for (var qi = 0; qi < def.Quiz.Length; qi++)
-                {
-                    var q = def.Quiz[qi];
-                    db.LearnQuizQuestions.Add(new LearnQuizQuestion
-                    {
-                        UnitId = unit.Id,
-                        SortOrder = qi + 1,
-                        PromptKey = q.PromptKey,
-                        OptionsJson = JsonSerializer.Serialize(q.Options),
-                        CorrectOptionId = q.CorrectId,
-                        ExplanationKey = q.ExplainKey
-                    });
-                }
-
-                await db.SaveChangesAsync();
                 unitsByKey[key] = unit;
             }
             else
@@ -96,17 +74,20 @@ public static class LearnCatalogSeeder
                 unit.ModuleId = modulesBySlug[def.ModuleSlug].Id;
             }
 
+            // Content is synced on every seed (not just for new units) so catalog edits reach existing
+            // databases. Rows are replaced in place by sort order, which keeps ids stable: quiz question
+            // ids appear in client answer maps and lesson ids in DTOs. Progress rows reference units only.
+            SyncLessons(db, unit, def.Lessons);
+            SyncQuiz(db, unit, def.Quiz);
             SyncLabCriteria(db, unit, ResolveCriteria(def, criteriaByUnit));
-            orderedUnitIds.Add(unit.Id);
+            orderedUnits.Add(unit);
         }
 
         await db.SaveChangesAsync();
 
-        for (var i = 0; i < orderedUnitIds.Count; i++)
+        for (var i = 0; i < orderedUnits.Count; i++)
         {
-            var unit = await db.LearnUnits.FindAsync(orderedUnitIds[i]);
-            if (unit is null) continue;
-            unit.NextUnitId = i < orderedUnitIds.Count - 1 ? orderedUnitIds[i + 1] : null;
+            orderedUnits[i].NextUnitId = i < orderedUnits.Count - 1 ? orderedUnits[i + 1].Id : null;
         }
 
         await db.SaveChangesAsync();
@@ -164,6 +145,81 @@ public static class LearnCatalogSeeder
         return def.LabCriteria
             .Select(c => new CriterionSeed(c.LabelKey, c.Type, JsonSerializer.Serialize(c.Params)))
             .ToArray();
+    }
+
+    private static void SyncLessons(
+        LearningDbContext db,
+        LearnUnit unit,
+        (int Order, string? TitleKey, string BodyKey)[] desired)
+    {
+        var existing = unit.LessonBlocks.OrderBy(b => b.SortOrder).ThenBy(b => b.Id).ToList();
+        var ordered = desired.OrderBy(d => d.Order).ToArray();
+        for (var i = 0; i < ordered.Length; i++)
+        {
+            var (order, titleKey, bodyKey) = ordered[i];
+            if (i < existing.Count)
+            {
+                var row = existing[i];
+                row.SortOrder = order;
+                row.TitleKey = titleKey;
+                row.BodyKey = bodyKey;
+            }
+            else
+            {
+                var row = new LearnLessonBlock
+                {
+                    UnitId = unit.Id,
+                    SortOrder = order,
+                    TitleKey = titleKey,
+                    BodyKey = bodyKey
+                };
+                unit.LessonBlocks.Add(row);
+                db.LearnLessonBlocks.Add(row);
+            }
+        }
+
+        for (var i = ordered.Length; i < existing.Count; i++)
+        {
+            db.LearnLessonBlocks.Remove(existing[i]);
+        }
+    }
+
+    private static void SyncQuiz(LearningDbContext db, LearnUnit unit, QuizDef[] desired)
+    {
+        var existing = unit.QuizQuestions.OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToList();
+        for (var i = 0; i < desired.Length; i++)
+        {
+            var q = desired[i];
+            var optionsJson = JsonSerializer.Serialize(q.Options);
+            if (i < existing.Count)
+            {
+                var row = existing[i];
+                row.SortOrder = i + 1;
+                row.PromptKey = q.PromptKey;
+                row.OptionsJson = optionsJson;
+                row.CorrectOptionId = q.CorrectId;
+                row.ExplanationKey = q.ExplainKey;
+            }
+            else
+            {
+                var row = new LearnQuizQuestion
+                {
+                    UnitId = unit.Id,
+                    SortOrder = i + 1,
+                    PromptKey = q.PromptKey,
+                    OptionsJson = optionsJson,
+                    CorrectOptionId = q.CorrectId,
+                    ExplanationKey = q.ExplainKey
+                };
+                unit.QuizQuestions.Add(row);
+                db.LearnQuizQuestions.Add(row);
+            }
+        }
+
+        for (var i = desired.Length; i < existing.Count; i++)
+        {
+            db.LearnQuizQuestions.Remove(existing[i]);
+        }
     }
 
     private static void SyncLabCriteria(LearningDbContext db, LearnUnit unit, CriterionSeed[] desired)

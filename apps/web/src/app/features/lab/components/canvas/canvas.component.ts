@@ -8,7 +8,8 @@ import {
   SchematicWire,
   assignNets,
   closestPointOnOrthogonalWire,
-  createComponent,
+  createComponentIn,
+  nextFreeId,
   pinKey,
   pinWorldPos,
   polylineToPath,
@@ -98,6 +99,9 @@ export class SchematicCanvasComponent {
   readonly dropPlace = output<{ modelKey: string; x: number; y: number }>();
   /** Momentary press on a pushbutton part (hold = pressed). */
   readonly pushbuttonPress = output<{ id: string; pressed: boolean }>();
+  /** Pointer gesture (symbol / wire-waypoint drag) — the store groups it into one undo step. */
+  readonly gestureStart = output<void>();
+  readonly gestureEnd = output<void>();
 
   readonly wireFrom = signal<PinRef | null>(null);
   /** Cursor in SVG space while drawing a wire (rubber-band). */
@@ -451,6 +455,7 @@ export class SchematicCanvasComponent {
     }
 
     this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y }, moveArmed: false, pushHoldId };
+    this.gestureStart.emit();
     (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
   }
 
@@ -508,15 +513,19 @@ export class SchematicCanvasComponent {
       } catch {
         /* ignore */
       }
+      this.drag = null;
+      this.gestureEnd.emit();
     }
-    this.drag = null;
   }
 
   onSymbolLostPointerCapture(): void {
     if (this.drag?.pushHoldId) {
       this.pushbuttonPress.emit({ id: this.drag.pushHoldId, pressed: false });
     }
-    this.drag = null;
+    if (this.drag) {
+      this.drag = null;
+      this.gestureEnd.emit();
+    }
   }
 
   onPinClick(ev: MouseEvent, componentId: string, pin: string): void {
@@ -560,7 +569,7 @@ export class SchematicCanvasComponent {
     const a = this.endpoint(d, from);
     const b = this.endpoint(d, ref);
     let wire: SchematicWire = {
-      id: `W${Date.now()}`,
+      id: nextFreeId(this.doc(), 'W'),
       a: from,
       b: ref
     };
@@ -598,7 +607,7 @@ export class SchematicCanvasComponent {
       const hit =
         tee ?? closestPointOnOrthogonalWire(pt.x, pt.y, path.pts, 16);
       if (!hit) return;
-      const junction = createComponent('junction', hit.x, hit.y);
+      const junction = createComponentIn(this.doc(), 'junction', hit.x, hit.y);
       const jRef: PinRef = { componentId: junction.id, pin: 'j' };
       let next = {
         ...this.doc(),
@@ -610,7 +619,7 @@ export class SchematicCanvasComponent {
       if (from && pinKey(from) !== pinKey(jRef) && !this.wireExists(from, jRef)) {
         // Finish an in-progress wire onto this wire (auto T-junction).
         const start = this.endpoint(next, from);
-        let branch: SchematicWire = { id: `W${Date.now()}`, a: from, b: jRef };
+        let branch: SchematicWire = { id: nextFreeId(next, 'W'), a: from, b: jRef };
         if (start) {
           const pts = routeOrthogonal(start.x, start.y, hit.x, hit.y, {
             motion: this.wireMotion(),
@@ -651,6 +660,7 @@ export class SchematicCanvasComponent {
     const svg = (ev.currentTarget as SVGElement).ownerSVGElement!;
     const pt = this.clientToSvg(svg, ev.clientX, ev.clientY);
     this.wireDrag = { wireId, pointer0: { x: pt.x, y: pt.y } };
+    this.gestureStart.emit();
     (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
   }
 
@@ -676,10 +686,20 @@ export class SchematicCanvasComponent {
       } catch {
         /* ignore */
       }
+      this.wireDrag = null;
+      this.gestureEnd.emit();
     }
-    this.wireDrag = null;
   }
 
+  /** Capture lost mid-drag (pointer cancelled, element re-rendered) — end the gesture. */
+  onWireLostPointerCapture(): void {
+    if (this.wireDrag) {
+      this.wireDrag = null;
+      this.gestureEnd.emit();
+    }
+  }
+
+  /** Reset manual elbows — a single undo step of its own (outside any drag gesture). */
   onWireDblClick(ev: MouseEvent, wireId: string): void {
     if (this.tool() !== 'select') return;
     ev.stopPropagation();

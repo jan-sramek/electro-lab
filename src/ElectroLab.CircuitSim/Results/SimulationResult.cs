@@ -18,6 +18,38 @@ public sealed class SimulationResult
         AnalysisType = analysisType,
         Errors = errors
     };
+
+    /// <summary>
+    /// True when any reported voltage, current, phasor or time value is NaN or ±Infinity.
+    /// Hosts should turn such a result into a failure rather than serialize it.
+    /// </summary>
+    public bool HasNonFiniteValues()
+    {
+        if (DcOp is not null)
+        {
+            if (DcOp.NodeVoltages.Values.Any(v => !double.IsFinite(v))) return true;
+            if (DcOp.BranchCurrents.Values.Any(v => !double.IsFinite(v))) return true;
+        }
+
+        if (Tran is not null)
+        {
+            if (Tran.Time.Any(v => !double.IsFinite(v))) return true;
+            if (Tran.NodeVoltages.Any(s => s.Values.Any(v => !double.IsFinite(v)))) return true;
+            if (Tran.BranchCurrents.Any(s => s.Values.Any(v => !double.IsFinite(v)))) return true;
+        }
+
+        if (Ac is not null)
+        {
+            foreach (var p in Ac.Points)
+            {
+                if (!double.IsFinite(p.Frequency)) return true;
+                if (p.NodeVoltages.Values.Any(ph => !double.IsFinite(ph.Mag) || !double.IsFinite(ph.PhaseDeg))) return true;
+                if (p.BranchCurrents.Values.Any(ph => !double.IsFinite(ph.Mag) || !double.IsFinite(ph.PhaseDeg))) return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 public sealed class DcOpResult

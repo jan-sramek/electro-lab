@@ -54,6 +54,9 @@ export class EnergyStateStore {
   private fingerprint = '';
   private state: TranEnergyState = { caps: new Map(), inductors: new Map() };
 
+  /** @param onChange invoked after every mutation so signal-based consumers can re-derive. */
+  constructor(private readonly onChange?: () => void) {}
+
   maxCapVoltageAbs(): number {
     let best = 0;
     for (const v of this.state.caps.values()) {
@@ -91,6 +94,7 @@ export class EnergyStateStore {
     if (!res.ok || !res.tran?.time?.length) return;
     this.fingerprint = energyTopologyFingerprint(doc);
     this.state = toStorageState(doc, extractEnergyState(doc, res));
+    this.onChange?.();
   }
 
   /** Snapshot peak charged Vc before opening the switch for discharge seeding. */
@@ -98,6 +102,7 @@ export class EnergyStateStore {
     if (!res.ok || !res.tran?.time?.length) return;
     this.fingerprint = energyTopologyFingerprint(doc);
     this.state = toStorageState(doc, extractChargedCapState(doc, res));
+    this.onChange?.();
   }
 
   /** Snapshot Vc at the current scrub frame before a mid-discharge re-solve. */
@@ -105,11 +110,13 @@ export class EnergyStateStore {
     if (!res.ok || !res.tran?.time?.length) return;
     this.fingerprint = energyTopologyFingerprint(doc);
     this.state = toStorageState(doc, extractEnergyStateAtIndex(doc, res, idx));
+    this.onChange?.();
   }
 
   clear(): void {
     this.fingerprint = '';
     this.state = { caps: new Map(), inductors: new Map() };
+    this.onChange?.();
   }
 
   clearIfStale(doc: SchematicDocument): void {
@@ -126,6 +133,7 @@ export class EnergyStateStore {
         caps: new Map(Object.entries(saved.voltages)),
         inductors: new Map()
       };
+      this.onChange?.();
       return;
     }
     if (this.fingerprint && this.fingerprint !== fp) this.clear();

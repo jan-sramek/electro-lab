@@ -1,5 +1,5 @@
 import { Injectable, NgZone, computed, DestroyRef, effect, inject, signal } from '@angular/core';
-import { Subject, catchError, debounceTime, from, map, of, switchMap, tap } from 'rxjs';
+import { Subject, catchError, debounceTime, finalize, from, map, of, switchMap, takeUntil, tap } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CircuitApiClient } from '../api/circuit-api.client';
@@ -62,7 +62,21 @@ interface SimulateJob {
   energySeed: TranEnergyState | null;
   usedEnergySeed: boolean;
   userInitFromDc: boolean;
+  /** Electrical fingerprint of the circuit + analysis settings this job was built from. */
+  simKey: string;
+  /** Set when the job is superseded / torn down; long transient chains stop issuing segments. */
+  cancelled: boolean;
+  /** Emits once on cancellation so in-flight HTTP requests unsubscribe (aborts the XHR). */
+  readonly cancel$: Subject<void>;
 }
+
+const CANCELLED_TRAN: SimulateResponse = {
+  schemaVersion: 1,
+  ok: false,
+  analysisType: 'tran',
+  errors: [],
+  warnings: []
+};
 
 function peakBranchCurrent(res: SimulateResponse, id: string): number | null {
   const dc = res.dcOp?.branchCurrents?.[id];
@@ -222,9 +236,12 @@ export class CircuitSimulationFacade {
   private readonly simulate$ = new Subject<SimulateJob>();
   /** Debounced auto-sim after schematic edits (no Run-button flicker). */
   private readonly autoRun$ = new Subject<void>();
-  private showBusyForRequest = false;
+  /** Explicit (busy-showing) runs currently in flight — busy clears when this drops to 0. */
+  private busyJobs = 0;
   /** Resolvers waiting for the next explicit `run()` / `runAndWait()` to settle. */
   private runSettleWaiters: Array<() => void> = [];
+  /** Bumped on every EnergyStateStore mutation so computed banners re-derive. */
+  readonly energyVersion = signal(0);
 
   readonly result = signal<SimulateResponse | null>(null);
   /** True only for an explicit toolbar Run — keeps the label from jumping on auto-sim. */
@@ -249,7 +266,7 @@ export class CircuitSimulationFacade {
   /** One-shot discharge fade when the switch opens — not on mid-discharge re-runs. */
   private pendingDischargePlayback = false;
 
-  private readonly energyStore = new EnergyStateStore();
+  private readonly energyStore = new EnergyStateStore(() => this.energyVersion.update((n) => n + 1));
   private readonly playbackPolicy = new TranPlaybackPolicy();
   /** True when the last transient used persisted C/L initial conditions. */
   private lastRunUsedEnergySeed = false;
@@ -259,6 +276,15 @@ export class CircuitSimulationFacade {
   private clientWarningKeys: string[] = [];
   /** Shown through the next sim result, then cleared (e.g. fuse-replace note). */
   private stickyClientWarnings: string[] = [];
+  /**
+   * RC-fade teaching defaults (tran, tStop 6 s, dt 2 ms) are applied at most once per
+   * arming event: new tab with factory timing, entering Transient, preset change, or the
+   * circuit first becoming an RC+switch network. User edits afterwards are never overridden.
+   */
+  private rcTeachingArmed = false;
+  private lastTeachingMode: AnalysisMode | null = null;
+  private lastTeachingPreset: string | null | undefined = undefined;
+  private lastWasRcTeaching = false;
 
   readonly highlightedIds = computed(() => {
     const ids = new Set<string>();
@@ -278,6 +304,7 @@ export class CircuitSimulationFacade {
   /** Banner when a prior transient left stored capacitor / inductor energy. */
   readonly capIcStatus = computed(() => {
     this.editor.revision();
+    this.energyVersion();
     const doc = this.editor.doc();
     if (!this.energyStore.fingerprintMatches(doc) || !this.energyStore.hasSeed()) return null;
     const v = this.energyStore.maxCapVoltageAbs();
@@ -359,15 +386,15 @@ export class CircuitSimulationFacade {
     this.simulate$
       .pipe(
         tap((job) => {
-          this.showBusyForRequest = job.showBusy;
-          if (job.showBusy) this.busy.set(true);
+          if (job.showBusy) {
+            this.busyJobs += 1;
+            this.busy.set(true);
+          }
         }),
         switchMap((job) =>
           from(this.runSimulationJob(job)).pipe(
             map((res) => ({ res, job })),
             catchError((err) => {
-              if (this.showBusyForRequest) this.busy.set(false);
-              this.notifyRunSettled();
               const rawErrors: string[] =
                 err?.error?.errors ??
                 (err?.message ? [err.message] : [this.i18n.t('lab.sim.requestFailed')]);
@@ -378,7 +405,10 @@ export class CircuitSimulationFacade {
                 this.mergeSingularHighlights();
               }
               return of(null);
-            })
+            }),
+            // Runs on completion, error AND when switchMap supersedes this job — so a busy
+            // Run replaced by a quiet auto-run can never leave the button stuck on "Running…".
+            finalize(() => this.finishJob(job))
           )
         ),
         takeUntilDestroyed()
@@ -386,11 +416,13 @@ export class CircuitSimulationFacade {
       .subscribe((payload) => {
         if (!payload) return;
         const { res, job } = payload;
+        // The circuit or analysis settings changed while this job was in flight: the result
+        // describes a circuit that no longer exists. Drop it (a fresh auto-run is already
+        // scheduled by the revision effect) — never burn parts or capture energy from it.
+        if (job.simKey !== this.currentSimKey()) return;
         const priorRes = this.result();
         const priorScrub = this.scrubIndex();
         this.result.set(res);
-        if (this.showBusyForRequest) this.busy.set(false);
-        this.notifyRunSettled();
         const warn = [...(res.warnings ?? [])];
         const doc = this.editor.doc();
         const storedBefore = this.energyStore.maxCapVoltageAbs();
@@ -410,7 +442,7 @@ export class CircuitSimulationFacade {
           const keepRunningPlayback =
             this.activePlaybackMode === 'blink-loop' &&
             this.scrubPlayback?.running &&
-            !this.showBusyForRequest &&
+            !job.showBusy &&
             this.playbackSlotId === this.editor.activeSlotId();
           if (keepRunningPlayback) {
             /* NE555 blink loop only — charge/discharge always re-resolve on new results */
@@ -537,9 +569,24 @@ export class CircuitSimulationFacade {
         this.lastAutoRunSlotId = slotId;
         this.lastElectricalSimKey = '';
         this.resetPlaybackForSlotChange();
+        // A tab still on factory timing may take the teaching defaults once; a tab whose
+        // timing was chosen (preset or user, incl. after reload) keeps it.
+        this.rcTeachingArmed = tStop === 0.005 && dt === 5e-5;
       }
+      const preset = this.editor.activeExamplePreset();
+      if (preset !== this.lastTeachingPreset) {
+        if (this.lastTeachingPreset !== undefined) this.rcTeachingArmed = true;
+        this.lastTeachingPreset = preset;
+      }
+      if (mode === 'tran' && this.lastTeachingMode !== null && this.lastTeachingMode !== 'tran') {
+        this.rcTeachingArmed = true;
+      }
+      this.lastTeachingMode = mode;
+      const rcNow = isRcFadeTeachingCircuit(doc);
+      if (rcNow && !this.lastWasRcTeaching) this.rcTeachingArmed = true;
+      this.lastWasRcTeaching = rcNow;
 
-      if (mode === 'tran' && isRcFadeTeachingCircuit(doc)) {
+      if (mode === 'tran' && rcNow) {
         this.ensureRcFadeTeachingReady(false);
       }
 
@@ -694,17 +741,51 @@ export class CircuitSimulationFacade {
     this.energyStore.persist(this.editor.activeSlotId(), this.editorPersistence);
   }
 
-  /** New RC+switch circuits need transient + longer tStop for fade playback (not DC / 5 ms). */
+  /** Per-job bookkeeping when it completes, fails, or is superseded by a newer job. */
+  private finishJob(job: SimulateJob): void {
+    if (!job.cancelled) {
+      job.cancelled = true;
+      job.cancel$.next();
+      job.cancel$.complete();
+    }
+    if (job.showBusy) {
+      this.busyJobs = Math.max(0, this.busyJobs - 1);
+      if (this.busyJobs === 0) {
+        this.busy.set(false);
+        this.notifyRunSettled();
+      }
+    }
+  }
+
+  private currentSimKey(): string {
+    return electricalSimKey(
+      this.editor.doc(),
+      this.editor.analysisMode(),
+      this.editor.tStop(),
+      this.editor.dt(),
+      this.editor.acFreq(),
+      this.editor.initFromDc()
+    );
+  }
+
+  /**
+   * New RC+switch circuits need transient + longer tStop for fade playback (not DC / 5 ms).
+   * Timing is only touched while `rcTeachingArmed` (see the arming rules on that field), and
+   * disarms after one application — so a user-chosen tStop/dt is never rewritten.
+   */
   private ensureRcFadeTeachingReady(switchToTran: boolean): void {
     const doc = this.editor.doc();
     if (!isRcFadeTeachingCircuit(doc)) return;
+    if (switchToTran && this.editor.analysisMode() !== 'tran') {
+      this.editor.setAnalysisMode('tran');
+      this.rcTeachingArmed = true;
+    }
+    if (!this.rcTeachingArmed || this.editor.analysisMode() !== 'tran') return;
+    this.rcTeachingArmed = false;
     const rec = recommendedRcTranSettings(this.editor.tStop(), this.editor.dt());
     if (rec) {
       this.editor.setTStop(rec.tStop);
       this.editor.setDt(rec.dt);
-    }
-    if (switchToTran && this.editor.analysisMode() !== 'tran') {
-      this.editor.setAnalysisMode('tran');
     }
   }
 
@@ -804,8 +885,6 @@ export class CircuitSimulationFacade {
     if (showBusy && mode === 'dcOp' && hasRcEnergyNetwork(doc)) {
       this.ensureRcFadeTeachingReady(true);
       mode = this.editor.analysisMode();
-    } else if (isRcFadeTeachingCircuit(doc)) {
-      this.ensureRcFadeTeachingReady(false);
     }
     const diags = diagnoseSchematic(doc, mode);
     const errors = diagnosticErrors(diags);
@@ -894,15 +973,30 @@ export class CircuitSimulationFacade {
       doc,
       energySeed,
       usedEnergySeed: this.lastRunUsedEnergySeed,
-      userInitFromDc: this.editor.initFromDc()
+      userInitFromDc: this.editor.initFromDc(),
+      simKey: electricalSimKey(
+        doc,
+        mode,
+        this.editor.tStop(),
+        this.editor.dt(),
+        this.editor.acFreq(),
+        this.editor.initFromDc()
+      ),
+      cancelled: false,
+      cancel$: new Subject<void>()
     });
   }
 
   private async runSimulationJob(job: SimulateJob): Promise<SimulateResponse> {
     if (job.body.analysis.type !== 'tran') {
-      return firstValueFrom(this.api.simulate(job.body));
+      return this.simulateFor(job, job.body);
     }
     return this.runTranContinuation(job);
+  }
+
+  /** One engine call bound to the job — cancelling the job unsubscribes (aborts) the request. */
+  private simulateFor(job: SimulateJob, body: SimulateRequest): Promise<SimulateResponse> {
+    return firstValueFrom(this.api.simulate(body).pipe(takeUntil(job.cancel$)));
   }
 
   /**
@@ -939,7 +1033,7 @@ export class CircuitSimulationFacade {
         },
         circuit
       };
-      return firstValueFrom(this.api.simulate(body));
+      return this.simulateFor(job, body);
     }
 
     const segmentStops = planTranSegments(targetTStop, dt);
@@ -952,6 +1046,8 @@ export class CircuitSimulationFacade {
     const warnings: string[] = [];
 
     for (let i = 0; i < segmentStops.length; i++) {
+      // Superseded (newer edit / run) — stop hitting the backend with segments nobody will see.
+      if (job.cancelled) return CANCELLED_TRAN;
       const segTStop = segmentStops[i]!;
       const circuit = segmentEnergy ? injectEnergyState(baseCircuit, segmentEnergy) : baseCircuit;
       const useInitFromDc =
@@ -972,7 +1068,8 @@ export class CircuitSimulationFacade {
         circuit
       };
 
-      const res = await firstValueFrom(this.api.simulate(body));
+      const res = await this.simulateFor(job, body);
+      if (job.cancelled) return CANCELLED_TRAN;
       lastRes = res;
       if (!res.ok) return res;
       warnings.push(...(res.warnings ?? []));

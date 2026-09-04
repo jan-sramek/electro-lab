@@ -599,4 +599,80 @@ describe('lab-challenge-checker', () => {
       )
     ).toBeTrue();
   });
+
+  describe('current checks use magnitude and fail on missing data', () => {
+    const doc = {
+      groundNet: 'gnd',
+      components: [
+        { id: 'B1', modelKey: 'battery', x: 0, y: 0, rotation: 0 as const, params: {}, pins: {} },
+        { id: 'D1', modelKey: 'led', x: 0, y: 0, rotation: 0 as const, params: {}, pins: {} }
+      ],
+      wires: []
+    };
+    const withCurrents = (branchCurrents: Record<string, number>) => ({
+      schemaVersion: 1,
+      ok: true,
+      analysisType: 'dcOp' as const,
+      errors: [],
+      warnings: [],
+      dcOp: { nodeVoltages: {}, branchCurrents }
+    });
+    const crit = (type: string, params: Record<string, unknown>) => [
+      { id: 1, order: 1, labelKey: 'x', type, paramsJson: JSON.stringify(params) }
+    ];
+
+    it('any_model_current_min accepts a negative (reverse-oriented) current by magnitude', () => {
+      const r = checkLabCriteria(crit('any_model_current_min', { modelKey: 'led', minAmps: 0.005 }), {
+        doc,
+        result: withCurrents({ D1: -0.01 }),
+        analysisMode: 'dcOp'
+      });
+      expect(r[0].passed).toBeTrue();
+    });
+
+    it('any_model_current_max fails when current is undefined or no part matches', () => {
+      const noCurrent = checkLabCriteria(crit('any_model_current_max', { modelKey: 'led', maxAmps: 0.02 }), {
+        doc,
+        result: withCurrents({}),
+        analysisMode: 'dcOp'
+      });
+      expect(noCurrent[0].passed).toBeFalse();
+      const noPart = checkLabCriteria(crit('any_model_current_max', { modelKey: 'motor', maxAmps: 0.02 }), {
+        doc,
+        result: withCurrents({ D1: 0.01 }),
+        analysisMode: 'dcOp'
+      });
+      expect(noPart[0].passed).toBeFalse();
+    });
+
+    it('any_model_current_max compares magnitude for negative currents', () => {
+      const r = checkLabCriteria(crit('any_model_current_max', { modelKey: 'led', maxAmps: 0.02 }), {
+        doc,
+        result: withCurrents({ D1: -0.05 }),
+        analysisMode: 'dcOp'
+      });
+      expect(r[0].passed).toBeFalse();
+    });
+
+    it('branch_current_min/max use magnitude and fail on undefined', () => {
+      const minNeg = checkLabCriteria(crit('branch_current_min', { refId: 'D1', minAmps: 0.005 }), {
+        doc,
+        result: withCurrents({ D1: -0.01 }),
+        analysisMode: 'dcOp'
+      });
+      expect(minNeg[0].passed).toBeTrue();
+      const maxNeg = checkLabCriteria(crit('branch_current_max', { refId: 'D1', maxAmps: 0.005 }), {
+        doc,
+        result: withCurrents({ D1: -0.01 }),
+        analysisMode: 'dcOp'
+      });
+      expect(maxNeg[0].passed).toBeFalse();
+      const maxUndef = checkLabCriteria(crit('branch_current_max', { refId: 'D1', maxAmps: 0.005 }), {
+        doc,
+        result: withCurrents({}),
+        analysisMode: 'dcOp'
+      });
+      expect(maxUndef[0].passed).toBeFalse();
+    });
+  });
 });
