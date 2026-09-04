@@ -55,9 +55,28 @@
   color: #fff;
   font-weight: 600;
   cursor: pointer;
+  margin-right: 0.4rem;
+  margin-top: 0.35rem;
 }
 
 .challenge-btn:hover { background: #095c42; }
+
+.challenge-btn.secondary {
+  background: transparent;
+  color: #0b6e4f;
+  border: 1px solid #0b6e4f;
+}
+
+.challenge-btn.secondary:hover {
+  background: #e8f5ef;
+}
+
+.challenge-peek-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: #5a6a7a;
+  line-height: 1.35;
+}
 
 .challenge-msg { margin: 0.5rem 0 0; font-size: 0.9rem; }
 .challenge-msg.ok { color: #0b6e4f; }

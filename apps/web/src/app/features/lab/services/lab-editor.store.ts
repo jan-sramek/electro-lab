@@ -1122,7 +1122,6 @@ export class LabEditorStore {
     dt?: number,
     acFreq?: number
   ): void {
-    this.persist();
     const doc = assignNets(factory());
     const sim: SlotSimState = {
       analysisMode: mode,
@@ -1130,15 +1129,30 @@ export class LabEditorStore {
       dt: dt ?? this.dt(),
       acFreq: acFreq ?? this.acFreq(),
       examplePreset: presetId,
-      initFromDc: false
+      initFromDc: this.initFromDc()
     };
-    const id = this.persistence.saveAs(tabName, doc, sim);
+
+    // Challenge mode stays on the isolated tab — load the sample in place as a reference.
+    if (this.learnChallengeMode()) {
+      this.history.push(this.doc());
+      this.doc.set(doc);
+      this.selectedIds.set([]);
+      this.selectedWireIds.set([]);
+      this.applySlotSim(sim);
+      this.syncHistoryFlags();
+      this.persist();
+      this.bump();
+      return;
+    }
+
+    this.persist();
+    const id = this.persistence.saveAs(tabName, doc, { ...sim, initFromDc: false });
     this.history.clear();
     this.doc.set(doc);
     this.activeSlotId.set(id);
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);
-    this.applySlotSim(sim);
+    this.applySlotSim({ ...sim, initFromDc: false });
     this.syncHistoryFlags();
     this.refreshSlots(id);
     this.bump();

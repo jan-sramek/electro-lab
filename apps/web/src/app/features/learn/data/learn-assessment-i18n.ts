@@ -26,6 +26,8 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.hub.status.complete': 'Complete',
   'lab.challenge.heading': 'Learn challenge',
   'lab.challenge.check': 'Check my work',
+  'lab.challenge.peekSample': 'Peek sample',
+  'lab.challenge.peekHint': 'Loads the teaching sample here as a reference — you can still edit and check.',
   'lab.challenge.passed': 'Challenge passed — return to Learn to continue.',
   'lab.challenge.failed': 'Not yet — adjust the circuit or run again, then check once more.',
   'lab.challenge.backToUnit': 'Back to unit',

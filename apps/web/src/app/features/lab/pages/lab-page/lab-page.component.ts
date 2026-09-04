@@ -448,6 +448,16 @@ export class LabPageComponent implements OnInit, OnDestroy {
     this.challengeMessage.set(passed ? 'lab.challenge.passed' : 'lab.challenge.failed');
   }
 
+  /** Load the unit's teaching sample into the challenge tab as a rebuild reference. */
+  peekChallengeSample(): void {
+    const unit = this.learnChallengeUnit();
+    if (!unit?.exampleId) return;
+    this.challengeResults.set([]);
+    this.challengePassed.set(false);
+    this.challengeMessage.set(null);
+    this.onLoadPreset(unit.exampleId as ExamplePresetId);
+  }
+
   learnChallengePath(): string[] | null {
     const unit = this.learnChallengeUnit();
     if (!unit) return null;

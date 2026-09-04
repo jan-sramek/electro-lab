@@ -24,6 +24,10 @@
           <button type="button" class="challenge-btn" (click)="checkLearnChallenge()">
             {{ 'lab.challenge.check' | t }}
           </button>
+          <button type="button" class="challenge-btn secondary" (click)="peekChallengeSample()">
+            {{ 'lab.challenge.peekSample' | t }}
+          </button>
+          <p class="challenge-peek-hint">{{ 'lab.challenge.peekHint' | t }}</p>
           @if (challengeMessage(); as msg) {
             <p class="challenge-msg" [class.ok]="challengePassed()">{{ msg | t }}</p>
           }
