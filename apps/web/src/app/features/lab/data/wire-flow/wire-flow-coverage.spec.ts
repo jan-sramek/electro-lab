@@ -49,6 +49,13 @@ import { createNotchFilterPreset } from '../presets/notch-filter.preset';
 import { createRlcSeriesPreset } from '../presets/rlc-series.preset';
 import { createI2cOledPreset } from '../presets/i2c-oled.preset';
 import { createOpAmpBufferPreset } from '../presets/opamp-buffer.preset';
+import { createOpAmpComparatorPreset } from '../presets/opamp-comparator.preset';
+import { createOpAmpSchmittPreset } from '../presets/opamp-schmitt.preset';
+import { createOpAmpSummingPreset } from '../presets/opamp-summing.preset';
+import { createOpAmpIntegratorPreset } from '../presets/opamp-integrator.preset';
+import { createOpAmpDifferentiatorPreset } from '../presets/opamp-differentiator.preset';
+import { createOpAmpActiveFilterPreset } from '../presets/opamp-active-filter.preset';
+import { createNe555PotBlinkPreset } from '../presets/ne555-pot-blink.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -934,6 +941,149 @@ describe('wire flow coverage on presets', () => {
       return null;
     });
     for (const id of ['W1', 'W2', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W13', 'W14']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp comparator (LED on) — supply and OUT→LED path animate', () => {
+    const doc = createOpAmpComparatorPreset();
+    const Iled = 0.007;
+    const Idiv = 0.00025;
+    const Ipot = 0.0005;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'RA' || id === 'RB') return Idiv;
+      if (id === 'POT1') return Ipot;
+      if (id === 'R1' || id === 'D1') return Iled;
+      if (id === 'U1') return Iled;
+      if (id === 'VCC') return Iled + Idiv + Ipot;
+      return null;
+    });
+    for (const id of ['W1', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp Schmitt (LED on) — supply and OUT→LED path animate', () => {
+    const doc = createOpAmpSchmittPreset();
+    const Iled = 0.007;
+    const Ifb = 0.000025;
+    const Ipot = 0.0005;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'POT1') return Ipot;
+      if (id === 'RIN') return 0;
+      if (id === 'RF' || id === 'RG') return Ifb;
+      if (id === 'R1' || id === 'D1') return Iled;
+      if (id === 'U1') return Iled + Ifb;
+      if (id === 'VCC') return Iled + Ipot + Ifb;
+      return null;
+    });
+    for (const id of ['W1', 'W8', 'W13', 'W14', 'W15', 'W16', 'W17']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp summing — input, feedback, and load paths animate', () => {
+    const doc = createOpAmpSummingPreset();
+    const I1 = 0.0001;
+    const I2 = 0.00005;
+    const Ifb = I1 + I2;
+    const Iload = 0.0003;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'V1' || id === 'R1') return I1;
+      if (id === 'V2' || id === 'R2') return I2;
+      if (id === 'RF') return Ifb;
+      if (id === 'RL') return Iload;
+      if (id === 'U1') return Ifb + Iload;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W6', 'W7', 'W8', 'W9', 'W11', 'W12', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp integrator (pulse high) — Rin/Cf and load paths animate', () => {
+    const doc = createOpAmpIntegratorPreset();
+    const Iin = 0.0001;
+    const Iload = 0.0002;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1' || id === 'RIN') return Iin;
+      if (id === 'CF') return Iin;
+      if (id === 'RL') return Iload;
+      if (id === 'U1') return Iin + Iload;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W4', 'W5', 'W6', 'W7', 'W9', 'W10', 'W11', 'W12']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp differentiator (edge) — Cin/Rf and load paths animate', () => {
+    const doc = createOpAmpDifferentiatorPreset();
+    const Icin = 0.002;
+    const Iload = 0.0003;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1' || id === 'CIN') return Icin;
+      if (id === 'RF') return Icin;
+      if (id === 'RL') return Iload;
+      if (id === 'U1') return Icin + Iload;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W4', 'W5', 'W6', 'W7', 'W9', 'W10', 'W11', 'W12']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Op-amp active LPF — Rin/Rf and load paths animate', () => {
+    const doc = createOpAmpActiveFilterPreset();
+    const Iin = 0.0001;
+    const Icf = 0.000006;
+    const Iload = 0.0001;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'AC1' || id === 'RIN') return Iin;
+      if (id === 'RF') return Iin - Icf;
+      if (id === 'CF') return Icf;
+      if (id === 'RL') return Iload;
+      if (id === 'U1') return Iin + Iload;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W4', 'W5', 'W6', 'W9', 'W11', 'W12', 'W13', 'W14']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('NE555 pot blink (LED on) — power and OUT→LED path animate', () => {
+    const doc = createNe555PotBlinkPreset();
+    const Iled = 0.015;
+    const Ict = 0.0003;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'R1' || id === 'D1') return Iled;
+      if (id === 'U1') return Iled;
+      if (id === 'RA' || id === 'POT1' || id === 'CT' || id === 'CC') return Ict;
+      if (id === 'VCC') return Iled + Ict * 2;
+      return null;
+    });
+    for (const id of ['W1', 'W3', 'W4', 'W18', 'W19', 'W20', 'W21', 'W22', 'W23']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);
