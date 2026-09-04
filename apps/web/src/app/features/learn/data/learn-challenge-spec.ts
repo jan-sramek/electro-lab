@@ -955,6 +955,7 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'no_circuit_errors', paramsJson: '{}' },
     { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'ground'] }) },
     { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
     {
       type: 'any_pin_dc_voltage_between',
       paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.0, maxVolts: 3.0 })
@@ -981,6 +982,7 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
       type: 'has_models',
       paramsJson: JSON.stringify({ models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground'] })
     },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
     { type: 'sim_ok', paramsJson: '{}' },
     { type: 'any_switch_closed', paramsJson: '{}' },
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
@@ -1003,8 +1005,91 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
     { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
   ],
-  'motor-flyback': cloneSpecCriteria('motor'),
-  'coil-protection': cloneSpecCriteria('relay'),
+  // Motor cluster — flyback / drive / load emphasis (sample has diode + NMOS + 15 wires).
+  'motor-flyback': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
+    },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'diode' }) }
+  ],
+  'motor-lowside': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 8 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
+  ],
+  'motor-control': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 12 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
+  'inductive-load': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
+    },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 10 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
+  ],
+  'motor-mosfet': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
+  // Relay / coil cluster.
+  'coil-protection': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground'] })
+    },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'diode' }) }
+  ],
+  'relay-flyback': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground'] })
+    },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 8 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+  ],
   'pin-input-pulldown': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
@@ -1015,8 +1100,6 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 3 }) },
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
   ],
-  'motor-control': cloneSpecCriteria('motor'),
-  'inductive-load': cloneSpecCriteria('motor'),
   'mosfet-driver': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
@@ -1025,34 +1108,226 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     },
     { type: 'sim_ok', paramsJson: '{}' },
     { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) },
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
     { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
   ],
-  'debounce-idea': cloneSpecCriteria('debounce'),
-  'sensor-threshold': cloneSpecCriteria('opampComparator'),
-  // Shared-preset clusters — explicit overlays so sibling units cannot silently share soft SPECS.
+  debounce: [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'resistor', 'switch', 'capacitor', 'nmos', 'led', 'ground']
+      })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'capacitor', min: 1 }) },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+  ],
+  'debounce-idea': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'resistor', 'switch', 'capacitor', 'nmos', 'led', 'ground']
+      })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'capacitor', min: 1 }) },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 10 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
+  'sensor-threshold': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'op_amp', 'potentiometer', 'resistor', 'led', 'ground']
+      })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'potentiometer', pin: 'w', minVolts: 0.5, maxVolts: 4.5 })
+    }
+  ],
+  'opamp-comparator': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'op_amp', 'potentiometer', 'resistor', 'led', 'ground']
+      })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: 2.0, maxVolts: 15 })
+    }
+  ],
+  // Shared-preset clusters — soft-unique so sibling titles mean different pass conditions.
   'led-series': cloneSpecCriteria('led'),
   'rc-charge': cloneSpecCriteria('rc'),
   'nmos-switch': cloneSpecCriteria('nmos'),
-  'relay-flyback': cloneSpecCriteria('relay'),
-  'motor-mosfet': cloneSpecCriteria('motor'),
-  'motor-lowside': cloneSpecCriteria('motor'),
-  'pot-divider': cloneSpecCriteria('pot'),
-  'sensor-pot': cloneSpecCriteria('pot'),
-  'adc-front-end': cloneSpecCriteria('pot'),
-  'voltage-divider': cloneSpecCriteria('voltageDivider'),
-  'adc-reference': cloneSpecCriteria('voltageDivider'),
-  'measure-freq-amp': cloneSpecCriteria('measureAc'),
-  'bode-intuition': cloneSpecCriteria('measureAc'),
-  'motor-pwm': cloneSpecCriteria('motorPwm'),
-  'motor-speed': cloneSpecCriteria('motorPwm'),
-  debounce: cloneSpecCriteria('debounce'),
-  'sensor-ldr': cloneSpecCriteria('ldr'),
-  'ldr-nightlight': cloneSpecCriteria('ldr'),
+  'pot-divider': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'potentiometer', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'potentiometer', pin: 'w', minVolts: 0.5, maxVolts: 4.5 })
+    }
+  ],
+  'sensor-pot': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'potentiometer', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 3 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'potentiometer', pin: 'w', minVolts: 1.0, maxVolts: 2.5 })
+    }
+  ],
+  'adc-front-end': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'potentiometer', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 4 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'potentiometer', pin: 'w', minVolts: 0.8, maxVolts: 4.0 })
+    }
+  ],
+  'voltage-divider': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 4 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.0, maxVolts: 3.0 })
+    }
+  ],
+  'adc-reference': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.4, maxVolts: 2.6 })
+    }
+  ],
+  'measure-freq-amp': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] })
+    },
+    { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    {
+      type: 'any_pin_ac_mag_between',
+      paramsJson: JSON.stringify({ modelKey: 'capacitor', pin: 'a', minMag: 0.4, maxMag: 0.95 })
+    }
+  ],
+  'bode-intuition': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['ac_source', 'resistor', 'capacitor', 'ground'] })
+    },
+    { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) },
+    {
+      type: 'any_pin_ac_mag_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minMag: 0.05, maxMag: 1.2 })
+    }
+  ],
+  'motor-pwm': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'pulse_source', 'nmos', 'dc_motor', 'diode', 'resistor', 'ground']
+      })
+    },
+    { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'diode', min: 1 }) },
+    {
+      type: 'any_model_tran_current_peak_min',
+      paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 })
+    },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
+  'motor-speed': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({
+        models: ['battery', 'pulse_source', 'nmos', 'dc_motor', 'diode', 'resistor', 'ground']
+      })
+    },
+    { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    {
+      type: 'any_model_tran_current_peak_min',
+      paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.1 })
+    },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
+  'sensor-ldr': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'ldr', 'nmos', 'led', 'resistor', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'ldr', min: 1 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+  ],
+  'ldr-nightlight': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'ldr', 'nmos', 'led', 'resistor', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 8 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
+  ],
   'arduino-dio-led': cloneSpecCriteria('arduino'),
-  'opamp-comparator': cloneSpecCriteria('opampComparator'),
-  'i2c-wiring': cloneSpecCriteria('i2cOled'),
-  'i2c-oled-wiring': cloneSpecCriteria('i2cOled'),
+  'i2c-wiring': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['arduino_i2c', 'ssd1306', 'resistor', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 6 }) },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) }
+  ],
+  'i2c-oled-wiring': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['arduino_i2c', 'ssd1306', 'resistor', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 8 }) },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 4.0, maxVolts: 5.5 })
+    }
+  ],
   'i2c-address-idea': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
@@ -1071,7 +1346,20 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'sim_ok', paramsJson: '{}' },
     { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) }
   ],
-  'i2c-multi-slave': cloneSpecCriteria('i2cOled')
+  'i2c-multi-slave': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['arduino_i2c', 'ssd1306', 'resistor', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 10 }) },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 4.0, maxVolts: 5.5 })
+    }
+  ]
 };
 
 /** True when a unit slug has its own challenge criteria overlay. */

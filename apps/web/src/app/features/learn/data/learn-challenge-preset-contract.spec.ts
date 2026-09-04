@@ -59,8 +59,16 @@ import { createIndustrial24vPreset } from '../../lab/data/presets/industrial-24v
 import { EXAMPLE_PRESET_IDS, ExamplePresetId } from '../../lab/services/lab-editor.store';
 import { SimulateResponse } from '../../lab/api/circuit-api.types';
 import { checkLabCriteria, allCriteriaPassed } from './lab-challenge-checker';
-import { getLearnChallengeSpec, hasUnitChallengeOverlay } from './learn-challenge-spec';
+import {
+  getLearnChallengeSpec,
+  hasUnitChallengeOverlay,
+  specCriteriaForCheck
+} from './learn-challenge-spec';
 import { LEARN_UNITS } from './learn-catalog';
+
+function criteriaFingerprint(criteria: { type: string; paramsJson: string }[]): string {
+  return JSON.stringify(criteria.map((c) => ({ type: c.type, paramsJson: c.paramsJson })));
+}
 
 const PRESET_DOCS: Record<ExamplePresetId, () => SchematicDocument> = {
   led: createLedPreset,
@@ -184,6 +192,16 @@ function mockPassingResult(
       for (const c of doc.components) {
         if (c.modelKey === modelKey || (modelKey === 'bjt_npn' && c.modelKey === 'bc547')) {
           branchCurrents[c.id] = Math.max(branchCurrents[c.id] ?? 0, minAmps * 2, 0.05);
+        }
+      }
+    }
+    if (crit.type === 'any_model_current_max') {
+      const modelKey = String(params['modelKey'] ?? '');
+      const maxAmps = Number(params['maxAmps'] ?? 0);
+      for (const c of doc.components) {
+        if (c.modelKey === modelKey || (modelKey === 'bjt_npn' && c.modelKey === 'bc547')) {
+          const cur = branchCurrents[c.id] ?? 0;
+          branchCurrents[c.id] = Math.min(Math.abs(cur), Math.max(maxAmps * 0.4, 0.001));
         }
       }
     }
@@ -317,6 +335,60 @@ describe('Learn challenge preset contracts', () => {
           .withContext(`${slug} shares exampleId ${exampleId} but has no UNIT_CRITERIA overlay`)
           .toBeTrue();
       }
+    }
+  });
+
+  it('sibling unit overlays that share an exampleId are soft-unique', () => {
+    const byExample = new Map<string, string[]>();
+    for (const u of LEARN_UNITS) {
+      const list = byExample.get(u.exampleId) ?? [];
+      list.push(u.unitSlug);
+      byExample.set(u.exampleId, list);
+    }
+    for (const [exampleId, slugs] of byExample) {
+      if (slugs.length < 2) continue;
+      const seen = new Map<string, string>();
+      for (const slug of slugs) {
+        const fp = criteriaFingerprint(specCriteriaForCheck(exampleId, [], slug));
+        const prior = seen.get(fp);
+        expect(prior)
+          .withContext(`${slug} duplicates ${prior} on shared exampleId ${exampleId}`)
+          .toBeUndefined();
+        seen.set(fp, slug);
+      }
+    }
+  });
+
+  it('unit overlays pass on their sample preset with a generous mock sim result', () => {
+    for (const u of LEARN_UNITS) {
+      if (!hasUnitChallengeOverlay(u.unitSlug)) continue;
+      const spec = getLearnChallengeSpec(u.exampleId);
+      expect(spec).withContext(u.unitSlug).not.toBeNull();
+      let doc = PRESET_DOCS[u.exampleId as ExamplePresetId]();
+      doc = {
+        ...doc,
+        components: doc.components.map((c) => {
+          if (c.modelKey === 'pushbutton') {
+            return { ...c, params: { ...c.params, closed: true } };
+          }
+          return c;
+        })
+      };
+      const criteria = specCriteriaForCheck(u.exampleId, [], u.unitSlug);
+      const result = mockPassingResult(doc, spec!.analysisMode, criteria);
+      const results = checkLabCriteria(criteria, {
+        doc,
+        result,
+        analysisMode: spec!.analysisMode
+      });
+      expect(allCriteriaPassed(results))
+        .withContext(
+          `${u.unitSlug}: ${results
+            .filter((r) => !r.passed)
+            .map((r) => criteria.find((c) => c.id === r.criterionId)?.type)
+            .join(', ')}`
+        )
+        .toBeTrue();
     }
   });
 });
