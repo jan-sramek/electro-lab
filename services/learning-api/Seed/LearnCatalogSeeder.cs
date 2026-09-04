@@ -475,6 +475,9 @@ public static class LearnCatalogSeeder
              new("learn.project.i2cOled.challenge.c2.label", "no_circuit_errors", new { })]),
         new("buses", "i2c-address-idea", "i2cOled", "learn.project.i2cAddress", 2,
             StandardLessons("learn.project.i2cAddress"), StandardQuiz("learn.project.i2cAddress"),
-            DcSimOk("learn.project.i2cAddress"))
+            DcSimOk("learn.project.i2cAddress")),
+        new("buses", "spi-vs-i2c", "i2cOled", "learn.project.spiVsI2c", 3,
+            StandardLessons("learn.project.spiVsI2c"), StandardQuiz("learn.project.spiVsI2c"),
+            DcSimOk("learn.project.spiVsI2c"))
     ];
 }

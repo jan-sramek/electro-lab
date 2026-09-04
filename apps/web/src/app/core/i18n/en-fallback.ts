@@ -1997,6 +1997,15 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.i2cAddress.step4': 'Run DC to confirm the wiring still solves cleanly.',
   'learn.project.i2cAddress.openLab': 'Open in Lab',
 
+  'learn.project.spiVsI2c.title': 'SPI vs I²C (idea)',
+  'learn.project.spiVsI2c.summary':
+    'Compare the two common buses conceptually on the I²C OLED sample — pins, addressing, and when each fits.',
+  'learn.project.spiVsI2c.step1': 'Open the I2C OLED sample — count the shared wires (SDA/SCL + pull-ups).',
+  'learn.project.spiVsI2c.step2': 'Note there is no chip-select pin — address does the selecting.',
+  'learn.project.spiVsI2c.step3': 'Contrast mentally with SPI: clock, data, and a CS per device.',
+  'learn.project.spiVsI2c.step4': 'Decide: few pins + many sensors → I²C; speed + CS available → SPI.',
+  'learn.project.spiVsI2c.openLab': 'Open in Lab',
+
   'learn.project.bjtVsMos.title': 'BJT vs MOSFET switch',
   'learn.project.bjtVsMos.summary':
     'Compare current-driven BJT switching with voltage-driven NMOS switching using the Lab examples.',

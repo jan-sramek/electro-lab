@@ -5,6 +5,7 @@ import { createBuzzerButtonPreset } from '../../lab/data/presets/buzzer-button.p
 import { createPotDividerPreset } from '../../lab/data/presets/pot-divider.preset';
 import { createVoltageDividerPreset } from '../../lab/data/presets/voltage-divider.preset';
 import { checkLabCriteria, modelKeyMatches } from './lab-challenge-checker';
+import { specCriteriaForCheck } from './learn-challenge-spec';
 
 describe('lab-challenge-checker', () => {
   it('passes sim_ok when simulation succeeded', () => {
@@ -169,5 +170,12 @@ describe('lab-challenge-checker', () => {
       }
     );
     expect(ok.every((r) => r.passed)).toBeTrue();
+  });
+
+  it('led-burn-limit overlay uses current max instead of shared LED min', () => {
+    const criteria = specCriteriaForCheck('led', [], 'led-burn-limit');
+    expect(criteria.some((c) => c.type === 'any_model_current_max')).toBeTrue();
+    expect(criteria.some((c) => c.type === 'any_part_not_burned')).toBeTrue();
+    expect(criteria.some((c) => c.type === 'any_model_current_min')).toBeFalse();
   });
 });

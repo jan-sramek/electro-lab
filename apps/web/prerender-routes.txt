@@ -80,3 +80,4 @@
 /learn/mcu/pin-input-pulldown
 /learn/buses/i2c-oled-wiring
 /learn/buses/i2c-address-idea
+/learn/buses/spi-vs-i2c

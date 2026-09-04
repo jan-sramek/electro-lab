@@ -322,7 +322,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
           models: ['battery', 'op_amp', 'potentiometer', 'resistor', 'led', 'ground']
         })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   opampSchmitt: {
@@ -336,7 +337,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
           models: ['battery', 'op_amp', 'potentiometer', 'resistor', 'led', 'ground']
         })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   opampSumming: {

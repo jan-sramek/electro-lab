@@ -184,6 +184,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...ne555PotAssessment(),
   ...pinInputAssessment(),
   ...i2cAddressAssessment(),
+  ...spiVsI2cAssessment(),
   ...bjtVsMosAssessment(),
   ...inductiveWhyDiodeAssessment()
 };
@@ -1830,6 +1831,45 @@ function i2cAddressAssessment() {
       ['I²C address selects…', 'Which device talks/listens', 'Wire thickness', 'LED color', 'Multiple chips share the bus.'],
       ['Pull-ups on SDA/SCL…', 'Are optional decoration', 'Are required for open-drain I²C', 'Replace ground', 'Idle lines are pulled high.'],
       ['Two OLEDs on one bus need…', 'Identical shorts', 'No VCC', 'Different addresses', 'Unique IDs avoid collisions.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Wiring passes circuit checks.')
+  };
+}
+
+
+function spiVsI2cAssessment() {
+  const p = 'learn.project.spiVsI2c';
+  return {
+    ...lessonKeys(
+      p,
+      'Two common buses',
+      'I²C uses two shared wires (SDA/SCL) plus addresses. SPI uses dedicated chip-select lines and usually a clock + data pair — faster, but more pins.',
+      'When which',
+      'I²C wins for few pins and many addressable sensors. SPI wins for higher bandwidth displays and when you can afford CS lines.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'I²C typically needs…',
+        'Two shared wires plus addresses',
+        'One CS per clock forever',
+        'No pull-ups ever',
+        'SDA/SCL are shared; address selects the chip.'
+      ],
+      [
+        'SPI usually adds…',
+        'Nothing beyond I²C',
+        'A chip-select (CS) per device',
+        'Only a single global address',
+        'CS picks the slave without an address field.'
+      ],
+      [
+        'Choose I²C when you want…',
+        'Maximum wire count always',
+        'No shared bus ever',
+        'Few pins and many addressable devices',
+        'Addressing trades speed for wiring simplicity.'
+      ]
     ),
     ...challengeKeys(p, 'Simulation completes without errors.', 'Wiring passes circuit checks.')
   };

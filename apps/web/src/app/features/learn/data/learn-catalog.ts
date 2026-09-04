@@ -586,6 +586,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     exampleId: 'i2cOled',
     i18nKeyPrefix: 'learn.project.i2cAddress',
     stepCount: 4
+  },
+  {
+    unitSlug: 'spi-vs-i2c',
+    moduleSlug: 'buses',
+    exampleId: 'i2cOled',
+    i18nKeyPrefix: 'learn.project.spiVsI2c',
+    stepCount: 4
   }
 ];
 
