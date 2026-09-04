@@ -187,7 +187,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 |---------|--------|-----|------------|
 | `pushbutton-led` | Momentary input | ready (`pushbutton`) | **mvp** |
 | `ldr-nightlight` | Light → threshold behaviour | ready (`ldr`) | **mvp** |
-| `debounce-idea` | Debounce as a concept | gap | later |
+| `debounce-idea` | Debounce as a concept | ready (`debounce`) | **mvp** |
 
 **Quiz I (later):** Dark vs bright on the night-light divider.
 
@@ -229,7 +229,7 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
 | `ac-rc-lpf` | AC low-pass feel | ready (`ac`) | **mvp** |
-| `bode-intuition` | Magnitude vs frequency | partial | later |
+| `bode-intuition` | Magnitude vs frequency | ready (`measureAc`) | **mvp** |
 
 **Quiz M (later):** Above cutoff → more/less attenuation.
 

@@ -301,6 +301,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
+    unitSlug: 'bode-intuition',
+    moduleSlug: 'filters',
+    exampleId: 'measureAc',
+    i18nKeyPrefix: 'learn.project.bodeIntuition',
+    stepCount: 4
+  },
+  {
     unitSlug: 'motor-mosfet',
     moduleSlug: 'motors',
     exampleId: 'motor',
@@ -354,6 +361,13 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'digital',
     exampleId: 'debounce',
     i18nKeyPrefix: 'learn.project.debounce',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'debounce-idea',
+    moduleSlug: 'digital',
+    exampleId: 'debounce',
+    i18nKeyPrefix: 'learn.project.debounceIdea',
     stepCount: 4
   },
   {

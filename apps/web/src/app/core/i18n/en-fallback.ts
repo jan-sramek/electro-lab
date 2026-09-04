@@ -1442,6 +1442,14 @@ export const EN_FALLBACK: Record<string, string> = {
     'Change frequency and watch reactive networks reshape the reading.',
   'learn.project.measureAc.openLab':
     'Open in Lab',
+  'learn.project.bodeIntuition.title': 'Magnitude vs frequency',
+  'learn.project.bodeIntuition.summary':
+    'Step AC frequency and probe one node — the seed of Bode thinking without a full plot.',
+  'learn.project.bodeIntuition.step1': 'Open the measure-AC sample and note the analysis frequency.',
+  'learn.project.bodeIntuition.step2': 'Run AC and probe the output magnitude.',
+  'learn.project.bodeIntuition.step3': 'Raise frequency and re-run — watch magnitude change on reactive networks.',
+  'learn.project.bodeIntuition.step4': 'Lower frequency again — connect the trend to low-pass / high-pass intuition.',
+  'learn.project.bodeIntuition.openLab': 'Open in Lab',
   'lab.toolbar.measureAcPreset':
     'Measure AC (AC)',
   'learn.challenge.tab.measureAc':
@@ -1590,6 +1598,14 @@ export const EN_FALLBACK: Record<string, string> = {
     'Think: without C, mechanical bounce could pulse the gate many times.',
   'learn.project.debounce.openLab':
     'Open in Lab',
+  'learn.project.debounceIdea.title': 'Why debounce exists',
+  'learn.project.debounceIdea.summary':
+    'Contact bounce creates fake edges — see the RC sample as the hardware idea, and remember firmware debounce is the twin.',
+  'learn.project.debounceIdea.step1': 'Open the RC debounce sample and identify the switch node capacitor.',
+  'learn.project.debounceIdea.step2': 'Run DC open and closed — notice the sense node is intentional, not floating.',
+  'learn.project.debounceIdea.step3': 'Imagine bounce without C — many edges for one press.',
+  'learn.project.debounceIdea.step4': 'Connect the idea to MCU code: wait until the pin stays stable.',
+  'learn.project.debounceIdea.openLab': 'Open in Lab',
   'lab.toolbar.debouncePreset':
     'RC debounce (DC)',
   'learn.challenge.tab.debounce':

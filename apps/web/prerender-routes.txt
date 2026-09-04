@@ -39,6 +39,7 @@
 /learn/filters/divider-design
 /learn/filters/pot-divider
 /learn/filters/measure-freq-amp
+/learn/filters/bode-intuition
 /learn/motors/motor-mosfet
 /learn/motors/motor-pwm
 /learn/motors/motor-speed
@@ -47,6 +48,7 @@
 /learn/motors/motor-direction
 /learn/digital/pull-up-down
 /learn/digital/debounce
+/learn/digital/debounce-idea
 /learn/sensors/sensor-ldr
 /learn/sensors/sensor-pot
 /learn/sensors/sensor-ntc

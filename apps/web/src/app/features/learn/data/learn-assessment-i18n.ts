@@ -147,6 +147,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...dividerDesignAssessment(),
   ...potDividerAssessment(),
   ...measureAcAssessment(),
+  ...bodeIntuitionAssessment(),
   ...motorMosfetAssessment(),
   ...motorPwmAssessment(),
   ...motorSpeedAssessment(),
@@ -155,6 +156,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...motorDirectionAssessment(),
   ...pullUpDownAssessment(),
   ...debounceAssessment(),
+  ...debounceIdeaAssessment(),
   ...sensorLdrAssessment(),
   ...sensorPotAssessment(),
   ...ntcDividerAssessment(),
@@ -1101,6 +1103,44 @@ function measureAcAssessment() {
   };
 }
 
+function bodeIntuitionAssessment() {
+  const p = 'learn.project.bodeIntuition';
+  return {
+    ...lessonKeys(
+      p,
+      'Magnitude vs frequency',
+      'Change the AC analysis frequency and probe the same node — that is the seed of Bode thinking without a full plot yet.',
+      'One knob at a time',
+      'Hold amplitude fixed, sweep frequency in your head (or step it), and watch magnitude fall or rise depending on the network.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'Bode intuition starts with…',
+        'How magnitude changes with frequency',
+        'Only wire color charts',
+        'Deleting capacitors forever',
+        'Frequency response of |V| (and later phase).'
+      ],
+      [
+        'On an RC low-pass, raising frequency usually…',
+        'Raises output forever',
+        'Lowers output magnitude',
+        'Removes ground',
+        'Above cutoff, attenuation grows.'
+      ],
+      [
+        'Best Lab habit for this idea…',
+        'Change every R and C at once',
+        'Never probe',
+        'Step frequency and re-probe one node',
+        'Isolate the frequency effect.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Use AC analysis.')
+  };
+}
+
 function motorMosfetAssessment() {
   const p = 'learn.project.motorMosfet';
   return {
@@ -1234,6 +1274,44 @@ function debounceAssessment() {
       ["Debounce belongs with…", "Only RF antennas", "Only transformers", "Buttons, limit switches, and noisy contacts", "Any mechanical contact benefits."]
     ),
     ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+  };
+}
+
+function debounceIdeaAssessment() {
+  const p = 'learn.project.debounceIdea';
+  return {
+    ...lessonKeys(
+      p,
+      'Why debounce exists',
+      'One physical press is not one clean edge — contacts bounce. Logic and MCU inputs need a quiet decision.',
+      'Hardware vs firmware',
+      'An RC filter is the analog version; waiting a few milliseconds in code is the digital twin. Same problem, two tools.'
+    ),
+    ...quizKeys(
+      p,
+      [
+        'Debounce solves…',
+        'False multiple edges from one press',
+        'Battery voltage doubling',
+        'Missing ground symbols only',
+        'Bounce creates chatter edges.'
+      ],
+      [
+        'Firmware debounce usually…',
+        'Ignores edges for a short settle time',
+        'Deletes the switch',
+        'Raises supply to 100 V',
+        'Wait until the contact is stable.'
+      ],
+      [
+        'RC debounce and code debounce…',
+        'Are unrelated forever',
+        'Only work on motors',
+        'Attack the same bounce problem differently',
+        'Hardware filters; software waits — same goal.'
+      ]
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'Circuit has no structural errors.')
   };
 }
 

@@ -459,7 +459,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'diode', 'capacitor', 'resistor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) }
     ]
   },
   zener: {
@@ -532,7 +533,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'diode', 'capacitor', 'resistor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 0.5 }) }
     ]
   },
   buck: {

@@ -344,6 +344,12 @@ public static class LearnCatalogSeeder
                 new("learn.project.measureAc.challenge.c1.label", "sim_ok", new { }),
                 new("learn.project.measureAc.challenge.c2.label", "analysis_mode", new { mode = "ac" })
             ]),
+        new("filters", "bode-intuition", "measureAc", "learn.project.bodeIntuition", 11,
+            StandardLessons("learn.project.bodeIntuition"), StandardQuiz("learn.project.bodeIntuition"),
+            [
+                new("learn.project.bodeIntuition.challenge.c1.label", "sim_ok", new { }),
+                new("learn.project.bodeIntuition.challenge.c2.label", "analysis_mode", new { mode = "ac" })
+            ]),
 
         new("motors", "motor-mosfet", "motor", "learn.project.motorMosfet", 1,
             StandardLessons("learn.project.motorMosfet"), StandardQuiz("learn.project.motorMosfet"),
@@ -370,6 +376,9 @@ public static class LearnCatalogSeeder
         new("digital", "debounce", "debounce", "learn.project.debounce", 2,
             StandardLessons("learn.project.debounce"), StandardQuiz("learn.project.debounce"),
             DcSimOk("learn.project.debounce")),
+        new("digital", "debounce-idea", "debounce", "learn.project.debounceIdea", 3,
+            StandardLessons("learn.project.debounceIdea"), StandardQuiz("learn.project.debounceIdea"),
+            DcSimOk("learn.project.debounceIdea")),
 
         new("sensors", "sensor-ldr", "ldr", "learn.project.sensorLdr", 1,
             StandardLessons("learn.project.sensorLdr"), StandardQuiz("learn.project.sensorLdr"),
