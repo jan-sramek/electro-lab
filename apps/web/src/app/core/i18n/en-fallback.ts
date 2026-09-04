@@ -183,6 +183,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.tabs.closeConfirm': 'Close this circuit tab? Unsaved edits on it will be lost.',
   'lab.tabs.closeOthersConfirm': 'Close other unpinned tabs? Their unsaved edits will be lost.',
   'lab.tabs.closeUnpinned': 'Close unpinned tabs',
+  'lab.tabs.closeUnpinnedConfirm': 'Close all unpinned tabs? Pinned tabs stay open.',
 
   'lab.palette.title': 'Parts',
   'lab.palette.dragHint': 'Drag a symbol onto the canvas, or click then click to place. Hover a part for its teaching note.',

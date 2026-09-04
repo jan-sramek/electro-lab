@@ -64,6 +64,7 @@ export class LabPageComponent implements OnInit, OnDestroy {
   /** Pending tab id to close after in-app confirm. */
   readonly closeTabConfirmId = signal<string | null>(null);
   readonly closeOthersConfirm = signal(false);
+  readonly closeUnpinnedConfirm = signal(false);
   readonly learnUnitPath = learnUnitPath;
 
   readonly challengeCriteria = computed(() => {
@@ -549,6 +550,22 @@ export class LabPageComponent implements OnInit, OnDestroy {
     this.editor.closeOtherCircuitTabs();
   }
 
+  requestCloseUnpinnedTabs(): void {
+    if (this.editor.learnChallengeMode()) return;
+    this.closeTabConfirmId.set(null);
+    this.closeOthersConfirm.set(false);
+    this.closeUnpinnedConfirm.set(true);
+  }
+
+  cancelCloseUnpinnedTabs(): void {
+    this.closeUnpinnedConfirm.set(false);
+  }
+
+  confirmCloseUnpinnedTabs(): void {
+    this.closeUnpinnedConfirm.set(false);
+    this.editor.closeUnpinnedCircuitTabs();
+  }
+
   learnChallengePath(): string[] | null {
     const unit = this.learnChallengeUnit();
     if (!unit) return null;
@@ -624,6 +641,10 @@ export class LabPageComponent implements OnInit, OnDestroy {
       }
       if (this.closeOthersConfirm()) {
         this.cancelCloseOtherTabs();
+        return;
+      }
+      if (this.closeUnpinnedConfirm()) {
+        this.cancelCloseUnpinnedTabs();
         return;
       }
       this.editor.escape();
