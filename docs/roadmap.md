@@ -27,7 +27,7 @@ Phase B FRs: [requirements-learn-mvp.md](requirements-learn-mvp.md) only.
 | **G1** | Target architecture | G0 passed | Passed |
 | **G2** | Phase B design | G1 passed | Passed — [learn-ia.md](learn-ia.md), prerender ([ADR-007](adr/007-seo.md)) |
 | **G3** | Phase B build | G2 passed | Passed — catalog, quizzes, lab challenges shipping; Account is Phase C |
-| **G4** | Phase C design | B shipped | Auth + progress ADRs updated; Account FR doc |
+| **G4** | Phase C design | B shipped | **In progress** — [requirements-account.md](requirements-account.md); ADR-003/004 amended; fill provider table before G5 |
 | **G5** | Phase C build | G4 passed | Account slice |
 
 **Rule:** No substantial Learn catalog implementation until **G2 exit**.
@@ -43,10 +43,11 @@ Phase B FRs: [requirements-learn-mvp.md](requirements-learn-mvp.md) only.
 | G1 | Passed |
 | G2 | Passed |
 | G3 | Passed (Learn Phase B catalog shipped) |
-| Phase B code | Catalog, routes, prerender shipped — **polish wave ongoing** (challenge integrity, UX, diagnostics, CI) |
-| G4 | **Next design gate** — Account FR + auth/progress ADRs before build |
+| Phase B code | Catalog, routes, prerender shipped — polish wave ongoing (challenge integrity, UX, diagnostics, CI) |
+| G4 | **In progress** — Account FR drafted; auth/progress ADRs amended; provider choice still TBD at review |
 
-Phase B polish does **not** reopen Lab device scope ([ADR-001](adr/001-lab-v1-freeze.md)). Account implementation waits for G4 exit.
+Phase B polish does **not** reopen Lab device scope ([ADR-001](adr/001-lab-v1-freeze.md)). Account **implementation** waits for G4 exit (provider table filled).
+
 ---
 
 ## After each phase ships

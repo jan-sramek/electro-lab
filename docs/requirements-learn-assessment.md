@@ -67,7 +67,7 @@ Per-unit overlays (when several units share one `exampleId`) live in `UNIT_CRITE
 - [x] Web unit player with phased UI
 - [x] Lab challenge panel when `?challenge=1`
 - [x] Offline fallback catalog when API unavailable (prerender / dev without DB)
-- [ ] Account links session to user (future)
+- [ ] Account links session to user (see [requirements-account.md](requirements-account.md); G5 after G4)
 
 ## Out of scope
 
