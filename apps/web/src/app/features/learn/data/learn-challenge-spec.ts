@@ -400,7 +400,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['ac_source', 'op_amp', 'resistor', 'capacitor', 'ground'] })
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'ac' }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_ac_mag_between',
+        paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minMag: 0.05, maxMag: 20 })
+      }
     ]
   },
   ac: {
