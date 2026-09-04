@@ -30,6 +30,8 @@ import { createPwmFilterPreset } from '../presets/pwm-filter.preset';
 import { createDebouncePreset } from '../presets/debounce.preset';
 import { createRipplePreset } from '../presets/ripple.preset';
 import { createBjtSwitchPreset } from '../presets/bjt-switch.preset';
+import { createLdrNightLightPreset } from '../presets/ldr-nightlight.preset';
+import { createIndustrial24vPreset } from '../presets/industrial-24v.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -629,6 +631,43 @@ describe('wire flow coverage on presets', () => {
     });
     for (const id of ['W1', 'W8', 'W9', 'W10', 'W11']) {
       if (!doc.wires.some((w) => w.id === id)) continue;
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('LDR night-light (dark/on) — divider and LED path animate', () => {
+    const doc = createLdrNightLightPreset();
+    const Idiv = 0.00005;
+    const Iled = 0.012;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'R1' || id === 'LDR1') return Idiv;
+      if (id === 'RD' || id === 'D1' || id === 'M1') return Iled;
+      if (id === 'V1') return Idiv + Iled;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10', 'W11', 'W12']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Industrial 24 V — coil and contact LED paths animate when closed', () => {
+    const doc = createIndustrial24vPreset();
+    const Icoil = 0.02;
+    const Iled = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'Dfly') return 0;
+      if (id === 'VB') return Icoil + Iled;
+      if (id === 'S1' || id === 'K1') return Icoil;
+      if (id === 'RC' || id === 'D1') return Iled;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);
