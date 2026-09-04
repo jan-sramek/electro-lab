@@ -101,9 +101,21 @@
     (loadPreset)="onLoadPreset($event)"
     (exportJson)="editor.exportJson()"
     (importJson)="onImport($event)"
-    (newSchematic)="editor.newSchematic()"
+    (newSchematic)="requestNewSchematic()"
     (run)="sim.run()"
   />
+
+  @if (newSchematicConfirm()) {
+    <div class="lab-confirm-banner" role="alertdialog" aria-live="polite">
+      <p>{{ 'lab.toolbar.newConfirm' | t }}</p>
+      <button type="button" class="challenge-btn" (click)="confirmNewSchematic()">
+        {{ 'lab.challenge.confirmAction' | t }}
+      </button>
+      <button type="button" class="challenge-btn secondary" (click)="cancelNewSchematic()">
+        {{ 'lab.challenge.cancelAction' | t }}
+      </button>
+    </div>
+  }
 
   <div class="lab-layout">
     <aside class="side">

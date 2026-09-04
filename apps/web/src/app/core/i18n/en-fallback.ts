@@ -161,6 +161,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.export': 'Export',
   'lab.toolbar.import': 'Import',
   'lab.toolbar.new': 'New',
+  'lab.toolbar.newConfirm': 'Clear the current schematic? Unsaved edits on this tab will be lost.',
   'lab.toolbar.run': 'Run',
   'lab.toolbar.running': 'Running…',
 

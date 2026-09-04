@@ -102,6 +102,20 @@
 .challenge-msg.ok { color: #0b6e4f; }
 .challenge-msg.warn { color: #b45309; }
 
+.lab-confirm-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid #c5e6d8;
+  border-radius: 8px;
+  background: #f0f7f4;
+}
+
+.lab-confirm-banner p {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  color: #12263a;
+}
+
 .learn-context-label strong {
   color: #12263a;
 }

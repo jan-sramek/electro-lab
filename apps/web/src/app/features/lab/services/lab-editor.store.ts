@@ -1100,9 +1100,6 @@ export class LabEditorStore {
 
   newSchematic(): void {
     if (this.learnChallengeMode()) return;
-    if (typeof window !== 'undefined' && !window.confirm('Clear the current schematic?')) {
-      return;
-    }
     this.commit(() => emptyDocument());
     this.selectedIds.set([]);
     this.selectedWireIds.set([]);

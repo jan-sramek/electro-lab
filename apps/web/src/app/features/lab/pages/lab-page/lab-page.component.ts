@@ -59,6 +59,8 @@ export class LabPageComponent implements OnInit, OnDestroy {
   readonly challengeMessage = signal<string | null>(null);
   /** Inline confirm for Peek / Clear — avoids bare window.confirm. */
   readonly challengeConfirm = signal<'peek' | 'clear' | null>(null);
+  /** Inline confirm for toolbar New schematic. */
+  readonly newSchematicConfirm = signal(false);
   readonly learnUnitPath = learnUnitPath;
 
   readonly challengeCriteria = computed(() => {
@@ -499,6 +501,20 @@ export class LabPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  requestNewSchematic(): void {
+    if (this.editor.learnChallengeMode()) return;
+    this.newSchematicConfirm.set(true);
+  }
+
+  cancelNewSchematic(): void {
+    this.newSchematicConfirm.set(false);
+  }
+
+  confirmNewSchematic(): void {
+    this.newSchematicConfirm.set(false);
+    this.editor.newSchematic();
+  }
+
   learnChallengePath(): string[] | null {
     const unit = this.learnChallengeUnit();
     if (!unit) return null;
@@ -560,6 +576,14 @@ export class LabPageComponent implements OnInit, OnDestroy {
         this.editor.deleteSelected();
       }
     } else if (ev.key === 'Escape') {
+      if (this.challengeConfirm()) {
+        this.cancelChallengeConfirm();
+        return;
+      }
+      if (this.newSchematicConfirm()) {
+        this.cancelNewSchematic();
+        return;
+      }
       this.editor.escape();
     }
   }

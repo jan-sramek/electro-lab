@@ -43,8 +43,10 @@ Phase B FRs: [requirements-learn-mvp.md](requirements-learn-mvp.md) only.
 | G1 | Passed |
 | G2 | Passed |
 | G3 | Passed (Learn Phase B catalog shipped) |
-| Phase B code | Catalog, routes, prerender shipped — polish ongoing |
+| Phase B code | Catalog, routes, prerender shipped — **polish wave ongoing** (challenge integrity, UX, diagnostics, CI) |
+| G4 | **Next design gate** — Account FR + auth/progress ADRs before build |
 
+Phase B polish does **not** reopen Lab device scope ([ADR-001](adr/001-lab-v1-freeze.md)). Account implementation waits for G4 exit.
 ---
 
 ## After each phase ships
