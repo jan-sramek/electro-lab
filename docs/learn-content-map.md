@@ -26,6 +26,8 @@ Product principle ([vision.md](vision.md), NFR-11): Learn should feel closer to 
 
 **MVP:** tone + session length + checkmarks. **Later:** quizzes, soft rewards, optional streaks once Account/progress exist.
 
+**Module-recap quizzes** listed as “Quiz X (later)” below stay deferred until a dedicated content slice — per-unit formative quizzes already ship with assessment. Do not invent thin recap quizzes just to clear the “(later)” label.
+
 ## Three horizons
 
 | Horizon | Meaning |

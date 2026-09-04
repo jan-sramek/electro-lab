@@ -231,6 +231,7 @@ function quizKeys(
   return { ...pack(1, q1), ...pack(2, q2), ...pack(3, q3) };
 }
 
+/** Legacy c1/c2 labels for thin seeder fallbacks — Lab checklist prefers learn.challenge.check.*. */
 function challengeKeys(prefix: string, c1: string, c2: string) {
   return {
     [`${prefix}.challenge.c1.label`]: c1,
@@ -1235,7 +1236,11 @@ function motorFlybackAssessment() {
       ["On a low-side motor switch, cathode faces…", "Ground only", "Toward +V (across the motor)", "The gate resistor", "Standard freewheel orientation."],
       ["Omitting the diode when switching a motor…", "Is always fine", "Speeds PWM forever", "Risks killing the transistor", "Spike energy has nowhere safe to go."]
     ),
-    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+    ...challengeKeys(
+      p,
+      'Include a flyback diode across the motor (cathode toward +V on a low-side switch).',
+      'Close the gate switch and run DC so the motor conducts.'
+    )
   };
 }
 
@@ -1483,7 +1488,11 @@ function coilProtectAssessment() {
       ["Diode across a DC coil: cathode faces…", "The positive coil supply", "Always ground only", "The LED anode only", "Reverse-biased when coil is energized."],
       ["Skipping the diode when switching a coil…", "Is always fine", "Risks killing the transistor/driver", "Speeds I²C", "Spike energy needs a path."]
     ),
-    ...challengeKeys(p, "Simulation completes without errors.", "Circuit has no structural errors.")
+    ...challengeKeys(
+      p,
+      'Place a flyback diode across the relay coil (cathode toward coil+).',
+      'Close the coil switch so the load LED conducts.'
+    )
   };
 }
 
