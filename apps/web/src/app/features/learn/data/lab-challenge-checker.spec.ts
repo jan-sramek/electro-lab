@@ -577,32 +577,26 @@ describe('lab-challenge-checker', () => {
     ).toBeTrue();
   });
 
-  it('adc-reference fails when midtap is outside the tight band but divider still passes', () => {
-    const doc = createVoltageDividerPreset();
-    // Equal divider mid is ~2.5 V; put mid net at 2.0 V (outside 2.4–2.6, inside 2.0–3.0).
-    const midNet =
-      doc.components.find((c) => c.id === 'R1')?.pins['b']?.net ??
-      doc.components.find((c) => c.modelKey === 'resistor')?.pins['b']?.net;
-    expect(midNet).toBeTruthy();
-    const result = {
-      schemaVersion: 1,
-      ok: true,
-      analysisType: 'dcOp' as const,
-      errors: [] as string[],
-      warnings: [] as string[],
-      dcOp: { nodeVoltages: { [midNet!]: 2.0 }, branchCurrents: {} }
-    };
-    const divider = specCriteriaForCheck('voltageDivider', [], 'voltage-divider');
-    const reference = specCriteriaForCheck('voltageDivider', [], 'adc-reference');
-    const divResults = checkLabCriteria(divider, { doc, result, analysisMode: 'dcOp' });
-    const refResults = checkLabCriteria(reference, { doc, result, analysisMode: 'dcOp' });
-    const divBandPass = divResults.find(
-      (r) => divider.find((c) => c.id === r.criterionId)?.type === 'any_pin_dc_voltage_between'
-    );
-    const refBandPass = refResults.find(
-      (r) => reference.find((c) => c.id === r.criterionId)?.type === 'any_pin_dc_voltage_between'
-    );
-    expect(divBandPass?.passed).toBeTrue();
-    expect(refBandPass?.passed).toBeFalse();
+  it('led-burn-limit fails when LED current is above the safe max', () => {
+    const doc = createLedPreset();
+    const criteria = specCriteriaForCheck('led', [], 'led-burn-limit');
+    const results = checkLabCriteria(criteria, {
+      doc,
+      result: {
+        schemaVersion: 1,
+        ok: true,
+        analysisType: 'dcOp',
+        errors: [],
+        warnings: [],
+        dcOp: { nodeVoltages: {}, branchCurrents: { D1: 0.05 } }
+      },
+      analysisMode: 'dcOp'
+    });
+    expect(
+      results.some(
+        (r) =>
+          !r.passed && criteria.find((c) => c.id === r.criterionId)?.type === 'any_model_current_max'
+      )
+    ).toBeTrue();
   });
 });

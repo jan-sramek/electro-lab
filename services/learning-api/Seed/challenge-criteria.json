@@ -107,9 +107,27 @@
       },
       {
         "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":4}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
         "type": "any_model_current_min",
         "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
         "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"led\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
       }
     ]
   },

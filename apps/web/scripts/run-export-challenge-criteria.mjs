@@ -17,15 +17,15 @@ const outJson = resolve(webRoot, '../../services/learning-api/Seed/challenge-cri
 const build = spawnSync(
   process.platform === 'win32' ? 'npx.cmd' : 'npx',
   ['--yes', 'esbuild', entry, '--bundle', '--platform=node', '--format=cjs', `--outfile=${bundle}`],
-  { cwd: webRoot, encoding: 'utf8' }
+  { cwd: webRoot, encoding: 'utf8', shell: process.platform === 'win32' }
 );
-if (build.status !== 0) {
+if ((build.status ?? 1) !== 0) {
   process.stderr.write(build.stderr || build.stdout || 'esbuild failed\n');
   process.exit(build.status ?? 1);
 }
 
 const run = spawnSync(process.execPath, [bundle], { cwd: webRoot, encoding: 'utf8' });
-if (run.status !== 0) {
+if ((run.status ?? 1) !== 0) {
   process.stderr.write(run.stderr || run.stdout || 'export failed\n');
   process.exit(run.status ?? 1);
 }

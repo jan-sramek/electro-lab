@@ -1170,7 +1170,15 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     }
   ],
   // Shared-preset clusters — soft-unique so sibling titles mean different pass conditions.
-  'led-series': cloneSpecCriteria('led'),
+  'led-series': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 1 }) },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 4 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'led' }) }
+  ],
   'rc-charge': cloneSpecCriteria('rc'),
   'nmos-switch': cloneSpecCriteria('nmos'),
   'pot-divider': [
