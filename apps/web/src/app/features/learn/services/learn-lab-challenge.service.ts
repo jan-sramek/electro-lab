@@ -11,6 +11,8 @@ import {
 import { LearnCatalogService } from './learn-catalog.service';
 import { LearnProgressService } from './learn-progress.service';
 
+export type ChallengeSubmitOutcome = 'failed' | 'passed' | 'verify_unavailable';
+
 @Injectable({ providedIn: 'root' })
 export class LearnLabChallengeService {
   private readonly catalog = inject(LearnCatalogService);
@@ -31,9 +33,9 @@ export class LearnLabChallengeService {
     unitSlug: string,
     apiCriteria: LearnLabCriterionDto[],
     specResults: CriterionCheckResult[]
-  ): Promise<boolean> {
+  ): Promise<ChallengeSubmitOutcome> {
     if (!allCriteriaPassed(specResults)) {
-      return false;
+      return 'failed';
     }
     const apiResults = apiCriteria.map((c) => ({ criterionId: c.id, passed: true }));
     try {
@@ -44,9 +46,10 @@ export class LearnLabChallengeService {
       );
       this.progress.applyProgress(response.progress);
       void this.catalog.reloadCatalog();
-      return response.passed;
+      return response.passed ? 'passed' : 'failed';
     } catch {
-      return false;
+      // Local criteria already passed — don't present API outage as a failed circuit.
+      return 'verify_unavailable';
     }
   }
 }

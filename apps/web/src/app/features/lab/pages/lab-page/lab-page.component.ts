@@ -438,14 +438,20 @@ export class LabPageComponent implements OnInit, OnDestroy {
     });
     this.challengeResults.set(results);
 
-    const passed = await this.learnChallenge.submitResults(
+    const outcome = await this.learnChallenge.submitResults(
       unit.moduleSlug,
       unit.unitSlug,
       unit.labChallenge.criteria,
       results
     );
-    this.challengePassed.set(passed);
-    this.challengeMessage.set(passed ? 'lab.challenge.passed' : 'lab.challenge.failed');
+    this.challengePassed.set(outcome === 'passed' || outcome === 'verify_unavailable');
+    this.challengeMessage.set(
+      outcome === 'passed'
+        ? 'lab.challenge.passed'
+        : outcome === 'verify_unavailable'
+          ? 'lab.challenge.verifyUnavailable'
+          : 'lab.challenge.failed'
+    );
   }
 
   /** Load the unit's teaching sample into the challenge tab as a rebuild reference. */

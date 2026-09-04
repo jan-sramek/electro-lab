@@ -28,5 +28,22 @@ describe('InspectorPanelComponent', () => {
     expect(sel?.count).toBe(1);
     expect(sel?.primary.id).toBe(wireId);
     expect(sel?.endpoints[0]?.a).toContain('.');
+    expect(sel?.endpoints[0]?.aId).toBeTruthy();
+  });
+
+  it('emits selectPart when a wire endpoint is clicked', () => {
+    const doc = createLedPreset();
+    const wire = doc.wires[0]!;
+    fixture.componentRef.setInput('doc', doc);
+    fixture.componentRef.setInput('selectedWireIds', [wire.id]);
+    fixture.componentRef.setInput('selected', null);
+    fixture.componentRef.setInput('selectionCount', 0);
+    fixture.detectChanges();
+    const spy = jasmine.createSpy('selectPart');
+    component.selectPart.subscribe(spy);
+    const btn = fixture.nativeElement.querySelector('button.end-link') as HTMLButtonElement;
+    expect(btn).toBeTruthy();
+    btn.click();
+    expect(spy).toHaveBeenCalledWith(wire.a.componentId);
   });
 });

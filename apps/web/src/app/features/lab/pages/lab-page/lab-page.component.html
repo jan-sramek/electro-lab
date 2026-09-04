@@ -29,7 +29,13 @@
           </button>
           <p class="challenge-peek-hint">{{ 'lab.challenge.peekHint' | t }}</p>
           @if (challengeMessage(); as msg) {
-            <p class="challenge-msg" [class.ok]="challengePassed()">{{ msg | t }}</p>
+            <p
+              class="challenge-msg"
+              [class.ok]="msg === 'lab.challenge.passed'"
+              [class.warn]="msg === 'lab.challenge.verifyUnavailable'"
+            >
+              {{ msg | t }}
+            </p>
           }
           @if (challengePassed() && learnChallengePath(); as path) {
             <a class="learn-context-back" [routerLink]="path">{{ 'lab.challenge.backToUnit' | t }}</a>

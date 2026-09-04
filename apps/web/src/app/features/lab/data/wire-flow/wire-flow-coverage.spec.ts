@@ -28,6 +28,8 @@ import { createFuseProtectPreset } from '../presets/fuse-protect.preset';
 import { createPullUpDownPreset } from '../presets/pull-up-down.preset';
 import { createPwmFilterPreset } from '../presets/pwm-filter.preset';
 import { createDebouncePreset } from '../presets/debounce.preset';
+import { createRipplePreset } from '../presets/ripple.preset';
+import { createBjtSwitchPreset } from '../presets/bjt-switch.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -591,6 +593,42 @@ describe('wire flow coverage on presets', () => {
       return null;
     });
     for (const id of ['W1', 'W8', 'W9', 'W10', 'W14', 'W15']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('Ripple filter — AC→diode→C/R animates while charging', () => {
+    const doc = createRipplePreset();
+    const Iac = 0.03;
+    const Ic = 0.02;
+    const Ir = 0.01;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'AC1' || id === 'D1') return Iac;
+      if (id === 'C1') return Ic;
+      if (id === 'R1') return Ir;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('BJT switch on — collector LED path animates; base may be small', () => {
+    const doc = createBjtSwitchPreset();
+    const Ic = 0.012;
+    const Ib = 0.0008;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S1') return Ib;
+      if (id === 'RB') return Ib;
+      if (id === 'Q1') return Ic;
+      if (id === 'RC' || id === 'D1') return Ic;
+      if (id === 'VB') return Ic + Ib;
+      return null;
+    });
+    for (const id of ['W1', 'W8', 'W9', 'W10', 'W11']) {
+      if (!doc.wires.some((w) => w.id === id)) continue;
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);

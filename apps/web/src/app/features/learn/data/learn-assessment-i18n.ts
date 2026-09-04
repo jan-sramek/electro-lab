@@ -29,6 +29,8 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'lab.challenge.peekSample': 'Peek sample',
   'lab.challenge.peekHint': 'Loads the teaching sample here as a reference — you can still edit and check.',
   'lab.challenge.passed': 'Challenge passed — return to Learn to continue.',
+  'lab.challenge.verifyUnavailable':
+    'Circuit looks good locally, but progress could not be saved — check your connection and try again.',
   'lab.challenge.failed': 'Not yet — adjust the circuit or run again, then check once more.',
   'lab.challenge.backToUnit': 'Back to unit',
 

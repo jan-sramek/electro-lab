@@ -80,6 +80,7 @@
 
 .challenge-msg { margin: 0.5rem 0 0; font-size: 0.9rem; }
 .challenge-msg.ok { color: #0b6e4f; }
+.challenge-msg.warn { color: #b45309; }
 
 .learn-context-label strong {
   color: #12263a;

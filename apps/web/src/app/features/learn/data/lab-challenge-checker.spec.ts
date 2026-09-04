@@ -369,4 +369,26 @@ describe('lab-challenge-checker', () => {
     );
     expect(results[0].passed).toBeTrue();
   });
+
+  it('treats diagnostic warnings as non-blocking for no_circuit_errors', () => {
+    const doc = createRcStepPreset();
+    const results = checkLabCriteria(
+      [{ id: 1, order: 1, labelKey: 'x', type: 'no_circuit_errors', paramsJson: '{}' }],
+      { doc, result: null, analysisMode: 'dcOp' }
+    );
+    expect(results[0].passed).toBeTrue();
+  });
+
+  it('fails no_circuit_errors on a real wiring error', () => {
+    const doc = createLedPreset();
+    const broken = {
+      ...doc,
+      wires: doc.wires.filter((w) => w.id !== 'W1')
+    };
+    const results = checkLabCriteria(
+      [{ id: 1, order: 1, labelKey: 'x', type: 'no_circuit_errors', paramsJson: '{}' }],
+      { doc: broken, result: null, analysisMode: 'dcOp' }
+    );
+    expect(results[0].passed).toBeFalse();
+  });
 });
