@@ -328,6 +328,19 @@ describe('Lab preset contracts', () => {
     }
   });
 
+  it('AC filter sample layouts avoid long rail collisions', () => {
+    const presets = [
+      ['ac', createAcRcPreset()],
+      ['rcLowPass', createRcLowPassPreset()],
+      ['rcHighPass', createRcHighPassPreset()],
+      ['measureAc', createMeasureAcPreset()]
+    ] as const;
+    for (const [name, doc] of presets) {
+      const hits = overlappingHorizontalRails([doc]);
+      expect(hits).withContext(`${name}: ${hits.join('; ')}`).toEqual([]);
+    }
+  });
+
   it('all example presets compile and diagnose without errors in default mode', () => {
     const presets: [string, SchematicDocument, 'dcOp' | 'tran' | 'ac'][] = [
       ['led', createLedPreset(), 'dcOp'],
