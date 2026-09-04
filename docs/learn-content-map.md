@@ -45,13 +45,13 @@ A topic can be in the **target path** with Lab = `gap` and Learn = `later`. That
 | **Path** | Always (design) | Ordered modules → units |
 | **Project** | MVP+ | Hands-on unit with Lab deep-link when available |
 | **Steps** | MVP+ | Checklist inside a project |
-| **Concept notes** | Soon | Short “before you Run” explainers (still i18n) |
-| **Quiz** | Later | Formative checks after a unit/module |
-| **Challenge** | Later | Slightly open task (change a value, fix a fault) |
-| **Progress** | Local MVP / server later | Checkmarks → then account-backed |
-| **Certificate / path complete** | Optional later | Only after progress + quizzes exist |
+| **Concept notes** | MVP+ | Lesson blocks (“before you Run”) via i18n |
+| **Quiz** | MVP+ | Formative checks after reading |
+| **Challenge** | MVP+ | Lab criteria against the unit’s teaching preset |
+| **Progress** | Local MVP / server later | Session progress in LearningApi; Account later |
+| **Certificate / path complete** | Optional later | Only after Account-backed progress |
 
-MVP implements Path (light) + Project + Steps. Quizzes and challenges are **designed here**, built in a later phase.
+MVP ships Path + Project + Lessons + Quiz + Lab challenge. Account-backed progress and certificates remain later.
 
 ---
 

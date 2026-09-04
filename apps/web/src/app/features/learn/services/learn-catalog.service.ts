@@ -9,8 +9,8 @@ import {
   LearnUnitSummaryDto,
   UnitAvailability
 } from '../api/learning-api.types';
-import { LEARN_MODULES, LEARN_UNITS } from '../data/learn-catalog';
-import { findLearnUnit } from '../data/learn-catalog';
+import { LEARN_MODULES, LEARN_UNITS, findLearnUnit } from '../data/learn-catalog';
+import { specCriteriaForCheck } from '../data/learn-challenge-spec';
 
 /** Builds offline catalog DTOs mirroring the LearningApi seeder shape. */
 @Injectable({ providedIn: 'root' })
@@ -176,16 +176,21 @@ export class LearnCatalogService {
         }))
       },
       labChallenge: {
-        criteria: [
-          { id: 1, order: 1, labelKey: `${prefix}.challenge.c1.label`, type: 'sim_ok', paramsJson: '{}' },
-          {
-            id: 2,
-            order: 2,
-            labelKey: `${prefix}.challenge.c2.label`,
-            type: 'branch_current_min',
-            paramsJson: JSON.stringify({ refId: 'D1', minAmps: 0.001 })
-          }
-        ]
+        // Prefer client SPECS/overlays so offline challenge checks match Lab (not a thin D1 stub).
+        criteria: (() => {
+          const fromSpec = specCriteriaForCheck(unit.exampleId, [], unit.unitSlug);
+          if (fromSpec.length) return fromSpec;
+          return [
+            { id: 1, order: 1, labelKey: `${prefix}.challenge.c1.label`, type: 'sim_ok', paramsJson: '{}' },
+            {
+              id: 2,
+              order: 2,
+              labelKey: `${prefix}.challenge.c2.label`,
+              type: 'branch_current_min',
+              paramsJson: JSON.stringify({ refId: 'D1', minAmps: 0.001 })
+            }
+          ];
+        })()
       },
       progress: {
         moduleSlug,
