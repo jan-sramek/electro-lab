@@ -55,6 +55,7 @@ export class LabPageComponent implements OnInit, OnDestroy {
   readonly learnChallengeUnit = signal<LearnUnitDetailResponse | null>(null);
   readonly challengeResults = signal<CriterionCheckResult[]>([]);
   readonly challengePassed = signal(false);
+  readonly challengeChecking = signal(false);
   readonly challengeMessage = signal<string | null>(null);
   readonly learnUnitPath = learnUnitPath;
 
@@ -425,39 +426,48 @@ export class LabPageComponent implements OnInit, OnDestroy {
 
   async checkLearnChallenge(): Promise<void> {
     const unit = this.learnChallengeUnit();
-    if (!unit) return;
+    if (!unit || this.challengeChecking()) return;
 
-    // Always re-run so criteria see a fresh result (avoids racing the auto-run debounce).
-    await this.sim.runAndWait();
+    this.challengeChecking.set(true);
+    try {
+      // Always re-run so criteria see a fresh result (avoids racing the auto-run debounce).
+      await this.sim.runAndWait();
 
-    const criteria = this.challengeCriteria();
-    const results = this.learnChallenge.evaluate(criteria, {
-      doc: this.editor.doc(),
-      result: this.sim.result(),
-      analysisMode: this.editor.analysisMode()
-    });
-    this.challengeResults.set(results);
+      const criteria = this.challengeCriteria();
+      const results = this.learnChallenge.evaluate(criteria, {
+        doc: this.editor.doc(),
+        result: this.sim.result(),
+        analysisMode: this.editor.analysisMode()
+      });
+      this.challengeResults.set(results);
 
-    const outcome = await this.learnChallenge.submitResults(
-      unit.moduleSlug,
-      unit.unitSlug,
-      unit.labChallenge.criteria,
-      results
-    );
-    this.challengePassed.set(outcome === 'passed' || outcome === 'verify_unavailable');
-    this.challengeMessage.set(
-      outcome === 'passed'
-        ? 'lab.challenge.passed'
-        : outcome === 'verify_unavailable'
-          ? 'lab.challenge.verifyUnavailable'
-          : 'lab.challenge.failed'
-    );
+      const outcome = await this.learnChallenge.submitResults(
+        unit.moduleSlug,
+        unit.unitSlug,
+        unit.labChallenge.criteria,
+        results
+      );
+      // Only treat server-confirmed pass as "done" — API outage is local-OK, not progress saved.
+      this.challengePassed.set(outcome === 'passed');
+      this.challengeMessage.set(
+        outcome === 'passed'
+          ? 'lab.challenge.passed'
+          : outcome === 'verify_unavailable'
+            ? 'lab.challenge.verifyUnavailable'
+            : 'lab.challenge.failed'
+      );
+    } finally {
+      this.challengeChecking.set(false);
+    }
   }
 
   /** Load the unit's teaching sample into the challenge tab as a rebuild reference. */
   peekChallengeSample(): void {
     const unit = this.learnChallengeUnit();
     if (!unit?.exampleId) return;
+    if (typeof window !== 'undefined' && !window.confirm(this.i18n.t('lab.challenge.peekConfirm'))) {
+      return;
+    }
     this.challengeResults.set([]);
     this.challengePassed.set(false);
     this.challengeMessage.set(null);
@@ -467,6 +477,9 @@ export class LabPageComponent implements OnInit, OnDestroy {
   /** Empty the challenge tab again without leaving challenge mode. */
   clearChallengeCanvas(): void {
     if (!this.editor.learnChallengeMode()) return;
+    if (typeof window !== 'undefined' && !window.confirm(this.i18n.t('lab.challenge.clearConfirm'))) {
+      return;
+    }
     this.challengeResults.set([]);
     this.challengePassed.set(false);
     this.challengeMessage.set(null);

@@ -36,6 +36,14 @@ import { createMotorDirectionPreset } from '../presets/motor-direction.preset';
 import { createEstopRelayPreset } from '../presets/estop-relay.preset';
 import { createRelayBjtPreset } from '../presets/relay-bjt.preset';
 import { createOpAmpNonInvPreset } from '../presets/opamp-noninv.preset';
+import { createArduinoLedPreset } from '../presets/arduino-led.preset';
+import { createBuzzerButtonPreset } from '../presets/buzzer-button.preset';
+import { createPushbuttonLedPreset } from '../presets/pushbutton-led.preset';
+import { createPulseRcPreset } from '../presets/pulse-rc.preset';
+import { createAcRcPreset } from '../presets/ac-rc.preset';
+import { createRcLowPassPreset } from '../presets/rc-low-pass.preset';
+import { createRcHighPassPreset } from '../presets/rc-high-pass.preset';
+import { createMeasureAcPreset } from '../presets/measure-ac.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -757,5 +765,92 @@ describe('wire flow coverage on presets', () => {
         .withContext(id)
         .toBeGreaterThan(1e-6);
     }
+  });
+
+  it('Arduino DIO HIGH — pin→R→LED path animates', () => {
+    const doc = createArduinoLedPreset();
+    const I = 0.015;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1') return null;
+      if (id === 'D2' || id === 'R1' || id === 'D1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Pushbutton LED (pressed) — series path animates', () => {
+    const doc = createPushbuttonLedPreset();
+    const I = 0.015;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1') return null;
+      if (id === 'V1' || id === 'BTN1' || id === 'R1' || id === 'D1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Buzzer button (pressed) — series path animates', () => {
+    const doc = createBuzzerButtonPreset();
+    const I = 0.02;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1') return null;
+      if (id === 'V1' || id === 'BTN1' || id === 'R1' || id === 'BZ1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('Pulse RC (charge) — source→R→C path animates', () => {
+    const doc = createPulseRcPreset();
+    const I = 0.002;
+    const missing = missingWires(doc, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VP1' || id === 'R1' || id === 'C1') return I;
+      return null;
+    });
+    expect(missing).withContext(missing.join(', ')).toEqual([]);
+  });
+
+  it('AC RC / low-pass / measure-AC — series R and shunt C animate; VM idle', () => {
+    for (const [name, doc] of [
+      ['ac', createAcRcPreset()],
+      ['rcLowPass', createRcLowPassPreset()],
+      ['measureAc', createMeasureAcPreset()]
+    ] as const) {
+      const I = 0.001;
+      const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+        if (id === 'GND1' || id.startsWith('J')) return null;
+        if (id === 'VM1') return 0;
+        if (id === 'AC1' || id === 'R1' || id === 'C1') return I;
+        return null;
+      });
+      for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']) {
+        expect(Math.abs(currents.get(id) ?? 0))
+          .withContext(`${name} ${id}`)
+          .toBeGreaterThan(1e-6);
+      }
+      expect(Math.abs(currents.get('W8') ?? 0))
+        .withContext(`${name} VM probe idle`)
+        .toBeLessThan(1e-6);
+    }
+  });
+
+  it('RC high-pass — series C and shunt R animate; VM idle', () => {
+    const doc = createRcHighPassPreset();
+    const I = 0.001;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VM1') return 0;
+      if (id === 'AC1' || id === 'C1' || id === 'R1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    expect(Math.abs(currents.get('W8') ?? 0))
+      .withContext('VM probe idle')
+      .toBeLessThan(1e-6);
   });
 });

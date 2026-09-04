@@ -21,7 +21,12 @@
               </li>
             }
           </ul>
-          <button type="button" class="challenge-btn" (click)="checkLearnChallenge()">
+          <button
+            type="button"
+            class="challenge-btn"
+            [disabled]="sim.busy() || challengeChecking()"
+            (click)="checkLearnChallenge()"
+          >
             {{ 'lab.challenge.check' | t }}
           </button>
           <button type="button" class="challenge-btn secondary" (click)="peekChallengeSample()">

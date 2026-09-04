@@ -59,7 +59,12 @@
   margin-top: 0.35rem;
 }
 
-.challenge-btn:hover { background: #095c42; }
+.challenge-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.challenge-btn:hover:not(:disabled) { background: #095c42; }
 
 .challenge-btn.secondary {
   background: transparent;
@@ -67,7 +72,7 @@
   border: 1px solid #0b6e4f;
 }
 
-.challenge-btn.secondary:hover {
+.challenge-btn.secondary:hover:not(:disabled) {
   background: #e8f5ef;
 }
 
