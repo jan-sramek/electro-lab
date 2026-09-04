@@ -37,7 +37,13 @@ export class LearnLabChallengeService {
     if (!allCriteriaPassed(specResults)) {
       return 'failed';
     }
-    const apiResults = apiCriteria.map((c) => ({ criterionId: c.id, passed: true }));
+    // When seeded API rows match SPECS length (post upsert), map by order.
+    // Older thin seeds: after SPECS pass, attest every seeded id so progress can save.
+    const aligned = apiCriteria.length === specResults.length;
+    const apiResults = apiCriteria.map((c, i) => ({
+      criterionId: c.id,
+      passed: aligned ? !!specResults[i]?.passed : true
+    }));
     try {
       const response = await firstValueFrom(
         this.api.verifyLab(moduleSlug, unitSlug, {

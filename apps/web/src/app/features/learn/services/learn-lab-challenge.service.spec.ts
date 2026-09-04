@@ -68,22 +68,34 @@ describe('LearnLabChallengeService.submitResults', () => {
     expect(progress.applyProgress).not.toHaveBeenCalled();
   });
 
-  it('returns failed when API responds with passed: false', async () => {
+  it('maps aligned SPECS results onto seeded API criterion ids by order', async () => {
+    const seeded: LearnLabCriterionDto[] = [
+      { id: 10, order: 1, labelKey: 'a', type: 'sim_ok', paramsJson: '{}' },
+      { id: 11, order: 2, labelKey: 'b', type: 'has_models', paramsJson: '{}' }
+    ];
+    const local: CriterionCheckResult[] = [
+      { criterionId: 1, passed: true },
+      { criterionId: 2, passed: true }
+    ];
     api.verifyLab.and.returnValue(
       of({
-        passed: false,
+        passed: true,
         progress: {
           moduleSlug: 'basics',
           unitSlug: 'led',
           readComplete: true,
           quizPassed: true,
-          labPassed: false,
-          complete: false
+          labPassed: true,
+          complete: true
         }
       })
     );
-    const outcome = await service.submitResults('basics', 'led', apiCriteria, passedLocal);
-    expect(outcome).toBe('failed');
-    expect(progress.applyProgress).toHaveBeenCalled();
+    await service.submitResults('basics', 'led', seeded, local);
+    expect(api.verifyLab).toHaveBeenCalledWith('basics', 'led', {
+      results: [
+        { criterionId: 10, passed: true },
+        { criterionId: 11, passed: true }
+      ]
+    });
   });
 });

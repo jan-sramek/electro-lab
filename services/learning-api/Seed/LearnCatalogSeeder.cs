@@ -262,22 +262,26 @@ public static class LearnCatalogSeeder
 
     private static LabCriterionDef[] LedLab(string prefix) =>
     [
+        // Fallback only when challenge-criteria.json is missing this unit.
         new($"{prefix}.challenge.c1.label", "sim_ok", new { }),
         new($"{prefix}.challenge.c2.label", "branch_current_min", new { refId = "D1", minAmps = 0.001 })
     ];
 
+    /** Fallback only — prefer challenge-criteria.json via ResolveCriteria. */
     private static LabCriterionDef[] SwitchLab(string prefix, string switchRef) =>
     [
         new($"{prefix}.challenge.c1.label", "sim_ok", new { }),
         new($"{prefix}.challenge.c2.label", "switch_state", new { refId = switchRef, closed = true })
     ];
 
+    /** Fallback only — prefer challenge-criteria.json via ResolveCriteria. */
     private static LabCriterionDef[] TranLab(string prefix) =>
     [
         new($"{prefix}.challenge.c1.label", "sim_ok", new { }),
         new($"{prefix}.challenge.c2.label", "analysis_mode", new { mode = "tran" })
     ];
 
+    /** Fallback only — prefer challenge-criteria.json via ResolveCriteria. */
     private static LabCriterionDef[] DcSimOk(string prefix) =>
     [
         new($"{prefix}.challenge.c1.label", "sim_ok", new { }),

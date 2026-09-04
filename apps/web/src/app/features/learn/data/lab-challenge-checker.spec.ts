@@ -6,6 +6,7 @@ import { createPotDividerPreset } from '../../lab/data/presets/pot-divider.prese
 import { createVoltageDividerPreset } from '../../lab/data/presets/voltage-divider.preset';
 import { createRcStepPreset } from '../../lab/data/presets/rc-step.preset';
 import { createSeriesLedsPreset } from '../../lab/data/presets/series-leds.preset';
+import { createMotorNmosPreset } from '../../lab/data/presets/motor-nmos.preset';
 import { checkLabCriteria, modelKeyMatches } from './lab-challenge-checker';
 import { specCriteriaForCheck } from './learn-challenge-spec';
 
@@ -460,5 +461,45 @@ describe('lab-challenge-checker', () => {
       { doc, result: null, analysisMode: 'dcOp' }
     );
     expect(results[0].passed).toBeFalse();
+  });
+
+  it('motor-flyback fails when the diode is removed from the sample', () => {
+    const full = createMotorNmosPreset();
+    const stripped = {
+      ...full,
+      components: full.components.filter((c) => c.modelKey !== 'diode'),
+      wires: full.wires.filter(
+        (w) =>
+          w.a.componentId !== 'Dfly' &&
+          w.b.componentId !== 'Dfly'
+      )
+    };
+    const criteria = specCriteriaForCheck('motor', [], 'motor-flyback');
+    const results = checkLabCriteria(criteria, {
+      doc: stripped,
+      result: {
+        schemaVersion: 1,
+        ok: true,
+        analysisType: 'dcOp',
+        errors: [],
+        warnings: [],
+        dcOp: { nodeVoltages: {}, branchCurrents: { MOT1: 0.2, S1: 0.01 } }
+      },
+      analysisMode: 'dcOp'
+    });
+    const failedTypes = results
+      .filter((r) => !r.passed)
+      .map((r) => criteria.find((c) => c.id === r.criterionId)?.type);
+    expect(failedTypes.some((t) => t === 'has_models' || t === 'any_model_min_count')).toBeTrue();
+  });
+
+  it('adc-reference uses a tighter midtap band than voltage-divider', () => {
+    const divider = specCriteriaForCheck('voltageDivider', [], 'voltage-divider');
+    const reference = specCriteriaForCheck('voltageDivider', [], 'adc-reference');
+    const divBand = divider.find((c) => c.type === 'any_pin_dc_voltage_between')!;
+    const refBand = reference.find((c) => c.type === 'any_pin_dc_voltage_between')!;
+    const div = JSON.parse(divBand.paramsJson) as { minVolts: number; maxVolts: number };
+    const ref = JSON.parse(refBand.paramsJson) as { minVolts: number; maxVolts: number };
+    expect(ref.maxVolts - ref.minVolts).toBeLessThan(div.maxVolts - div.minVolts);
   });
 });
