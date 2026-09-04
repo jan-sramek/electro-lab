@@ -57,7 +57,8 @@ import { createRelayBjtPreset } from '../../lab/data/presets/relay-bjt.preset';
 import { createEstopRelayPreset } from '../../lab/data/presets/estop-relay.preset';
 import { createIndustrial24vPreset } from '../../lab/data/presets/industrial-24v.preset';
 import { EXAMPLE_PRESET_IDS, ExamplePresetId } from '../../lab/services/lab-editor.store';
-import { checkLabCriteria } from './lab-challenge-checker';
+import { SimulateResponse } from '../../lab/api/circuit-api.types';
+import { checkLabCriteria, allCriteriaPassed } from './lab-challenge-checker';
 import { getLearnChallengeSpec } from './learn-challenge-spec';
 
 const PRESET_DOCS: Record<ExamplePresetId, () => SchematicDocument> = {
@@ -120,6 +121,119 @@ const PRESET_DOCS: Record<ExamplePresetId, () => SchematicDocument> = {
   industrial24v: createIndustrial24vPreset
 };
 
+/** Build a synthetic sim result that satisfies measurement criteria for the sample doc. */
+function mockPassingResult(
+  doc: SchematicDocument,
+  analysisMode: string,
+  criteria: { type: string; paramsJson: string }[]
+): SimulateResponse {
+  const nets = new Set<string>();
+  for (const c of doc.components) {
+    for (const p of Object.values(c.pins)) {
+      if (p?.net && p.net !== doc.groundNet) nets.add(p.net);
+    }
+  }
+
+  const nodeVoltages: Record<string, number> = {};
+  for (const n of nets) nodeVoltages[n] = 2.5;
+  const branchCurrents: Record<string, number> = {};
+  for (const c of doc.components) {
+    if (c.modelKey === 'ground' || c.modelKey === 'junction' || c.modelKey === 'voltmeter') continue;
+    branchCurrents[c.id] = 0.2;
+  }
+
+  const pinNet = (modelKey: string, pin: string): string | undefined => {
+    const c = doc.components.find(
+      (x) => x.modelKey === modelKey || x.modelKey.includes(modelKey.replace('bjt_npn', 'bc547'))
+    );
+    // Prefer exact then loose match via SYMBOL-free id scan
+    const match =
+      doc.components.find((x) => x.modelKey === modelKey) ??
+      doc.components.find((x) => x.modelKey === 'bc547' && modelKey === 'bjt_npn') ??
+      doc.components.find((x) => x.modelKey === 'potentiometer' && modelKey === 'potentiometer');
+    return (match ?? c)?.pins[pin]?.net;
+  };
+
+  for (const crit of criteria) {
+    let params: Record<string, unknown> = {};
+    try {
+      params = JSON.parse(crit.paramsJson) as Record<string, unknown>;
+    } catch {
+      params = {};
+    }
+    if (
+      crit.type === 'any_pin_dc_voltage_between' ||
+      crit.type === 'any_pin_tran_peak_min' ||
+      crit.type === 'any_pin_tran_peak_to_peak_min' ||
+      crit.type === 'any_pin_ac_mag_between'
+    ) {
+      const modelKey = String(params['modelKey'] ?? '');
+      const pin = String(params['pin'] ?? '');
+      const net = pinNet(modelKey, pin);
+      if (!net || net === doc.groundNet) continue;
+      if (crit.type === 'any_pin_dc_voltage_between') {
+        const minV = Number(params['minVolts'] ?? 0);
+        const maxV = Number(params['maxVolts'] ?? 0);
+        nodeVoltages[net] = (minV + maxV) / 2;
+      }
+    }
+    if (crit.type === 'any_model_current_min' || crit.type === 'any_model_tran_current_peak_min') {
+      const modelKey = String(params['modelKey'] ?? '');
+      const minAmps = Number(params['minAmps'] ?? 0);
+      for (const c of doc.components) {
+        if (c.modelKey === modelKey || (modelKey === 'bjt_npn' && c.modelKey === 'bc547')) {
+          branchCurrents[c.id] = Math.max(branchCurrents[c.id] ?? 0, minAmps * 2, 0.05);
+        }
+      }
+    }
+  }
+
+  // Caps: Va high relative to Vb for any_cap_voltage_final_min.
+  for (const c of doc.components) {
+    if (c.modelKey !== 'capacitor') continue;
+    const na = c.pins['a']?.net;
+    const nb = c.pins['b']?.net;
+    if (na && na !== doc.groundNet) nodeVoltages[na] = Math.max(nodeVoltages[na] ?? 0, 5);
+    if (nb && nb !== doc.groundNet) nodeVoltages[nb] = 0;
+  }
+
+  const tranNode = [...nets].map((id) => ({
+    id,
+    values: [nodeVoltages[id] ?? 0, Math.max(8, (nodeVoltages[id] ?? 0) + 3), (nodeVoltages[id] ?? 0) * 0.5]
+  }));
+  const tranBranch = Object.keys(branchCurrents).map((id) => ({
+    id,
+    values: [0.01, Math.max(0.25, branchCurrents[id] ?? 0)]
+  }));
+  const acNode: Record<string, { mag: number; phaseDeg: number }> = {};
+  for (const n of nets) acNode[n] = { mag: 0.7, phaseDeg: -45 };
+  for (const crit of criteria) {
+    if (crit.type !== 'any_pin_ac_mag_between') continue;
+    let params: Record<string, unknown> = {};
+    try {
+      params = JSON.parse(crit.paramsJson) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    const net = pinNet(String(params['modelKey'] ?? ''), String(params['pin'] ?? ''));
+    if (!net || net === doc.groundNet) continue;
+    const minMag = Number(params['minMag'] ?? 0);
+    const maxMag = Number(params['maxMag'] ?? minMag + 1);
+    acNode[net] = { mag: (minMag + Math.min(maxMag, minMag + 1)) / 2, phaseDeg: -45 };
+  }
+
+  return {
+    schemaVersion: 1,
+    ok: true,
+    analysisType: analysisMode,
+    errors: [],
+    warnings: [],
+    dcOp: { nodeVoltages, branchCurrents },
+    tran: { time: [0, 0.01, 0.02], nodeVoltages: tranNode, branchCurrents: tranBranch },
+    ac: { points: [{ frequency: 1000, nodeVoltages: acNode, branchCurrents: {} }] }
+  };
+}
+
 describe('Learn challenge preset contracts', () => {
   it('every example preset has a challenge spec', () => {
     for (const id of EXAMPLE_PRESET_IDS) {
@@ -146,6 +260,44 @@ describe('Learn challenge preset contracts', () => {
       );
       expect(results.every((r) => r.passed))
         .withContext(`${id}: has_models failed on sample preset`)
+        .toBeTrue();
+    }
+  });
+
+  it('full SPECS pass on sample presets with a generous mock sim result', () => {
+    for (const id of EXAMPLE_PRESET_IDS) {
+      const spec = getLearnChallengeSpec(id)!;
+      let doc = PRESET_DOCS[id]();
+      // Momentary / switch goals need the sample in the "checked" teaching state.
+      doc = {
+        ...doc,
+        components: doc.components.map((c) => {
+          if (c.modelKey === 'pushbutton') {
+            return { ...c, params: { ...c.params, closed: true } };
+          }
+          return c;
+        })
+      };
+      const result = mockPassingResult(doc, spec.analysisMode, spec.criteria);
+      const criteria = spec.criteria.map((c, i) => ({
+        id: i + 1,
+        order: i + 1,
+        labelKey: `learn.challenge.check.${c.type}`,
+        type: c.type,
+        paramsJson: c.paramsJson
+      }));
+      const results = checkLabCriteria(criteria, {
+        doc,
+        result,
+        analysisMode: spec.analysisMode
+      });
+      expect(allCriteriaPassed(results))
+        .withContext(
+          `${id}: ${results
+            .filter((r) => !r.passed)
+            .map((r) => criteria.find((c) => c.id === r.criterionId)?.type)
+            .join(', ')}`
+        )
         .toBeTrue();
     }
   });

@@ -1,5 +1,5 @@
 import { SchematicDocument } from '../../lab/data/schematic.model';
-import { diagnoseSchematic } from '../../lab/data/circuit-diagnostics';
+import { diagnoseSchematic, diagnosticErrors } from '../../lab/data/circuit-diagnostics';
 import { SimulateResponse } from '../../lab/api/circuit-api.types';
 import { simModelOf } from '../../lab/data/symbol-library';
 import { extractEnergyState } from '../../lab/data/tran-continuation';
@@ -128,7 +128,10 @@ function checkCriterion(criterion: LearnLabCriterionDto, ctx: LabChallengeContex
     case 'sim_ok':
       return ctx.result?.ok === true;
     case 'no_circuit_errors':
-      return diagnoseSchematic(ctx.doc, ctx.analysisMode as 'dcOp' | 'tran' | 'ac').length === 0;
+      return (
+        diagnosticErrors(diagnoseSchematic(ctx.doc, ctx.analysisMode as 'dcOp' | 'tran' | 'ac'))
+          .length === 0
+      );
     case 'analysis_mode':
       return ctx.analysisMode === String(params['mode'] ?? '');
     case 'has_models': {
