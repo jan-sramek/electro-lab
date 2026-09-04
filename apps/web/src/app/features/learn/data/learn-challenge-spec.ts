@@ -442,6 +442,7 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
       },
       { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
       { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 6 }) },
       { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },

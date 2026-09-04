@@ -36,7 +36,7 @@ Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at chec
 | Type | Params |
 |------|--------|
 | `sim_ok` | — |
-| `no_circuit_errors` | — |
+| `no_circuit_errors` | — (only `severity: 'error'` diagnostics; warnings like `dc_rc_needs_tran` do not fail) |
 | `analysis_mode` | `mode`: `dcOp` \| `tran` \| `ac` |
 | `has_models` | `models`: string[] (palette or sim model keys) |
 | `min_wire_count` | `min` |
