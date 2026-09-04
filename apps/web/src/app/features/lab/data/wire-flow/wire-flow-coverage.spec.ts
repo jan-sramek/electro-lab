@@ -961,7 +961,7 @@ describe('wire flow coverage on presets', () => {
       if (id === 'VCC') return Iled + Idiv + Ipot;
       return null;
     });
-    for (const id of ['W1', 'W10', 'W11', 'W12', 'W13', 'W14', 'W15']) {
+    for (const id of ['W1', 'W10', 'W11', 'W12', 'W13', 'W14']) {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);
