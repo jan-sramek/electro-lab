@@ -10,8 +10,8 @@ Learners can **optionally** sign in so progress survives devices and browsers. A
 
 | Capability | Notes |
 |------------|--------|
-| Sign-in / sign-out | Provider chosen in ADR (see below); email magic-link or one OAuth is enough for v1 |
-| Profile shell | `/account` — display name optional, locale preference later |
+| Sign-in / sign-out | **Email magic link** (ADR-003); optional display name on profile |
+| Profile shell | `/account` — email, sign-out, link-session CTA |
 | Cloud progress | Read/write same unit phases as today (read → quiz → lab) under the user id |
 | Session merge | On first sign-in, offer to **link** existing `X-Learn-Session` progress into the account (one-time, explicit) |
 | Teacher-friendly links | Stable `/learn/{module}/{unit}` (already); optional “copy progress link” is later |
@@ -22,7 +22,7 @@ Learners can **optionally** sign in so progress survives devices and browsers. A
 - Classrooms, rosters, gradebooks
 - Forced login to open Lab or Learn
 - Server-side circuit simulation / anti-cheat beyond attestation
-- Minors-specific compliance productization (flag privacy decisions in G4 ADR notes)
+- Minors-specific compliance productization for G5 (see privacy)
 
 ## Progress model
 
@@ -39,29 +39,31 @@ Target (Phase C):
 
 | Method | Route | Purpose |
 |--------|-------|---------|
-| GET/POST | `/api/auth/*` | Provider-specific (not finalized) |
+| POST | `/api/auth/magic-link/request` | Send magic link to email |
+| GET | `/api/auth/magic-link/consume` | Exchange token → set HTTP-only session cookie |
+| POST | `/api/auth/sign-out` | Clear session |
 | GET | `/api/learning/me` | Profile + linked session info |
 | POST | `/api/learning/progress/link-session` | Merge `X-Learn-Session` → user |
-| Existing | `/api/learning/progress…` | Accept either session header **or** user auth |
+| Existing | `/api/learning/progress…` | Accept either session header **or** user cookie |
 
-Exact auth middleware belongs in the auth ADR update.
+## Privacy / data (G4)
 
-## Privacy / data (G4 decisions required)
-
-Document before build:
-
-- What PII we store (email, provider subject, display name)
-- Retention / delete account
-- Whether under-16 learners are in scope for v1
-- Analytics vs progress telemetry (keep separate)
+| Topic | Decision |
+|-------|----------|
+| PII stored | Email, auth subject id, optional display name, progress rows, timestamps |
+| Retention | Keep while account exists; **delete account** removes auth + progress |
+| Under-16 | **Out of scope for G5** — product is general adult/hobbyist; revisit before school pilots |
+| Analytics vs progress | Progress is product data; analytics stay separate/stub until a privacy review |
 
 ## Acceptance (G4 exit — design)
 
-- [ ] This FR doc reviewed
-- [ ] ADR-003 superseded or amended with chosen auth direction
-- [ ] ADR-004 superseded or amended for session + user progress
-- [ ] Privacy notes filled (even if “defer minors”)
-- [ ] Explicit non-goals list unchanged unless product decides otherwise
+- [x] This FR doc reviewed (design draft)
+- [x] ADR-003 amended with magic-link + cookie session
+- [x] ADR-004 amended for session + user progress
+- [x] Privacy notes filled (defer minors)
+- [x] Explicit non-goals list unchanged
+
+**G4 exit for build:** product owner confirms magic-link direction; then G5 may start.
 
 ## Acceptance (G5 exit — build)
 
