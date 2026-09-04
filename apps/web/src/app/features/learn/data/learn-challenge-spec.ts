@@ -946,6 +946,24 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'sim_ok', paramsJson: '{}' },
     { type: 'any_switch_closed', paramsJson: '{}' },
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+  ],
+  'fundamentals-loop': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 3 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+  ],
+  'bjt-vs-mos-compare': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    {
+      type: 'has_models',
+      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'led', 'resistor', 'switch', 'ground'] })
+    },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_switch_closed', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
+    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
   ]
 };
 

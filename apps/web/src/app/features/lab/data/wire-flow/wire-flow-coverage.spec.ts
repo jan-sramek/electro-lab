@@ -32,6 +32,7 @@ import { createRipplePreset } from '../presets/ripple.preset';
 import { createBjtSwitchPreset } from '../presets/bjt-switch.preset';
 import { createLdrNightLightPreset } from '../presets/ldr-nightlight.preset';
 import { createIndustrial24vPreset } from '../presets/industrial-24v.preset';
+import { createMotorDirectionPreset } from '../presets/motor-direction.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -671,6 +672,27 @@ describe('wire flow coverage on presets', () => {
       expect(Math.abs(currents.get(id) ?? 0))
         .withContext(id)
         .toBeGreaterThan(1e-6);
+    }
+  });
+
+  it('H-bridge reverse (S2+S3) — motor path animates; open diagonal idle', () => {
+    const doc = createMotorDirectionPreset();
+    const I = 0.2;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'S1' || id === 'S4') return 0;
+      if (id === 'V1' || id === 'S2' || id === 'S3' || id === 'MOT1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W5', 'W6', 'W7', 'W8', 'W11', 'W12', 'W13']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W3', 'W4', 'W9', 'W10']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} open diagonal`)
+        .toBeLessThan(1e-6);
     }
   });
 });
