@@ -259,12 +259,16 @@ export class CircuitSimulationFacade {
   private stickyClientWarnings: string[] = [];
 
   readonly highlightedIds = computed(() => {
-    const fromDiag = this.highlightComponentIds();
-    if (fromDiag.length) return fromDiag;
+    const ids = new Set<string>();
+    for (const id of this.highlightComponentIds()) ids.add(id);
     const msgs = [...(this.warnings() ?? []), ...(this.error() ? [this.error()!] : [])];
     const fromResult = this.result();
     if (fromResult?.errors?.length) msgs.push(...fromResult.errors);
-    return parseHighlightedIds(msgs);
+    for (const id of parseHighlightedIds(msgs)) ids.add(id);
+    const probe = this.editor.probeTarget();
+    if (probe?.id) ids.add(probe.id);
+    for (const id of this.editor.selectedIds()) ids.add(id);
+    return [...ids];
   });
 
   readonly highlightedNets = computed(() => this.highlightNetIds());

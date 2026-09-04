@@ -48,6 +48,8 @@ interface DragState {
   ids: string[];
   origins: Map<string, { x: number; y: number }>;
   pointer0: { x: number; y: number };
+  /** False until pointer moves past click-vs-drag threshold. */
+  moveArmed: boolean;
   /** Pushbutton hold — convert to move-drag after a small threshold. */
   pushHoldId?: string;
 }
@@ -448,7 +450,7 @@ export class SchematicCanvasComponent {
       this.pushbuttonPress.emit({ id: pushHoldId, pressed: true });
     }
 
-    this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y }, pushHoldId };
+    this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y }, moveArmed: false, pushHoldId };
     (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
   }
 
@@ -462,9 +464,16 @@ export class SchematicCanvasComponent {
     const rawDx = pt.x - this.drag.pointer0.x;
     const rawDy = pt.y - this.drag.pointer0.y;
 
-    if (this.drag.pushHoldId) {
-      // Stay pressed in place until the pointer clearly wants to move the part.
+    if (!this.drag.moveArmed) {
+      // Click selects without nudging the part; arm move after a small threshold.
       if (Math.hypot(rawDx, rawDy) < 10) return;
+      if (this.drag.pushHoldId) {
+        this.pushbuttonPress.emit({ id: this.drag.pushHoldId, pressed: false });
+        this.drag = { ...this.drag, pushHoldId: undefined, moveArmed: true };
+      } else {
+        this.drag = { ...this.drag, moveArmed: true };
+      }
+    } else if (this.drag.pushHoldId) {
       this.pushbuttonPress.emit({ id: this.drag.pushHoldId, pressed: false });
       this.drag = { ...this.drag, pushHoldId: undefined };
     }

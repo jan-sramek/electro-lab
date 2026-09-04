@@ -102,7 +102,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'switch', 'ground'] })
       },
       { type: 'sim_ok', paramsJson: '{}' },
-      { type: 'any_switch_closed', paramsJson: '{}' }
+      { type: 'any_switch_closed', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
     ]
   },
   ne555: {
@@ -290,7 +291,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
       { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'op_amp', 'resistor', 'ground'] }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: 1.7, maxVolts: 2.3 })
+      }
     ]
   },
   opampNonInv: {
@@ -299,7 +304,11 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
     criteria: [
       { type: 'no_circuit_errors', paramsJson: '{}' },
       { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'op_amp', 'resistor', 'ground'] }) },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      {
+        type: 'any_pin_dc_voltage_between',
+        paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: 4.5, maxVolts: 6.5 })
+      }
     ]
   },
   opampComparator: {
@@ -686,7 +695,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'switch', 'dc_motor', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
     ]
   },
   motorDirection: {
@@ -698,7 +708,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'switch', 'dc_motor', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
     ]
   },
   pullUpDown: {
@@ -710,7 +721,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
         type: 'has_models',
         paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'switch', 'led', 'ground'] })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   debounce: {
@@ -765,7 +777,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
           models: ['battery', 'bjt_npn', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground']
         })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   estopRelay: {
@@ -779,7 +792,8 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
           models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground']
         })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   },
   industrial24v: {
@@ -793,7 +807,9 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
           models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground']
         })
       },
-      { type: 'sim_ok', paramsJson: '{}' }
+      { type: 'sim_ok', paramsJson: '{}' },
+      { type: 'any_switch_closed', paramsJson: '{}' },
+      { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
     ]
   }
 };

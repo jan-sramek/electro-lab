@@ -30,13 +30,29 @@
   @if (info(); as i) {
     <p class="item info">
       <span class="kind">{{ 'lab.status.info' | t }}</span>
-      <span class="text">{{ i }}</span>
+      <span class="text">
+        @for (seg of segments(i); track $index) {
+          @if (seg.partId; as id) {
+            <button type="button" class="id-link" (click)="onSelectPart(id, $event)">{{ seg.text }}</button>
+          } @else {
+            <span>{{ seg.text }}</span>
+          }
+        }
+      </span>
     </p>
   }
   @if (probe(); as p) {
     <p class="item probe">
       <span class="kind">{{ 'lab.status.probe' | t }}</span>
-      <span class="text">{{ p }}</span>
+      <span class="text">
+        @for (seg of segments(p); track $index) {
+          @if (seg.partId; as id) {
+            <button type="button" class="id-link" (click)="onSelectPart(id, $event)">{{ seg.text }}</button>
+          } @else {
+            <span>{{ seg.text }}</span>
+          }
+        }
+      </span>
     </p>
   }
   @if (!error() && warnings().length === 0 && !info() && !probe()) {

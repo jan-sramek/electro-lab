@@ -31,19 +31,32 @@ Each Learn unit is a vertical lesson with server-backed structure and anonymous 
 
 ## Lab criterion types (client checker)
 
+Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at check time. Model keys match via `simModelOf` (e.g. `bc547` ↔ `bjt_npn`, `pushbutton` ↔ `switch`).
+
 | Type | Params |
 |------|--------|
 | `sim_ok` | — |
 | `no_circuit_errors` | — |
 | `analysis_mode` | `mode`: `dcOp` \| `tran` \| `ac` |
+| `has_models` | `models`: string[] (palette or sim model keys) |
+| `min_wire_count` | `min` |
+| `any_model_current_min` | `modelKey`, `minAmps` |
+| `any_model_current_max` | `modelKey`, `maxAmps` |
+| `any_cap_voltage_final_min` | `modelKey` (default `capacitor`), `minVolts` |
+| `any_switch_closed` | — (includes pushbutton via switch sim model) |
+| `any_pushbutton_pressed` | — |
+| `any_pin_dc_voltage_between` | `modelKey`, `pin`, `minVolts`, `maxVolts` |
+| `any_part_not_burned` | `modelKey` |
 | `branch_current_min` | `refId`, `minAmps` |
 | `branch_current_max` | `refId`, `maxAmps` |
 | `switch_state` | `refId`, `closed` |
 
+Per-unit overlays (when several units share one `exampleId`) live in `UNIT_CRITERIA` — e.g. `led-burn-limit`, `divider-design`.
+
 ## Acceptance
 
 - [x] Catalog + assessment structure in Postgres with EF migrations
-- [x] All 13 Phase B units seeded with lessons, quiz, lab criteria
+- [x] Learn units seeded with lessons, quiz, lab criteria (full catalog path; see `learn-catalog.ts`)
 - [x] Web unit player with phased UI
 - [x] Lab challenge panel when `?challenge=1`
 - [x] Offline fallback catalog when API unavailable (prerender / dev without DB)
