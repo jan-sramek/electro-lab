@@ -1,0 +1,3330 @@
+[
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "fundamentals-loop",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":3}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "ohm-explore",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.001}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_max",
+        "paramsJson": "{\"modelKey\":\"led\",\"maxAmps\":0.025}",
+        "labelKey": "learn.challenge.check.any_model_current_max"
+      },
+      {
+        "order": 6,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"led\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "led-series",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "diode-direction",
+    "exampleId": "diodeDirection",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"diode\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "series-parallel-intro",
+    "exampleId": "seriesParallel",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"led\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "series-leds",
+    "exampleId": "seriesLeds",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"led\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "led-burn-limit",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_max",
+        "paramsJson": "{\"modelKey\":\"led\",\"maxAmps\":0.025}",
+        "labelKey": "learn.challenge.check.any_model_current_max"
+      },
+      {
+        "order": 5,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"led\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "rc-charge",
+    "exampleId": "rc",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.5}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "time-constant-estimate",
+    "exampleId": "rc",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":2}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "led-fade",
+    "exampleId": "ledFade",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.5}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "pulse-rc",
+    "exampleId": "pulse",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"pulse_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.2}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "half-wave-rectifier",
+    "exampleId": "halfWave",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"diode\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 5,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_tran_peak_min",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"a\",\"minVolts\":5}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "bridge-rectifier",
+    "exampleId": "bridge",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"diode\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":4}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 5,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_tran_peak_min",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"a\",\"minVolts\":5}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "filter-capacitor",
+    "exampleId": "filterCap",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"diode\",\"capacitor\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.5}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_tran_peak_min",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"a\",\"minVolts\":4}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "zener-regulator",
+    "exampleId": "zener",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"zener\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"zener\",\"pin\":\"c\",\"minVolts\":4.5,\"maxVolts\":5.7}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "linear-7805",
+    "exampleId": "vreg7805",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"vreg_7805\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"vreg_7805\",\"pin\":\"out\",\"minVolts\":4.7,\"maxVolts\":5.3}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "reverse-polarity",
+    "exampleId": "reversePolarity",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"diode\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":4}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "fuse-protection",
+    "exampleId": "fuseProtect",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"fuse\",\"switch\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"fuse\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"minAmps\":0.01}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "ripple-measure",
+    "exampleId": "ripple",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"diode\",\"capacitor\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.5}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_tran_peak_to_peak_min",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"a\",\"minVolts\":0.3}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_to_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "buck-converter",
+    "exampleId": "buck",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"inductor\",\"diode\",\"capacitor\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.5}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      },
+      {
+        "order": 6,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "power",
+    "unitSlug": "boost-converter",
+    "exampleId": "boost",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"inductor\",\"diode\",\"capacitor\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.5}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      },
+      {
+        "order": 6,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-follower",
+    "exampleId": "opampFollower",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minVolts\":1.7,\"maxVolts\":2.3}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-invert",
+    "exampleId": "opamp",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minVolts\":-11,\"maxVolts\":-9}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-noninv",
+    "exampleId": "opampNonInv",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minVolts\":4.5,\"maxVolts\":6.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-comparator",
+    "exampleId": "opampComparator",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"potentiometer\",\"resistor\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minVolts\":2,\"maxVolts\":15}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-schmitt",
+    "exampleId": "opampSchmitt",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"potentiometer\",\"resistor\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minVolts\":2,\"maxVolts\":15}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-summing",
+    "exampleId": "opampSumming",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minVolts\":-2,\"maxVolts\":-1}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-integrator",
+    "exampleId": "opampIntegrator",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"pulse_source\",\"op_amp\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.2}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-differentiator",
+    "exampleId": "opampDifferentiator",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"pulse_source\",\"op_amp\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":0.05}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "opamps",
+    "unitSlug": "opamp-active-filter",
+    "exampleId": "opampActiveFilter",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"op_amp\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"op_amp\",\"pin\":\"out\",\"minMag\":0.05,\"maxMag\":20}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "rc-low-pass",
+    "exampleId": "rcLowPass",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"pin\":\"a\",\"minMag\":0.4,\"maxMag\":0.95}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "ac-rc-lpf",
+    "exampleId": "ac",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"pin\":\"a\",\"minMag\":0.4,\"maxMag\":0.95}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "rc-high-pass",
+    "exampleId": "rcHighPass",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"a\",\"minMag\":0.4,\"maxMag\":0.95}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "rlc-series",
+    "exampleId": "rlcSeries",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"inductor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"pin\":\"a\",\"minMag\":0.05,\"maxMag\":20}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "band-pass",
+    "exampleId": "bandPass",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"inductor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"pin\":\"a\",\"minMag\":0.02,\"maxMag\":20}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "notch-filter",
+    "exampleId": "notchFilter",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"inductor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minMag\":0.02,\"maxMag\":5}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "voltage-divider",
+    "exampleId": "voltageDivider",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":4}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":2,\"maxVolts\":3}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "divider-design",
+    "exampleId": "voltageDivider",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":2,\"maxVolts\":3}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "pot-divider",
+    "exampleId": "pot",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"potentiometer\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"potentiometer\",\"pin\":\"w\",\"minVolts\":0.5,\"maxVolts\":4.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "measure-freq-amp",
+    "exampleId": "measureAc",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"pin\":\"a\",\"minMag\":0.4,\"maxMag\":0.95}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "filters",
+    "unitSlug": "bode-intuition",
+    "exampleId": "measureAc",
+    "analysisMode": "ac",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"ac_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"ac\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":6}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_ac_mag_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minMag\":0.05,\"maxMag\":1.2}",
+        "labelKey": "learn.challenge.check.any_pin_ac_mag_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "motors",
+    "unitSlug": "motor-mosfet",
+    "exampleId": "motor",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"dc_motor\",\"diode\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "motors",
+    "unitSlug": "motor-pwm",
+    "exampleId": "motorPwm",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"pulse_source\",\"nmos\",\"dc_motor\",\"diode\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_tran_current_peak_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_tran_current_peak_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "motors",
+    "unitSlug": "motor-speed",
+    "exampleId": "motorPwm",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"pulse_source\",\"nmos\",\"dc_motor\",\"diode\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_model_tran_current_peak_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.1}",
+        "labelKey": "learn.challenge.check.any_model_tran_current_peak_min"
+      },
+      {
+        "order": 6,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "motors",
+    "unitSlug": "motor-flyback",
+    "exampleId": "motor",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"dc_motor\",\"diode\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"diode\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "motors",
+    "unitSlug": "h-bridge",
+    "exampleId": "hBridge",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"switch\",\"dc_motor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"switch\",\"min\":4}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "motors",
+    "unitSlug": "motor-direction",
+    "exampleId": "motorDirection",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"switch\",\"dc_motor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"switch\",\"min\":4}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "digital",
+    "unitSlug": "pull-up-down",
+    "exampleId": "pullUpDown",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"switch\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":4}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "digital",
+    "unitSlug": "debounce",
+    "exampleId": "debounce",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"switch\",\"capacitor\",\"nmos\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":6}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "digital",
+    "unitSlug": "debounce-idea",
+    "exampleId": "debounce",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"switch\",\"capacitor\",\"nmos\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":10}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "sensors",
+    "unitSlug": "sensor-ldr",
+    "exampleId": "ldr",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"ldr\",\"nmos\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"ldr\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "sensors",
+    "unitSlug": "sensor-pot",
+    "exampleId": "pot",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"potentiometer\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":3}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"potentiometer\",\"pin\":\"w\",\"minVolts\":1,\"maxVolts\":2.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "sensors",
+    "unitSlug": "sensor-ntc",
+    "exampleId": "ntcDivider",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"potentiometer\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":1.5,\"maxVolts\":3.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "sensors",
+    "unitSlug": "sensor-threshold",
+    "exampleId": "opampComparator",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"op_amp\",\"potentiometer\",\"resistor\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"potentiometer\",\"pin\":\"w\",\"minVolts\":0.5,\"maxVolts\":4.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "comms",
+    "unitSlug": "i2c-wiring",
+    "exampleId": "i2cOled",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_i2c\",\"ssd1306\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":6}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "adc-dac",
+    "unitSlug": "adc-front-end",
+    "exampleId": "pot",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"potentiometer\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":4}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"potentiometer\",\"pin\":\"w\",\"minVolts\":0.8,\"maxVolts\":4}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "adc-dac",
+    "unitSlug": "adc-reference",
+    "exampleId": "voltageDivider",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":2.4,\"maxVolts\":2.6}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "adc-dac",
+    "unitSlug": "pwm-pseudo-dac",
+    "exampleId": "pwmFilter",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"pulse_source\",\"resistor\",\"capacitor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_cap_voltage_final_min",
+        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":1}",
+        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "industrial",
+    "unitSlug": "relay-transistor",
+    "exampleId": "relayBjt",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"bjt_npn\",\"relay\",\"diode\",\"switch\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "industrial",
+    "unitSlug": "mosfet-driver",
+    "exampleId": "nmos",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"led\",\"resistor\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":6}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "industrial",
+    "unitSlug": "coil-protection",
+    "exampleId": "relay",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"relay\",\"diode\",\"switch\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"diode\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "industrial",
+    "unitSlug": "inductive-load",
+    "exampleId": "motor",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"dc_motor\",\"diode\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 6,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":10}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 7,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "industrial",
+    "unitSlug": "estop-principle",
+    "exampleId": "estopRelay",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"relay\",\"diode\",\"switch\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"switch\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "industrial",
+    "unitSlug": "control-24v",
+    "exampleId": "industrial24v",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"relay\",\"diode\",\"switch\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"battery\",\"pin\":\"p\",\"minVolts\":20,\"maxVolts\":28}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "switching",
+    "unitSlug": "bjt-switch",
+    "exampleId": "bjt",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"bjt_npn\",\"led\",\"resistor\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "switching",
+    "unitSlug": "relay-flyback",
+    "exampleId": "relay",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"relay\",\"diode\",\"switch\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 6,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":8}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 7,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "switching",
+    "unitSlug": "nmos-switch",
+    "exampleId": "nmos",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"led\",\"resistor\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "switching",
+    "unitSlug": "motor-lowside",
+    "exampleId": "motor",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"dc_motor\",\"diode\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":8}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "switching",
+    "unitSlug": "bjt-vs-mos-compare",
+    "exampleId": "nmos",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"led\",\"resistor\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 6,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "switching",
+    "unitSlug": "inductive-why-diode",
+    "exampleId": "relay",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"relay\",\"diode\",\"switch\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"diode\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "timing",
+    "unitSlug": "ne555-astable",
+    "exampleId": "ne555",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"ne555\",\"resistor\",\"capacitor\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_tran_peak_to_peak_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"pin\":\"a\",\"minVolts\":1}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_to_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "timing",
+    "unitSlug": "ne555-play",
+    "exampleId": "christmasTree",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"ne555\",\"resistor\",\"capacitor\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"led\",\"min\":6}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_pin_tran_peak_to_peak_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"pin\":\"a\",\"minVolts\":1}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_to_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "timing",
+    "unitSlug": "ne555-pot-blink",
+    "exampleId": "ne555Pot",
+    "analysisMode": "tran",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"ne555\",\"resistor\",\"capacitor\",\"potentiometer\",\"led\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "analysis_mode",
+        "paramsJson": "{\"mode\":\"tran\"}",
+        "labelKey": "learn.challenge.check.analysis_mode"
+      },
+      {
+        "order": 4,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_tran_peak_to_peak_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"pin\":\"a\",\"minVolts\":1}",
+        "labelKey": "learn.challenge.check.any_pin_tran_peak_to_peak_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "input",
+    "unitSlug": "pushbutton-led",
+    "exampleId": "pushbutton",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"pushbutton\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pushbutton_pressed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_pushbutton_pressed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "input",
+    "unitSlug": "ldr-nightlight",
+    "exampleId": "ldr",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"ldr\",\"nmos\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":8}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 6,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "actuators",
+    "unitSlug": "buzzer-button",
+    "exampleId": "buzzer",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"buzzer\",\"resistor\",\"pushbutton\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_pushbutton_pressed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_pushbutton_pressed"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"buzzer\",\"minAmps\":0.005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "actuators",
+    "unitSlug": "motor-control",
+    "exampleId": "motor",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"nmos\",\"dc_motor\",\"diode\",\"switch\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_switch_closed",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.any_switch_closed"
+      },
+      {
+        "order": 5,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":12}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"dc_motor\",\"minAmps\":0.05}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_part_not_burned",
+        "paramsJson": "{\"modelKey\":\"nmos\"}",
+        "labelKey": "learn.challenge.check.any_part_not_burned"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "mcu",
+    "unitSlug": "arduino-dio-led",
+    "exampleId": "arduino",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_dio\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "mcu",
+    "unitSlug": "pin-input-pulldown",
+    "exampleId": "arduino",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_dio\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":3}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "buses",
+    "unitSlug": "i2c-oled-wiring",
+    "exampleId": "i2cOled",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_i2c\",\"ssd1306\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":8}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":4,\"maxVolts\":5.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "buses",
+    "unitSlug": "i2c-address-idea",
+    "exampleId": "i2cOled",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_i2c\",\"ssd1306\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":4}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "buses",
+    "unitSlug": "spi-vs-i2c",
+    "exampleId": "i2cOled",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_i2c\",\"ssd1306\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "buses",
+    "unitSlug": "i2c-multi-slave",
+    "exampleId": "i2cOled",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"arduino_i2c\",\"ssd1306\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "min_wire_count",
+        "paramsJson": "{\"min\":10}",
+        "labelKey": "learn.challenge.check.min_wire_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 6,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":4,\"maxVolts\":5.5}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  }
+]

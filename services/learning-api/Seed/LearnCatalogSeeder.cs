@@ -7,12 +7,14 @@ namespace ElectroLab.LearningApi.Seed;
 
 /// <summary>
 /// Idempotent catalog seed. Structure mirrors <c>apps/web/.../learn-catalog.ts</c>.
-/// Adds missing modules/units without wiping existing progress rows.
+/// Lab criteria prefer <c>challenge-criteria.json</c> (exported from client SPECS) and upsert on every seed.
 /// </summary>
 public static class LearnCatalogSeeder
 {
     public static async Task SeedAsync(LearningDbContext db)
     {
+        var criteriaByUnit = LoadChallengeCriteria();
+
         var modulesBySlug = await db.LearnModules.ToDictionaryAsync(m => m.Slug);
         foreach (var def in ModuleDefs)
         {
@@ -38,7 +40,7 @@ public static class LearnCatalogSeeder
         await db.SaveChangesAsync();
 
         var moduleIdToSlug = modulesBySlug.ToDictionary(kv => kv.Value.Id, kv => kv.Key);
-        var units = await db.LearnUnits.ToListAsync();
+        var units = await db.LearnUnits.Include(u => u.LabCriteria).ToListAsync();
         var unitsByKey = units.ToDictionary(u => $"{moduleIdToSlug[u.ModuleId]}/{u.Slug}");
 
         var orderedUnitIds = new List<int>();
@@ -83,19 +85,6 @@ public static class LearnCatalogSeeder
                     });
                 }
 
-                for (var ci = 0; ci < def.LabCriteria.Length; ci++)
-                {
-                    var c = def.LabCriteria[ci];
-                    db.LearnLabCriteria.Add(new LearnLabCriterion
-                    {
-                        UnitId = unit.Id,
-                        SortOrder = ci + 1,
-                        LabelKey = c.LabelKey,
-                        Type = c.Type,
-                        ParamsJson = JsonSerializer.Serialize(c.Params)
-                    });
-                }
-
                 await db.SaveChangesAsync();
                 unitsByKey[key] = unit;
             }
@@ -107,6 +96,7 @@ public static class LearnCatalogSeeder
                 unit.ModuleId = modulesBySlug[def.ModuleSlug].Id;
             }
 
+            SyncLabCriteria(db, unit, ResolveCriteria(def, criteriaByUnit));
             orderedUnitIds.Add(unit.Id);
         }
 
@@ -120,6 +110,93 @@ public static class LearnCatalogSeeder
         }
 
         await db.SaveChangesAsync();
+    }
+
+    private sealed record CriterionSeed(string LabelKey, string Type, string ParamsJson);
+
+    private sealed record ChallengeCriteriaFileRow(
+        string ModuleSlug,
+        string UnitSlug,
+        ChallengeCriteriaFileCriterion[] Criteria);
+
+    private sealed record ChallengeCriteriaFileCriterion(
+        int Order,
+        string Type,
+        string ParamsJson,
+        string LabelKey);
+
+    private static Dictionary<string, CriterionSeed[]> LoadChallengeCriteria()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Seed", "challenge-criteria.json");
+        if (!File.Exists(path))
+        {
+            // Dev: project Seed/ next to content root.
+            path = Path.Combine(Directory.GetCurrentDirectory(), "Seed", "challenge-criteria.json");
+        }
+
+        if (!File.Exists(path)) return new Dictionary<string, CriterionSeed[]>(StringComparer.Ordinal);
+
+        var json = File.ReadAllText(path);
+        var rows = JsonSerializer.Deserialize<ChallengeCriteriaFileRow[]>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        }) ?? [];
+
+        var map = new Dictionary<string, CriterionSeed[]>(StringComparer.Ordinal);
+        foreach (var row in rows)
+        {
+            var key = $"{row.ModuleSlug}/{row.UnitSlug}";
+            map[key] = row.Criteria
+                .OrderBy(c => c.Order)
+                .Select(c => new CriterionSeed(c.LabelKey, c.Type, c.ParamsJson))
+                .ToArray();
+        }
+
+        return map;
+    }
+
+    private static CriterionSeed[] ResolveCriteria(
+        UnitDef def,
+        IReadOnlyDictionary<string, CriterionSeed[]> fromJson)
+    {
+        var key = $"{def.ModuleSlug}/{def.UnitSlug}";
+        if (fromJson.TryGetValue(key, out var seeded) && seeded.Length > 0) return seeded;
+        return def.LabCriteria
+            .Select(c => new CriterionSeed(c.LabelKey, c.Type, JsonSerializer.Serialize(c.Params)))
+            .ToArray();
+    }
+
+    private static void SyncLabCriteria(LearningDbContext db, LearnUnit unit, CriterionSeed[] desired)
+    {
+        var existing = unit.LabCriteria.OrderBy(c => c.SortOrder).ToList();
+        for (var i = 0; i < desired.Length; i++)
+        {
+            var d = desired[i];
+            if (i < existing.Count)
+            {
+                var row = existing[i];
+                row.SortOrder = i + 1;
+                row.LabelKey = d.LabelKey;
+                row.Type = d.Type;
+                row.ParamsJson = d.ParamsJson;
+            }
+            else
+            {
+                db.LearnLabCriteria.Add(new LearnLabCriterion
+                {
+                    UnitId = unit.Id,
+                    SortOrder = i + 1,
+                    LabelKey = d.LabelKey,
+                    Type = d.Type,
+                    ParamsJson = d.ParamsJson
+                });
+            }
+        }
+
+        for (var i = desired.Length; i < existing.Count; i++)
+        {
+            db.LearnLabCriteria.Remove(existing[i]);
+        }
     }
 
     private sealed record ModuleDef(string Slug, string TitleKey, int Order);

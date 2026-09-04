@@ -8,6 +8,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "export:challenge-criteria": "node scripts/run-export-challenge-criteria.mjs",
     "serve:ssr:web": "node dist/web/server/server.mjs"
   },
   "private": true,

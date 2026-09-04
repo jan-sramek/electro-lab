@@ -55,7 +55,8 @@ Bar: debug from service stdout + UI. No secrets/PII in logs.
 ## When something’s weird locally
 
 - **Unknown model** → rebuild/restart CircuitEngine  
-- **Stale API strings** → restart LearningApi (seeder)  
+- Stale API strings → restart LearningApi (seeder)
+- After Learn challenge SPECS changes → `cd apps/web && npm run export:challenge-criteria`, then restart LearningApi so upserted criteria match
 - Ports: engine `:5080`, learning `:5081`, Angular `:4200`, Compose UI `:8080`
 
 ## Threat notes

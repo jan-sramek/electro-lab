@@ -33,6 +33,8 @@ Each Learn unit is a vertical lesson with server-backed structure and anonymous 
 
 Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at check time. Model keys match via `simModelOf` (e.g. `bc547` ↔ `bjt_npn`, `pushbutton` ↔ `switch`).
 
+Seeded API rows should match SPECS: regenerate `services/learning-api/Seed/challenge-criteria.json` with `npm run export:challenge-criteria` (from `apps/web`) after SPECS changes. LearningApi upserts criteria on every startup seed.
+
 | Type | Params |
 |------|--------|
 | `sim_ok` | — |
@@ -56,7 +58,7 @@ Frontend SPECS in `learn-challenge-spec.ts` override seeded API criteria at chec
 | `branch_current_max` | `refId`, `maxAmps` |
 | `switch_state` | `refId`, `closed` |
 
-Per-unit overlays (when several units share one `exampleId`) live in `UNIT_CRITERIA` — e.g. `led-burn-limit`, `divider-design`, `ohm-explore`, `time-constant-estimate`, `fundamentals-loop`, `bjt-vs-mos-compare`, `inductive-why-diode`, `motor-flyback`, `coil-protection`, `pin-input-pulldown`, `motor-control`, `inductive-load`, `mosfet-driver`, `debounce-idea`, `sensor-threshold`.
+Per-unit overlays (when several units share one `exampleId`) live in `UNIT_CRITERIA` and must be soft-unique among siblings (enforced by `learn-challenge-preset-contract.spec.ts`). Clusters include motor/relay/inductive, pot/ADC, voltage-divider, measure/bode, motor-pwm/speed, debounce, LDR, op-amp comparator/threshold, I²C wiring variants, plus the LED/RC/NMOS/Arduino primary overlays.
 
 ## Acceptance
 

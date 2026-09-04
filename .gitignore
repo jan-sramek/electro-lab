@@ -38,4 +38,6 @@ TestResults/
 # Local scratch / vendor tools
 .build/
 .tools/
+apps/web/scripts/_*.cjs
+apps/web/scripts/_*.bundle.cjs
 diag-test*.txt
