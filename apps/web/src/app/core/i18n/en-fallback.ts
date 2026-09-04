@@ -28,7 +28,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'diag.switch_inductor_spike':
     'Switching an inductor can make large voltage spikes (ideal teaching model). Use care with openAt/closeAt timing.',
   'diag.inductive_missing_flyback':
-    'Relay coils and motors need a flyback diode across the inductive load — without it, switching can spike the rail.',
+    'Relay coils and motors need a flyback diode across the inductive terminals — a diode elsewhere on the canvas is not enough.',
   'diag.dc_rc_needs_tran':
     'Capacitors need Transient analysis for charge and discharge — switch to Transient and set tStop long enough (e.g. 6 s for LED fade).',
 
@@ -109,6 +109,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'lab.toolbar.dc': 'DC',
   'lab.toolbar.transient': 'Transient',
   'lab.toolbar.ac': 'AC',
+  'lab.toolbar.challengeLocked': 'Analysis mode and timing are locked for this Learn challenge.',
   'lab.toolbar.tStop': 'tStop (s)',
   'lab.toolbar.dt': 'dt (s)',
   'lab.toolbar.initFromDc': 'Init from DC',

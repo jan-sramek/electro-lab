@@ -65,6 +65,9 @@
     >
       {{ 'lab.toolbar.ac' | t }}
     </button>
+    @if (challengeMode()) {
+      <span class="challenge-lock-hint">{{ 'lab.toolbar.challengeLocked' | t }}</span>
+    }
     @if (analysisMode() === 'tran') {
       <label class="timebase">
         {{ 'lab.toolbar.tStop' | t }}

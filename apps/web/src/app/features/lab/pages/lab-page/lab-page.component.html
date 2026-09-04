@@ -24,15 +24,25 @@
           <button
             type="button"
             class="challenge-btn"
-            [disabled]="sim.busy() || challengeChecking()"
+            [disabled]="sim.busy() || challengeChecking() || !!challengeConfirm()"
             (click)="checkLearnChallenge()"
           >
             {{ 'lab.challenge.check' | t }}
           </button>
-          <button type="button" class="challenge-btn secondary" (click)="peekChallengeSample()">
+          <button
+            type="button"
+            class="challenge-btn secondary"
+            [disabled]="sim.busy() || challengeChecking() || !!challengeConfirm()"
+            (click)="peekChallengeSample()"
+          >
             {{ 'lab.challenge.peekSample' | t }}
           </button>
-          <button type="button" class="challenge-btn secondary" (click)="clearChallengeCanvas()">
+          <button
+            type="button"
+            class="challenge-btn secondary"
+            [disabled]="sim.busy() || challengeChecking() || !!challengeConfirm()"
+            (click)="clearChallengeCanvas()"
+          >
             {{ 'lab.challenge.clearCanvas' | t }}
           </button>
           <p class="challenge-peek-hint">{{ 'lab.challenge.peekHint' | t }}</p>

@@ -15,8 +15,9 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.continueToLab': 'Continue to lab challenge',
   'learn.unit.labHeading': 'Lab challenge',
   'learn.unit.labHint':
-    'Build the circuit from scratch in Lab — start with an empty canvas. Place parts, wire them up, run a simulation, then check your work.',
-  'learn.unit.labReturnHint': 'After the challenge passes in Lab, return here to continue the path.',
+    'Build the circuit from scratch in Lab — start with an empty canvas. Place parts, wire them up, run a simulation, then check your work. Analysis mode is locked to match this unit.',
+  'learn.unit.labReturnHint':
+    'After the challenge passes in Lab, return here to continue the path. If progress could not be saved, use Check again once you are online.',
   'learn.unit.completeHeading': 'Unit complete',
   'learn.unit.completeBody': 'Nice work — you read the lesson, passed the quiz, and cleared the lab challenge.',
   'learn.unit.continueNext': 'Next project →',

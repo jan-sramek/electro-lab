@@ -218,13 +218,36 @@ describe('circuit-diagnostics', () => {
       wires: [
         { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'MOT1', pin: 'a' } },
         { id: 'W2', a: { componentId: 'MOT1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
-        { id: 'W3', a: { componentId: 'D1', pin: 'c' }, b: { componentId: 'V1', pin: 'p' } },
+        { id: 'W3', a: { componentId: 'D1', pin: 'c' }, b: { componentId: 'MOT1', pin: 'a' } },
         { id: 'W4', a: { componentId: 'D1', pin: 'a' }, b: { componentId: 'MOT1', pin: 'b' } },
         { id: 'W5', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
       ]
     });
     const diags = diagnoseSchematic(doc, 'dcOp');
     expect(diags.some((d) => d.code === 'inductive_missing_flyback')).toBeFalse();
+  });
+
+  it('still warns when a diode exists but is not across the motor terminals', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const mot = createComponent('dc_motor', 120, 0, 'MOT1');
+    const d1 = createComponent('diode', 200, 40, 'D1');
+    const r1 = createComponent('resistor', 280, 0, 'R1');
+    r1.params = { r: 1000 };
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, mot, d1, r1, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'MOT1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'MOT1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W3', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'D1', pin: 'a' } },
+        { id: 'W4', a: { componentId: 'D1', pin: 'c' }, b: { componentId: 'R1', pin: 'a' } },
+        { id: 'W5', a: { componentId: 'R1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W6', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'dcOp');
+    expect(diags.some((d) => d.code === 'inductive_missing_flyback')).toBeTrue();
   });
 });
 

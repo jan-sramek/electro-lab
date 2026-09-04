@@ -198,13 +198,25 @@ export function diagnoseSchematic(
     }
   }
 
-  // Teaching hint: relay coils / DC motors need a flyback diode (any mode).
+  // Teaching hint: relay coils / DC motors need a flyback diode across the load pins.
   const inductiveLoads = simParts.filter(
     (c) => c.modelKey === 'relay' || c.modelKey === 'dc_motor'
   );
-  const hasFlybackDiode = simParts.some((c) => c.modelKey === 'diode');
-  if (inductiveLoads.length > 0 && !hasFlybackDiode) {
-    out.push(diag('inductive_missing_flyback', 'warning', inductiveLoads.map((c) => c.id)));
+  const diodes = simParts.filter((c) => c.modelKey === 'diode');
+  const unprotected = inductiveLoads.filter((load) => {
+    const pinNames = load.modelKey === 'relay' ? (['cp', 'cn'] as const) : (['a', 'b'] as const);
+    const loadNets = new Set(
+      pinNames.map((p) => load.pins[p]?.net).filter((n): n is string => !!n)
+    );
+    if (loadNets.size < 2) return true;
+    return !diodes.some((d) => {
+      const anode = d.pins['a']?.net;
+      const cathode = d.pins['c']?.net;
+      return !!anode && !!cathode && loadNets.has(anode) && loadNets.has(cathode);
+    });
+  });
+  if (unprotected.length > 0) {
+    out.push(diag('inductive_missing_flyback', 'warning', unprotected.map((c) => c.id)));
   }
 
   return out;
