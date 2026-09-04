@@ -11,7 +11,7 @@ Options we considered: TypeScript module in the repo, markdown at build time, Po
 
 ## Decision
 
-**Keep MVP content in a TypeScript catalog under `apps/web/src/app/features/learn/data/`.** Prose stays in i18n keys (`learn.project.*`). LearningApi stays translations-only until we consciously move the catalog.
+**Ship Learn catalog + assessment criteria from TypeScript (`learn-catalog.ts`, `learn-challenge-spec.ts`) with LearningApi seeding the same structure into Postgres for progress.** Translations stay in LearningApi. Full CMS / author UI remains future work.
 
 ## Consequences
 

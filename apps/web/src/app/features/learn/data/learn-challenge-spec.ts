@@ -930,6 +930,10 @@ const SPECS: Record<ExamplePresetId, LearnChallengeLabSpec> = {
 };
 
 /** Per-unit criteria when several units share one exampleId (e.g. LED path). */
+function cloneSpecCriteria(exampleId: ExamplePresetId): LearnChallengeLabSpec['criteria'] {
+  return SPECS[exampleId].criteria.map((c) => ({ ...c }));
+}
+
 const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
   'led-burn-limit': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
@@ -990,26 +994,8 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
     { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
   ],
-  'motor-flyback': [
-    { type: 'no_circuit_errors', paramsJson: '{}' },
-    {
-      type: 'has_models',
-      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
-    },
-    { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_switch_closed', paramsJson: '{}' },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
-  ],
-  'coil-protection': [
-    { type: 'no_circuit_errors', paramsJson: '{}' },
-    {
-      type: 'has_models',
-      paramsJson: JSON.stringify({ models: ['battery', 'relay', 'diode', 'switch', 'led', 'resistor', 'ground'] })
-    },
-    { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_switch_closed', paramsJson: '{}' },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
-  ],
+  'motor-flyback': cloneSpecCriteria('motor'),
+  'coil-protection': cloneSpecCriteria('relay'),
   'pin-input-pulldown': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
@@ -1020,26 +1006,8 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 3 }) },
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
   ],
-  'motor-control': [
-    { type: 'no_circuit_errors', paramsJson: '{}' },
-    {
-      type: 'has_models',
-      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
-    },
-    { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_switch_closed', paramsJson: '{}' },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
-  ],
-  'inductive-load': [
-    { type: 'no_circuit_errors', paramsJson: '{}' },
-    {
-      type: 'has_models',
-      paramsJson: JSON.stringify({ models: ['battery', 'nmos', 'dc_motor', 'diode', 'switch', 'ground'] })
-    },
-    { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_switch_closed', paramsJson: '{}' },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'dc_motor', minAmps: 0.05 }) }
-  ],
+  'motor-control': cloneSpecCriteria('motor'),
+  'inductive-load': cloneSpecCriteria('motor'),
   'mosfet-driver': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
@@ -1051,34 +1019,56 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
     { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
     { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'nmos' }) }
   ],
-  'debounce-idea': [
+  'debounce-idea': cloneSpecCriteria('debounce'),
+  'sensor-threshold': cloneSpecCriteria('opampComparator'),
+  // Shared-preset clusters — explicit overlays so sibling units cannot silently share soft SPECS.
+  'led-series': cloneSpecCriteria('led'),
+  'rc-charge': cloneSpecCriteria('rc'),
+  'nmos-switch': cloneSpecCriteria('nmos'),
+  'relay-flyback': cloneSpecCriteria('relay'),
+  'motor-mosfet': cloneSpecCriteria('motor'),
+  'motor-lowside': cloneSpecCriteria('motor'),
+  'pot-divider': cloneSpecCriteria('pot'),
+  'sensor-pot': cloneSpecCriteria('pot'),
+  'adc-front-end': cloneSpecCriteria('pot'),
+  'voltage-divider': cloneSpecCriteria('voltageDivider'),
+  'adc-reference': cloneSpecCriteria('voltageDivider'),
+  'measure-freq-amp': cloneSpecCriteria('measureAc'),
+  'bode-intuition': cloneSpecCriteria('measureAc'),
+  'motor-pwm': cloneSpecCriteria('motorPwm'),
+  'motor-speed': cloneSpecCriteria('motorPwm'),
+  debounce: cloneSpecCriteria('debounce'),
+  'sensor-ldr': cloneSpecCriteria('ldr'),
+  'ldr-nightlight': cloneSpecCriteria('ldr'),
+  'arduino-dio-led': cloneSpecCriteria('arduino'),
+  'opamp-comparator': cloneSpecCriteria('opampComparator'),
+  'i2c-wiring': cloneSpecCriteria('i2cOled'),
+  'i2c-oled-wiring': cloneSpecCriteria('i2cOled'),
+  'i2c-address-idea': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
       type: 'has_models',
-      paramsJson: JSON.stringify({
-        models: ['battery', 'resistor', 'switch', 'capacitor', 'nmos', 'led', 'ground']
-      })
+      paramsJson: JSON.stringify({ models: ['arduino_i2c', 'ssd1306', 'resistor', 'ground'] })
     },
     { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'capacitor', min: 1 }) },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) }
+    { type: 'min_wire_count', paramsJson: JSON.stringify({ min: 4 }) }
   ],
-  'sensor-threshold': [
+  'spi-vs-i2c': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     {
       type: 'has_models',
-      paramsJson: JSON.stringify({
-        models: ['battery', 'op_amp', 'potentiometer', 'resistor', 'led', 'ground']
-      })
+      paramsJson: JSON.stringify({ models: ['arduino_i2c', 'ssd1306', 'resistor', 'ground'] })
     },
     { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.0005 }) },
-    {
-      type: 'any_pin_dc_voltage_between',
-      paramsJson: JSON.stringify({ modelKey: 'op_amp', pin: 'out', minVolts: 2.0, maxVolts: 15 })
-    }
-  ]
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) }
+  ],
+  'i2c-multi-slave': cloneSpecCriteria('i2cOled')
 };
+
+/** True when a unit slug has its own challenge criteria overlay. */
+export function hasUnitChallengeOverlay(unitSlug: string): boolean {
+  return Object.prototype.hasOwnProperty.call(UNIT_CRITERIA, unitSlug);
+}
 
 export function getLearnChallengeSpec(exampleId: string): LearnChallengeLabSpec | null {
   return (SPECS as Record<string, LearnChallengeLabSpec>)[exampleId] ?? null;

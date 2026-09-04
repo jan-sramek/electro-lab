@@ -32,15 +32,13 @@ Handy Lab anchors: LED / RC fade presets, Arduino-path preset compiles, CircuitS
 
 ## What to run before merging
 
-Until CI is wired:
-
 ```bash
 dotnet test
 cd apps/web && npx ng build --configuration=development
 cd apps/web && npx ng test --no-watch --browsers=ChromeHeadless --include=**/preset-contracts.spec.ts
 ```
 
-Later: GitHub Actions for `dotnet test`, `ng build`, web tests, Compose health.
+GitHub Actions (`.github/workflows/ci.yml`) runs `dotnet test`, `ng build`, and the Lab/Learn contract suite on push/PR.
 
 ## Logging and ops
 

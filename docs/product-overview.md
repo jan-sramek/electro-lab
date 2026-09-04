@@ -27,7 +27,7 @@ People **learn practical electronics** by following short guided paths and **bui
 | Surface | Role | Maturity |
 |---------|------|----------|
 | **Lab** (`/lab`) | Schematic editor + teaching simulator (DC, transient, AC). Serious workbench; local tabs and presets. | **Shipped (v1 frozen)** — fixes, a11y, i18n only unless ADR reopens scope |
-| **Learn** (`/learn`) | Game-like guide: paths, modules, units, steps, later quizzes/challenges and visible progress. Every unit ties to Lab when a preset exists. | **Next** — catalog and UX first; assessments and richer progress later |
+| **Learn** (`/learn`) | Game-like guide: paths, modules, units, lessons, quizzes, lab challenges, and visible progress. Every unit ties to Lab when a preset exists. | **In progress** — catalog + assessment path shipping; Account cloud progress later |
 | **Account** (`/account`) | Sign-in, profile, cloud progress, teacher-friendly links. | **Later** — anonymous Learn stays valid |
 
 Lab teaches by **doing**. Learn teaches by **guiding**. Account remembers **who you are** when you want that.

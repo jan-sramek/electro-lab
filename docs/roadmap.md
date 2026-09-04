@@ -26,7 +26,7 @@ Phase B FRs: [requirements-learn-mvp.md](requirements-learn-mvp.md) only.
 | **G0** | Analysis | Lab v1 done | Passed — doc pack reviewed |
 | **G1** | Target architecture | G0 passed | Passed |
 | **G2** | Phase B design | G1 passed | Passed — [learn-ia.md](learn-ia.md), prerender ([ADR-007](adr/007-seo.md)) |
-| **G3** | Phase B build | G2 passed | In progress |
+| **G3** | Phase B build | G2 passed | Passed — catalog, quizzes, lab challenges shipping; Account is Phase C |
 | **G4** | Phase C design | B shipped | Auth + progress ADRs updated; Account FR doc |
 | **G5** | Phase C build | G4 passed | Account slice |
 

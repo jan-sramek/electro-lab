@@ -59,7 +59,8 @@ import { createIndustrial24vPreset } from '../../lab/data/presets/industrial-24v
 import { EXAMPLE_PRESET_IDS, ExamplePresetId } from '../../lab/services/lab-editor.store';
 import { SimulateResponse } from '../../lab/api/circuit-api.types';
 import { checkLabCriteria, allCriteriaPassed } from './lab-challenge-checker';
-import { getLearnChallengeSpec } from './learn-challenge-spec';
+import { getLearnChallengeSpec, hasUnitChallengeOverlay } from './learn-challenge-spec';
+import { LEARN_UNITS } from './learn-catalog';
 
 const PRESET_DOCS: Record<ExamplePresetId, () => SchematicDocument> = {
   led: createLedPreset,
@@ -299,6 +300,23 @@ describe('Learn challenge preset contracts', () => {
             .join(', ')}`
         )
         .toBeTrue();
+    }
+  });
+
+  it('units that share an exampleId each have an explicit UNIT_CRITERIA overlay', () => {
+    const byExample = new Map<string, string[]>();
+    for (const u of LEARN_UNITS) {
+      const list = byExample.get(u.exampleId) ?? [];
+      list.push(u.unitSlug);
+      byExample.set(u.exampleId, list);
+    }
+    for (const [exampleId, slugs] of byExample) {
+      if (slugs.length < 2) continue;
+      for (const slug of slugs) {
+        expect(hasUnitChallengeOverlay(slug))
+          .withContext(`${slug} shares exampleId ${exampleId} but has no UNIT_CRITERIA overlay`)
+          .toBeTrue();
+      }
     }
   });
 });
