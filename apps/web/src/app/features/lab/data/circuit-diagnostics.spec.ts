@@ -169,6 +169,25 @@ describe('circuit-diagnostics', () => {
     expect(island!.componentIds).toContain('C1');
     expect(island!.componentIds).toContain('C2');
   });
+
+  it('warns when a switch and inductor share a transient schematic', () => {
+    const v1 = createComponent('battery', 0, 0, 'V1');
+    const s1 = createComponent('switch', 80, 0, 'S1');
+    const l1 = createComponent('inductor', 160, 0, 'L1');
+    const gnd = createComponent('ground', 0, 100, 'GND1');
+    const doc = assignNets({
+      groundNet: 'gnd',
+      components: [v1, s1, l1, gnd],
+      wires: [
+        { id: 'W1', a: { componentId: 'V1', pin: 'p' }, b: { componentId: 'S1', pin: 'a' } },
+        { id: 'W2', a: { componentId: 'S1', pin: 'b' }, b: { componentId: 'L1', pin: 'a' } },
+        { id: 'W3', a: { componentId: 'L1', pin: 'b' }, b: { componentId: 'GND1', pin: 'g' } },
+        { id: 'W4', a: { componentId: 'V1', pin: 'n' }, b: { componentId: 'GND1', pin: 'g' } }
+      ]
+    });
+    const diags = diagnoseSchematic(doc, 'tran');
+    expect(diags.some((d) => d.code === 'switch_inductor_spike')).toBeTrue();
+  });
 });
 
 describe('junction nets', () => {

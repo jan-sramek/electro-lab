@@ -44,6 +44,10 @@ import { createAcRcPreset } from '../presets/ac-rc.preset';
 import { createRcLowPassPreset } from '../presets/rc-low-pass.preset';
 import { createRcHighPassPreset } from '../presets/rc-high-pass.preset';
 import { createMeasureAcPreset } from '../presets/measure-ac.preset';
+import { createBandPassPreset } from '../presets/band-pass.preset';
+import { createNotchFilterPreset } from '../presets/notch-filter.preset';
+import { createRlcSeriesPreset } from '../presets/rlc-series.preset';
+import { createI2cOledPreset } from '../presets/i2c-oled.preset';
 import { estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
@@ -852,5 +856,67 @@ describe('wire flow coverage on presets', () => {
     expect(Math.abs(currents.get('W8') ?? 0))
       .withContext('VM probe idle')
       .toBeLessThan(1e-6);
+  });
+
+  it('Series RLC / band-pass — RLC path animates; VM idle', () => {
+    for (const [name, doc] of [
+      ['rlcSeries', createRlcSeriesPreset()],
+      ['bandPass', createBandPassPreset()]
+    ] as const) {
+      const I = 0.002;
+      const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+        if (id === 'GND1' || id.startsWith('J')) return null;
+        if (id === 'VM1') return 0;
+        if (id === 'AC1' || id === 'R1' || id === 'L1' || id === 'C1') return I;
+        return null;
+      });
+      for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']) {
+        expect(Math.abs(currents.get(id) ?? 0))
+          .withContext(`${name} ${id}`)
+          .toBeGreaterThan(1e-6);
+      }
+    }
+  });
+
+  it('Notch filter (off-notch) — series Rs, load, and LC shunt animate; VM idle', () => {
+    const doc = createNotchFilterPreset();
+    const Iload = 0.0005;
+    const Ilc = 0.0004;
+    const Iac = Iload + Ilc;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'VM1') return 0;
+      if (id === 'AC1' || id === 'RS') return Iac;
+      if (id === 'RL') return Iload;
+      if (id === 'L1' || id === 'C1') return Ilc;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    expect(Math.abs(currents.get('W11') ?? 0)).toBeLessThan(1e-6);
+  });
+
+  it('I2C OLED idle — VCC load path animates; open-drain bus stubs idle', () => {
+    const doc = createI2cOledPreset();
+    const I = 0.01;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === 'RpuSCL' || id === 'RpuSDA') return 0;
+      if (id === 'MCU1' || id === 'OLED1') return I;
+      return null;
+    });
+    for (const id of ['W1', 'W2', 'W9', 'W10']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(id)
+        .toBeGreaterThan(1e-6);
+    }
+    for (const id of ['W3', 'W4', 'W6', 'W8', 'W11', 'W12']) {
+      expect(Math.abs(currents.get(id) ?? 0))
+        .withContext(`${id} bus idle`)
+        .toBeLessThan(1e-6);
+    }
   });
 });
