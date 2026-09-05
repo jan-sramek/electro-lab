@@ -68,6 +68,10 @@ interface MarqueeState {
   additive: boolean;
 }
 
+/** Wire trace history bound; older samples are thinned, the tail stays dense. */
+const WIRE_TRACE_MAX = 96;
+const WIRE_TRACE_TAIL = 24;
+
 @Component({
   selector: 'app-schematic-canvas',
   standalone: true,
@@ -106,9 +110,9 @@ export class SchematicCanvasComponent {
   readonly wireFrom = signal<PinRef | null>(null);
   /** Cursor in SVG space while drawing a wire (rubber-band). */
   readonly wireCursor = signal<{ x: number; y: number } | null>(null);
-  /** Recent cursor samples while rubber-banding (oldest → newest). */
+  /** Cursor trace while rubber-banding (oldest → newest) — the drawn path picks the L. */
   readonly wireMotion = signal<Point[]>([]);
-  /** Sticky L orientation for the in-progress wire (follows first clear mouse pull). */
+  /** Sticky L orientation for the in-progress wire (follows the traced side). */
   readonly wireAxisLock = signal<PreferAxis | null>(null);
   readonly dragOver = signal(false);
   /** Normalized marquee rect while dragging on empty canvas. */
@@ -198,7 +202,13 @@ export class SchematicCanvasComponent {
     const prev = this.wireMotion();
     const last = prev[prev.length - 1];
     if (last && Math.hypot(cursor.x - last.x, cursor.y - last.y) < 3) return;
-    const next = [...prev, cursor].slice(-12);
+    let next = [...prev, cursor];
+    // Keep the whole gesture (the first leg decides the L) but bounded:
+    // thin out older samples, keep the recent tail dense.
+    if (next.length > WIRE_TRACE_MAX) {
+      const tail = next.length - WIRE_TRACE_TAIL;
+      next = next.filter((_, i) => i >= tail || i % 2 === 0);
+    }
     this.wireMotion.set(next);
     this.wireAxisLock.set(updateAxisLock(this.wireAxisLock(), next, from, cursor));
   }

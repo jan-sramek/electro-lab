@@ -1,36 +1,58 @@
+import { distanceToPolyline } from './geometry';
 import { Point, PreferAxis, RoutingIntent } from './types';
 
-/**
- * Dominant axis of recent cursor motion (oldest → newest).
- * Later samples weigh more so the latest pull direction wins.
- */
-export function motionPrimaryAxis(samples: Point[] | null | undefined): PreferAxis | null {
-  if (!samples || samples.length < 2) return null;
-  // Skip the first samples while still on the pin — leaving a side pin always
-  // jitters horizontally and would lock the opposite L.
-  const origin = samples[0]!;
-  let start = 1;
-  while (start < samples.length) {
-    const p = samples[start]!;
-    if (Math.hypot(p.x - origin.x, p.y - origin.y) >= 18) break;
-    start += 1;
-  }
-  if (start >= samples.length) return null;
+/** Below this the two Ls are practically the same wire. */
+const TRACE_MIN_SPAN = 12;
+/** Minimum mean-distance gap (px) before the trace is trusted over the lock. */
+const TRACE_MIN_MARGIN = 4;
 
-  let hx = 0;
-  let hy = 0;
-  for (let i = start; i < samples.length; i++) {
-    const w = i - start + 1;
-    const a = samples[i - 1]!;
-    const b = samples[i]!;
-    hx += Math.abs(b.x - a.x) * w;
-    hy += Math.abs(b.y - a.y) * w;
+/**
+ * Which L the traced cursor path follows.
+ *
+ * The user draws the side of the pin→target rectangle they want: across then
+ * down reads HV ('h'), down then across reads VH ('v'). Each candidate L is
+ * scored by the (recency-weighted) mean distance of the trace samples to it;
+ * the clearly closer one wins. Diagonal / tiny spans are ambiguous → null so
+ * the sticky lock or span axis decides.
+ *
+ * Without from/to the trace's own endpoints are used.
+ */
+export function motionPrimaryAxis(
+  samples: Point[] | null | undefined,
+  from?: Point | null,
+  to?: Point | null
+): PreferAxis | null {
+  if (!samples || samples.length < 2) return null;
+  const a = from ?? samples[0]!;
+  const b = to ?? samples[samples.length - 1]!;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  // Both Ls coincide on a straight run — nothing to choose.
+  if (Math.abs(dx) < TRACE_MIN_SPAN || Math.abs(dy) < TRACE_MIN_SPAN) return null;
+
+  const hv: Point[] = [a, { x: b.x, y: a.y }, b];
+  const vh: Point[] = [a, { x: a.x, y: b.y }, b];
+  let sH = 0;
+  let sV = 0;
+  let wSum = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const p = samples[i]!;
+    // Samples on the pin or on the target sit on both Ls — skip the noise.
+    if (Math.hypot(p.x - a.x, p.y - a.y) < TRACE_MIN_SPAN) continue;
+    if (Math.hypot(p.x - b.x, p.y - b.y) < TRACE_MIN_SPAN) continue;
+    // Mild recency weight so a re-traced path can still change the pick.
+    const w = 1 + i / samples.length;
+    sH += distanceToPolyline(p, hv) * w;
+    sV += distanceToPolyline(p, vh) * w;
+    wSum += w;
   }
-  if (hx + hy < 14) return null;
-  // Soft bias so “mostly down” still reads vertical.
-  if (hy >= hx * 0.75) return 'v';
-  if (hx >= hy * 0.75) return 'h';
-  return hy >= hx ? 'v' : 'h';
+  if (wSum === 0) return null;
+  sH /= wSum;
+  sV /= wSum;
+  const margin = Math.max(TRACE_MIN_MARGIN, Math.min(Math.abs(dx), Math.abs(dy)) * 0.1);
+  if (sH + margin < sV) return 'h';
+  if (sV + margin < sH) return 'v';
+  return null;
 }
 
 /** Span-only axis from pin → target (exit never overrides). */
@@ -52,7 +74,7 @@ export function updateAxisLock(
   from: Point,
   to: Point
 ): PreferAxis {
-  const fromMotion = motionPrimaryAxis(motion);
+  const fromMotion = motionPrimaryAxis(motion, from, to);
   if (fromMotion) return fromMotion;
   if (prev) return prev;
   return spanPrimaryAxis(to.x - from.x, to.y - from.y);
@@ -60,7 +82,7 @@ export function updateAxisLock(
 
 /**
  * Teaching router intent for squared / rectangular circuits:
- * - primaryAxis follows mouse motion (or sticky lock), then span
+ * - primaryAxis follows the traced path (or sticky lock), then span
  * - shape is always L for open space (two sides of the pin→target rectangle)
  * - U is only chosen later when obstacles force a detour
  */
@@ -73,7 +95,7 @@ export function inferRoutingIntent(args: {
   const { from, to, motion, axisLock } = args;
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const fromMotion = motionPrimaryAxis(motion);
+  const fromMotion = motionPrimaryAxis(motion, from, to);
   const span = spanPrimaryAxis(dx, dy);
 
   let primaryAxis: PreferAxis;

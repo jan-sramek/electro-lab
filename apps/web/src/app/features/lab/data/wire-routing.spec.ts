@@ -156,33 +156,92 @@ describe('wire routing (refactored)', () => {
     expect(longVertical).toBeTrue();
   });
 
-  it('motionPrimaryAxis prefers the latest pull direction', () => {
+  it('motionPrimaryAxis follows the traced side of the rectangle', () => {
+    // Across then down → HV (the old "latest pull" heuristic flipped this to VH).
     expect(
       motionPrimaryAxis([
         { x: 0, y: 0 },
         { x: 40, y: 0 },
-        { x: 40, y: 10 },
-        { x: 40, y: 80 }
+        { x: 80, y: 0 },
+        { x: 80, y: 40 },
+        { x: 80, y: 80 }
       ])
-    ).toBe('v');
+    ).toBe('h');
+    // Down then across → VH.
     expect(
       motionPrimaryAxis([
         { x: 0, y: 0 },
-        { x: 0, y: 30 },
-        { x: 50, y: 30 },
-        { x: 120, y: 30 }
+        { x: 0, y: 40 },
+        { x: 0, y: 80 },
+        { x: 50, y: 80 },
+        { x: 120, y: 80 }
       ])
-    ).toBe('h');
+    ).toBe('v');
   });
 
-  it('axis lock sticks until motion overrides', () => {
+  it('motionPrimaryAxis is ambiguous on a diagonal or straight run', () => {
+    expect(
+      motionPrimaryAxis([
+        { x: 0, y: 0 },
+        { x: 50, y: 50 },
+        { x: 100, y: 100 }
+      ])
+    ).toBeNull();
+    expect(
+      motionPrimaryAxis([
+        { x: 0, y: 0 },
+        { x: 40, y: 2 },
+        { x: 100, y: 5 }
+      ])
+    ).toBeNull();
+  });
+
+  it('motionPrimaryAxis fits the trace against the current cursor, not its own end', () => {
+    // Trace drawn along the top row, cursor now far below-right.
+    const trace = [
+      { x: 0, y: 0 },
+      { x: 60, y: 0 },
+      { x: 120, y: 0 }
+    ];
+    expect(motionPrimaryAxis(trace, { x: 0, y: 0 }, { x: 120, y: 100 })).toBe('h');
+  });
+
+  it('re-tracing the other side flips the pick', () => {
+    // First across the top and down; then back along the bottom and up the left.
+    const trace = [
+      { x: 0, y: 0 },
+      { x: 60, y: 0 },
+      { x: 120, y: 0 },
+      { x: 120, y: 60 },
+      { x: 120, y: 120 },
+      { x: 60, y: 120 },
+      { x: 0, y: 120 },
+      { x: 0, y: 60 },
+      { x: 0, y: 120 },
+      { x: 60, y: 120 },
+      { x: 120, y: 120 }
+    ];
+    expect(motionPrimaryAxis(trace, { x: 0, y: 0 }, { x: 120, y: 120 })).toBe('v');
+  });
+
+  it('axis lock sticks until the trace clearly picks a side', () => {
     expect(updateAxisLock('v', [], { x: 0, y: 0 }, { x: 100, y: 20 })).toBe('v');
+    // Nearly straight run — both Ls coincide, lock stays.
     expect(
       updateAxisLock('v', [
         { x: 0, y: 0 },
         { x: 40, y: 0 },
         { x: 100, y: 5 }
       ], { x: 0, y: 0 }, { x: 100, y: 5 })
+    ).toBe('v');
+    // Clear across-then-down trace overrides.
+    expect(
+      updateAxisLock('v', [
+        { x: 0, y: 0 },
+        { x: 50, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 40 }
+      ], { x: 0, y: 0 }, { x: 100, y: 80 })
     ).toBe('h');
   });
 

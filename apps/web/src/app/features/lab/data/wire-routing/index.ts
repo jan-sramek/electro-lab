@@ -8,6 +8,8 @@ export type { Point, PreferAxis, RouteOptions, RouteShape, RoutingIntent, WireSe
 
 export {
   collinearOverlap,
+  distanceToPolyline,
+  distanceToSegment,
   dedupePoints,
   firstLegAxis,
   pathLength,

@@ -123,3 +123,26 @@ export function simpleElbow(x1: number, y1: number, x2: number, y2: number, pref
   if (prefer === 'h') return hv;
   return Math.abs(x2 - x1) >= Math.abs(y2 - y1) ? hv : vh;
 }
+
+/** Shortest distance from a point to an axis-aligned (or any) segment. */
+export function distanceToSegment(p: Point, s: WireSegment): number {
+  const dx = s.x2 - s.x1;
+  const dy = s.y2 - s.y1;
+  const len2 = dx * dx + dy * dy;
+  let t = 0;
+  if (len2 > 0) {
+    t = ((p.x - s.x1) * dx + (p.y - s.y1) * dy) / len2;
+    t = Math.max(0, Math.min(1, t));
+  }
+  return Math.hypot(p.x - (s.x1 + t * dx), p.y - (s.y1 + t * dy));
+}
+
+/** Shortest distance from a point to a polyline (Infinity for an empty one). */
+export function distanceToPolyline(p: Point, pts: Point[]): number {
+  if (pts.length === 1) return Math.hypot(p.x - pts[0]!.x, p.y - pts[0]!.y);
+  let best = Number.POSITIVE_INFINITY;
+  for (const s of polylineSegments(pts)) {
+    best = Math.min(best, distanceToSegment(p, s));
+  }
+  return best;
+}
