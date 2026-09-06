@@ -121,14 +121,24 @@ export interface LabVerifyResponse {
 
 export type LearnUnitPhase = 'read' | 'quiz' | 'lab' | 'complete';
 
+/** Lesson + quiz complete a unit; the lab is an optional bonus. Mirrors LearnProgressRow.IsComplete. */
+export function isUnitComplete(progress: LearnUnitProgressDto | null | undefined): boolean {
+  if (!progress) return false;
+  return progress.complete || (progress.readComplete && progress.quizPassed);
+}
+
+/**
+ * Phase shown on the unit page. After the quiz the unit is already complete; a unit
+ * with a lab challenge offers it as an optional bonus phase until it is passed.
+ */
 export function resolveUnitPhase(
   progress: LearnUnitProgressDto,
-  availability: UnitAvailability
+  availability: UnitAvailability,
+  hasLab = true
 ): LearnUnitPhase {
   if (availability === 'locked') return 'read';
-  if (progress.complete) return 'complete';
   if (progress.labPassed) return 'complete';
-  if (progress.quizPassed) return 'lab';
+  if (isUnitComplete(progress) || progress.quizPassed) return hasLab ? 'lab' : 'complete';
   if (progress.readComplete) return 'quiz';
   return 'read';
 }

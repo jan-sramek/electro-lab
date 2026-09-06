@@ -1,10 +1,13 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { learnUnitPath } from '../../data/learn-catalog.model';
 import { LearnUnitSummaryDto } from '../../api/learning-api.types';
 import { LearnCatalogService } from '../../services/learn-catalog.service';
 import { LearnProgressService } from '../../services/learn-progress.service';
+import { LEARN_POINTS, totalPoints, unitPointsEarned, unitPointsMax } from '../../data/learn-points';
+import { findLearnUnit } from '../../data/learn-catalog';
+import { unitHasLab } from '../../data/learn-catalog.model';
 import { LearnSeoService } from '../../services/learn-seo.service';
 
 @Component({
@@ -15,6 +18,10 @@ import { LearnSeoService } from '../../services/learn-seo.service';
     <section class="learn">
       <h1>{{ 'learn.title' | t }}</h1>
       <p class="intro">{{ 'learn.body' | t }}</p>
+      <p class="points-total" role="status">
+        <strong>{{ 'learn.points.total' | t: { earned: total().earned, max: total().max } }}</strong>
+        <span>{{ 'learn.points.explain' | t: { read: pts.read, quiz: pts.quiz, lab: pts.lab } }}</span>
+      </p>
 
       @for (row of modules(); track row.slug) {
         <section class="module">
@@ -26,6 +33,7 @@ import { LearnSeoService } from '../../services/learn-seo.service';
                   <!-- Always a real link so crawlers discover every unit; the badge conveys lock state. -->
                   <a [routerLink]="unitPath(unit)">{{ unit.i18nKeyPrefix + '.title' | t }}</a>
                 </h3>
+                <span class="unit-points">{{ 'learn.points.unit' | t: unitPoints(unit) }}</span>
                 <span class="status" [attr.data-status]="unit.availability">
                   {{ statusKey(unit.availability) | t }}
                 </span>
@@ -43,7 +51,14 @@ import { LearnSeoService } from '../../services/learn-seo.service';
   styles: `
     .learn { max-width: 40rem; }
     h1 { margin: 0 0 0.5rem; color: #12263a; font-size: 1.75rem; }
-    .intro { color: #5a6b7d; margin: 0 0 1.75rem; line-height: 1.5; }
+    .intro { color: #5a6b7d; margin: 0 0 1rem; line-height: 1.5; }
+    .points-total {
+      display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; align-items: baseline; margin: 0 0 1.75rem;
+      padding: 0.6rem 0.85rem; border-radius: 8px; background: #f0f7f4; border: 1px solid #c5e6d8; color: #12263a;
+    }
+    .points-total strong { color: #0b6e4f; font-size: 1.05rem; }
+    .points-total span { color: #5a6b7d; font-size: 0.9rem; }
+    .unit-points { font-size: 0.8rem; color: #0b6e4f; font-weight: 600; white-space: nowrap; }
     .module { margin-bottom: 2rem; }
     .module-title {
       margin: 0 0 0.75rem; color: #0b6e4f; font-size: 1.1rem; font-weight: 700;
@@ -73,6 +88,16 @@ export class LearnHubPageComponent implements OnInit {
   private readonly progress = inject(LearnProgressService);
 
   readonly modules = signal(this.catalog.modules());
+  readonly pts = LEARN_POINTS;
+  readonly total = computed(() => totalPoints(this.progress.progressSnapshot()));
+
+  unitPoints(unit: LearnUnitSummaryDto): { earned: number; max: number } {
+    const hasLab = unitHasLab(findLearnUnit(unit.moduleSlug, unit.unitSlug));
+    return {
+      earned: unitPointsEarned(this.progress.progressFor(unit.moduleSlug, unit.unitSlug), hasLab),
+      max: unitPointsMax(hasLab)
+    };
+  }
 
   readonly unitPath = (unit: LearnUnitSummaryDto) =>
     learnUnitPath({ moduleSlug: unit.moduleSlug, unitSlug: unit.unitSlug });

@@ -16,6 +16,12 @@ export interface LearnUnit {
   /** Prefix for i18n keys: `{prefix}.title`, `.summary`, `.step1`, `.openLab`. */
   i18nKeyPrefix: string;
   stepCount: number;
+  /** False for theory-only units: no Lab phase, no lab bonus points. Defaults to true. */
+  lab?: boolean;
+}
+
+export function unitHasLab(unit: Pick<LearnUnit, 'lab'> | null | undefined): boolean {
+  return unit?.lab !== false;
 }
 
 export function learnUnitPath(unit: Pick<LearnUnit, 'moduleSlug' | 'unitSlug'>): string {

@@ -515,7 +515,7 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.unit.skimStepsBeforeLab':
     'Tip: skim the checklist above first — then try the circuit here in Lab.',
 
-  'learn.module.basics.title': 'Voltage, LEDs & capacitors',
+  'learn.module.basics.title': 'Voltage, current & resistance',
   'learn.module.power.title': 'Power supplies',
   'learn.module.switching.title': 'Transistors & relays',
   'learn.module.timing.title': 'Timing circuits',
@@ -1931,6 +1931,69 @@ export const EN_FALLBACK: Record<string, string> = {
     'Parallel LEDs: Run DC — both branches light. Change one R; only that branch dims.',
   'lab.hint.seriesLeds':
     'Series LEDs: Run DC — same current through both. Compare with the parallel branches sample.',
+
+  'learn.project.voltageIntro.title': 'What is voltage?',
+  'learn.project.voltageIntro.summary':
+    'The push behind every circuit: potential difference, volts, ground as the zero reference, and why a battery has voltage even with nothing connected.',
+  'learn.project.voltageIntro.step1': 'Read the eight slides — each one is a single idea with a picture.',
+  'learn.project.voltageIntro.step2': 'Open the Lab LED example, Run DC and read the node voltages against ground.',
+  'learn.project.voltageIntro.step3': 'Probe the node between the resistor and the LED: it sits between 0 V and the battery.',
+  'learn.project.voltageIntro.step4': 'Check that the resistor drop plus the LED drop adds up to the battery voltage.',
+  'learn.project.voltageIntro.openLab': 'Open in Lab',
+
+  'learn.project.currentIntro.title': 'What is current?',
+  'learn.project.currentIntro.summary':
+    'Charge on the move: amperes and milliamperes, conventional direction, why a loop must be closed, and what “too much” means for an LED.',
+  'learn.project.currentIntro.step1': 'Read the eight slides on current, direction, loops and junctions.',
+  'learn.project.currentIntro.step2': 'Open the Lab LED example, Run DC and watch the dashes travel around the loop.',
+  'learn.project.currentIntro.step3': 'Compare the current labels: the same value appears on every part in the single loop.',
+  'learn.project.currentIntro.step4': 'Keep the LED between 5 mA and 30 mA — bright, but nowhere near burning.',
+  'learn.project.currentIntro.openLab': 'Open in Lab',
+
+  'learn.project.resistanceIntro.title': 'What is resistance?',
+  'learn.project.resistanceIntro.summary':
+    'The part that pushes back: ohms, the resistor and its colour bands, Ohm’s law with a worked LED example, series addition and heat.',
+  'learn.project.resistanceIntro.step1': 'Read the eight slides, including the worked Ohm’s-law example.',
+  'learn.project.resistanceIntro.step2': 'Open the Lab LED example and note the resistor value and the LED current.',
+  'learn.project.resistanceIntro.step3': 'Change the resistor in the inspector, Run DC again and watch I = U / R in action.',
+  'learn.project.resistanceIntro.step4': 'Settle on a resistance that puts the LED between 8 mA and 20 mA.',
+  'learn.project.resistanceIntro.openLab': 'Open in Lab',
+
+  'learn.project.ohmsLaw.title': 'Ohm’s law',
+  'learn.project.ohmsLaw.summary':
+    'U = I · R put to work: the straight-line meaning, two worked examples (sizing an LED resistor, finding an unknown R), prefixes, where the law stops, and power.',
+  'learn.project.ohmsLaw.step1': 'Read the eight slides, including both worked examples.',
+  'learn.project.ohmsLaw.step2': 'Open the Lab LED example and compute the LED current from R1 before you Run DC.',
+  'learn.project.ohmsLaw.step3': 'Run DC and compare your prediction with the LED label.',
+  'learn.project.ohmsLaw.step4': 'Change R1 so the LED lands between 8 mA and 20 mA and check the node voltage.',
+  'learn.project.ohmsLaw.openLab': 'Open in Lab',
+
+  'learn.project.circuitElements.title': 'Circuit elements',
+  'learn.project.circuitElements.summary':
+    'A guided tour of the parts palette: sources, passives, semiconductors, controls, wires, junctions, ground and meters — and how to read a schematic.',
+  'learn.project.circuitElements.step1': 'Read the eight slides and match each symbol to its job.',
+  'learn.project.circuitElements.step2': 'Open the Lab LED example and identify V1, S1, R1, D1 and ground on the canvas.',
+  'learn.project.circuitElements.step3': 'Hover the palette: every part in the lesson is there. Toggle S1 and Run DC.',
+  'learn.project.circuitElements.step4': 'Make sure the loop has at least four wires and the LED lights without burning.',
+  'learn.project.circuitElements.openLab': 'Open in Lab',
+
+  'learn.project.seriesParallelCircuits.title': 'Series and parallel circuits',
+  'learn.project.seriesParallelCircuits.summary':
+    'The two ways to connect loads and their rule sets: same current versus same voltage, adding resistances versus adding currents, and what fails when one part breaks.',
+  'learn.project.seriesParallelCircuits.step1': 'Read the eight slides and the quick series-or-parallel test.',
+  'learn.project.seriesParallelCircuits.step2': 'Open the series-parallel example and Run DC.',
+  'learn.project.seriesParallelCircuits.step3': 'Probe both branch nodes (same voltage) and add the LED currents (they match the battery).',
+  'learn.project.seriesParallelCircuits.step4': 'Keep both LEDs lit between 2 mA and 30 mA.',
+  'learn.project.seriesParallelCircuits.openLab': 'Open in Lab',
+
+  'learn.project.acDc.title': 'AC and DC',
+  'learn.project.acDc.summary':
+    'Steady versus alternating: polarity, period and frequency, peak and RMS, why the grid is AC and gadgets are DC, rectifying and smoothing, and AC in the Lab.',
+  'learn.project.acDc.step1': 'Read the eight slides on DC, AC, RMS and rectification.',
+  'learn.project.acDc.step2': 'Open the AC measurement example and switch the analysis to AC.',
+  'learn.project.acDc.step3': 'Run and read the capacitor node magnitude — a fraction of the source.',
+  'learn.project.acDc.step4': 'Raise the frequency and run again: the capacitor node magnitude falls.',
+  'learn.project.acDc.openLab': 'Open in Lab',
 
   'learn.project.fundamentalsLoop.title': 'The simple loop',
   'learn.project.fundamentalsLoop.summary':

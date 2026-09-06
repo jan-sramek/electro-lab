@@ -1,4 +1,11 @@
 /learn
+/learn/basics/voltage-intro
+/learn/basics/current-intro
+/learn/basics/resistance-intro
+/learn/basics/ohms-law
+/learn/basics/circuit-elements
+/learn/basics/series-parallel-circuits
+/learn/basics/ac-dc
 /learn/basics/fundamentals-loop
 /learn/basics/ohm-explore
 /learn/basics/led-series

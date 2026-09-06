@@ -12,6 +12,7 @@ var connectionString = builder.Configuration.GetConnectionString("LearningDb")
     ?? "Host=localhost;Port=5433;Database=electro_lab;Username=electro;Password=electro";
 
 builder.Services.AddDbContext<LearningDbContext>(o => o.UseNpgsql(connectionString));
+builder.Services.Configure<LearnOptions>(builder.Configuration.GetSection("Learn"));
 builder.Services.AddScoped<LearnCatalogService>();
 builder.Services.AddScoped<LearnProgressService>();
 builder.Services.AddProblemDetails();

@@ -6,8 +6,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ElectroLab.LearningApi.Services;
 
-public sealed class LearnCatalogService(LearningDbContext db)
+/// <summary>Runtime switches for the Learn path (bound from the "Learn" configuration section).</summary>
+public sealed class LearnOptions
 {
+    /// <summary>
+    /// Temporary: open every unit regardless of progress. Set to false to restore the
+    /// sequential path (each unit unlocks when the previous one is complete).
+    /// </summary>
+    public bool UnlockAll { get; set; }
+}
+
+public sealed class LearnCatalogService(LearningDbContext db, Microsoft.Extensions.Options.IOptions<LearnOptions>? options = null)
+{
+    private readonly bool _unlockAll = options?.Value.UnlockAll ?? false;
+
+    /// <summary>Apply the UnlockAll switch: a locked unit is reported (and treated) as available.</summary>
+    private UnitAvailability WithUnlock(UnitAvailability availability) =>
+        _unlockAll && availability == UnitAvailability.Locked ? UnitAvailability.Available : availability;
+
     public async Task<LearnCatalogResponse> GetCatalogAsync(Guid sessionId, CancellationToken ct = default)
     {
         var modules = await LoadModulesAsync(ct);
@@ -85,7 +101,7 @@ public sealed class LearnCatalogService(LearningDbContext db)
 
         var row = rows.FirstOrDefault(r => r.UnitId == unit.Id);
         var prevRow = predecessorId is int pid ? rows.FirstOrDefault(r => r.UnitId == pid) : null;
-        return (row, ResolveAvailability(row, predecessorId.HasValue, prevRow));
+        return (row, WithUnlock(ResolveAvailability(row, predecessorId.HasValue, prevRow)));
     }
 
     /// <summary>The unit immediately before <paramref name="unit"/> in global (module order, unit order) sequence.</summary>
@@ -156,7 +172,7 @@ public sealed class LearnCatalogService(LearningDbContext db)
             .SelectMany(m => m.Units.OrderBy(u => u.SortOrder).ThenBy(u => u.Id))
             .ToList();
 
-    private static LearnUnitSummaryDto ToSummary(
+    private LearnUnitSummaryDto ToSummary(
         LearnUnit unit,
         IReadOnlyDictionary<int, LearnProgressRow> progress,
         IReadOnlyList<LearnUnit> orderedUnits) =>
@@ -168,7 +184,7 @@ public sealed class LearnCatalogService(LearningDbContext db)
             unit.SortOrder,
             unit.NextUnit?.Module.Slug,
             unit.NextUnit?.Slug,
-            ResolveAvailability(unit, progress, orderedUnits));
+            WithUnlock(ResolveAvailability(unit, progress, orderedUnits)));
 
     private static UnitAvailability ResolveAvailability(
         LearnUnit unit,

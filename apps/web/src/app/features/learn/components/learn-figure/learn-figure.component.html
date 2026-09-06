@@ -1,0 +1,371 @@
+<figure class="learn-figure">
+  <svg viewBox="0 0 320 180" role="img" [attr.aria-label]="figure().captionKey ? (figure().captionKey! | t) : null">
+    @switch (kind()) {
+      <!-- ───────────── Voltage as level difference ───────────── -->
+      @case ('water-tanks') {
+        <g class="tanks">
+          <!-- equal levels -->
+          <rect x="18" y="50" width="44" height="90" class="tank" />
+          <rect x="20" y="86" width="40" height="52" class="water" />
+          <rect x="88" y="50" width="44" height="90" class="tank" />
+          <rect x="90" y="86" width="40" height="52" class="water" />
+          <rect x="62" y="122" width="26" height="10" class="pipe" />
+          <text x="75" y="160" class="lbl center">0 V</text>
+          <text x="75" y="36" class="lbl center muted">=</text>
+          <!-- different levels -->
+          <rect x="188" y="50" width="44" height="90" class="tank" />
+          <rect x="190" y="58" width="40" height="80" class="water" />
+          <rect x="258" y="50" width="44" height="90" class="tank" />
+          <rect x="260" y="112" width="40" height="26" class="water" />
+          <rect x="232" y="122" width="26" height="10" class="pipe" />
+          <path d="M 236 127 L 254 127" class="flow" />
+          <path d="M 250 123 L 256 127 L 250 131" class="arrow" />
+          <line x1="240" y1="58" x2="240" y2="112" class="dim" />
+          <path d="M 236 62 L 240 58 L 244 62 M 236 108 L 240 112 L 244 108" class="arrow" />
+          <text x="246" y="88" class="lbl accent">U</text>
+          <text x="245" y="160" class="lbl center">U &gt; 0</text>
+        </g>
+      }
+
+      <!-- ───────────── Battery with a voltmeter across ───────────── -->
+      @case ('battery-meter') {
+        <g transform="translate(160 118) scale(0.75)" appSymbolGlyph modelKey="battery"></g>
+        <text x="120" y="150" class="lbl muted center">−</text>
+        <text x="200" y="150" class="lbl accent center">+</text>
+        <path d="M 130 118 L 110 118 L 110 60 L 135 60 M 190 118 L 210 118 L 210 60 L 185 60" class="wire" />
+        <circle cx="160" cy="60" r="26" class="meter" />
+        <text x="160" y="66" class="meter-letter center">V</text>
+        <text x="160" y="24" class="lbl center reading">{{ str('volts', '5 V') }}</text>
+      }
+
+      <!-- ───────────── Logarithmic scale bar ───────────── -->
+      @case ('scale') {
+        <line x1="30" y1="100" x2="290" y2="100" class="axis" />
+        <path d="M 284 95 L 292 100 L 284 105" class="arrow" />
+        @for (t of scaleTicks(); track t.label) {
+          <line [attr.x1]="t.x" y1="92" [attr.x2]="t.x" y2="108" class="tick" />
+          <text [attr.x]="t.x" y="124" class="lbl center small">{{ t.label }}</text>
+        }
+        <text x="160" y="60" class="unit center">{{ str('unit') }}</text>
+      }
+
+      <!-- ───────────── Potential ladder with ground ───────────── -->
+      @case ('potential-ladder') {
+        <line x1="120" y1="24" x2="120" y2="150" class="rail" />
+        <line x1="200" y1="24" x2="200" y2="150" class="rail" />
+        @for (l of ladderLevels(); track l.label) {
+          <line x1="120" [attr.y1]="l.y" x2="200" [attr.y2]="l.y" class="rung" />
+          <text x="212" [attr.y]="l.y + 4" class="lbl">{{ l.label }}</text>
+        }
+        <path d="M 96 40 L 96 130" class="dim" />
+        <path d="M 92 46 L 96 40 L 100 46 M 92 124 L 96 130 L 100 124" class="arrow" />
+        <text x="60" y="90" class="lbl accent">U</text>
+        <g transform="translate(160 158) scale(0.45)" appSymbolGlyph modelKey="ground"></g>
+      }
+
+      <!-- ───────────── The teaching loop (battery, switch, resistor, LED, ground) ───────────── -->
+      @case ('loop') {
+        <!-- wires -->
+        <path d="M 60 75 L 60 40 L 75 40" class="wire" />
+        @if (loop().hasSwitch) {
+          <g transform="translate(100 40) scale(0.5)" appSymbolGlyph modelKey="switch" [closed]="!loop().switchOpen"></g>
+          <path d="M 125 40 L 145 40" class="wire" />
+        } @else {
+          <path d="M 75 40 L 145 40" class="wire" />
+        }
+        <g transform="translate(170 40) scale(0.5)" appSymbolGlyph modelKey="resistor"></g>
+        @if (loop().meter === 'amp') {
+          <path d="M 195 40 L 212 40 M 244 40 L 260 40 L 260 68" class="wire" />
+          <circle cx="228" cy="40" r="15" class="meter" />
+          <text x="228" y="45" class="meter-letter center small">A</text>
+          <text x="228" y="14" class="lbl center reading small">12.5 mA</text>
+        } @else {
+          <path d="M 195 40 L 260 40 L 260 68" class="wire" />
+        }
+        <g transform="translate(260 95) scale(0.5)" appSymbolGlyph modelKey="led" [ledBrightness]="loop().flow && !loop().switchOpen ? 0.8 : 0"></g>
+        <path d="M 260 122 L 260 150 L 60 150 L 60 115" class="wire" />
+        <path d="M 160 150 L 160 158" class="wire" />
+        <g transform="translate(160 168) scale(0.45)" appSymbolGlyph modelKey="ground"></g>
+        <g transform="translate(60 95) rotate(-90) scale(0.5)" appSymbolGlyph modelKey="battery"></g>
+        <text x="40" y="70" class="lbl accent small">+</text>
+        <text x="40" y="128" class="lbl muted small">−</text>
+        @if (loop().flow && !loop().switchOpen) {
+          <path
+            d="M 60 75 L 60 40 L 145 40 M 195 40 L 260 40 L 260 68 M 260 122 L 260 150 L 60 150 L 60 115"
+            class="flow"
+          />
+        }
+        @if (loop().designators) {
+          <text x="18" y="86" class="lbl small muted">V1</text>
+          @if (loop().hasSwitch) {
+            <text x="100" y="62" class="lbl small muted center">S1</text>
+          }
+          <text x="170" y="62" class="lbl small muted center">R1</text>
+          <text x="283" y="112" class="lbl small muted">D1</text>
+          <text x="180" y="176" class="lbl small muted">GND</text>
+        }
+        @if (loop().drops) {
+          <text x="18" y="98" class="lbl reading small">5 V</text>
+          <text x="170" y="22" class="lbl reading small center">2.75 V</text>
+          <text x="283" y="98" class="lbl reading small">2.25 V</text>
+        }
+        @if (loop().meter === 'volt-led') {
+          <path d="M 260 72 L 300 72 L 300 82 M 260 118 L 300 118 L 300 108" class="lead" />
+          <circle cx="300" cy="95" r="13" class="meter" />
+          <text x="300" y="99" class="meter-letter center small">V</text>
+          <text x="300" y="60" class="lbl center reading small">2.25 V</text>
+        }
+        @if (loop().meter === 'volt-switch') {
+          <path d="M 80 40 L 80 20 M 120 40 L 120 20" class="lead" />
+          <circle cx="100" cy="16" r="12" class="meter" />
+          <text x="100" y="20" class="meter-letter center small">V</text>
+          <text x="140" y="20" class="lbl reading small">5 V</text>
+          <text x="140" y="70" class="lbl muted small">I = 0</text>
+        }
+      }
+
+      <!-- ───────────── Charge drifting in a wire ───────────── -->
+      @case ('charge-flow') {
+        <rect x="30" y="80" width="260" height="26" rx="13" class="conductor" />
+        <g class="charges">
+          @for (i of [0, 1, 2, 3, 4, 5, 6]; track i) {
+            <circle [attr.cx]="40 + i * 40" cy="93" r="5" class="charge" [style.animation-delay]="(i * -0.35) + 's'" />
+          }
+        </g>
+        @if (str('mode') === 'directions') {
+          <text x="18" y="97" class="lbl accent">+</text>
+          <text x="298" y="97" class="lbl muted">−</text>
+          <path d="M 60 50 L 250 50" class="axis" />
+          <path d="M 244 45 L 252 50 L 244 55" class="arrow" />
+          <text x="150" y="42" class="lbl center">I</text>
+          <path d="M 250 140 L 70 140" class="axis muted" />
+          <path d="M 76 135 L 68 140 L 76 145" class="arrow muted" />
+          <text x="150" y="160" class="lbl center muted">e⁻</text>
+        } @else {
+          <line x1="160" y1="60" x2="160" y2="126" class="gate" />
+          <path d="M 120 40 L 200 40" class="axis" />
+          <path d="M 194 35 L 202 40 L 194 45" class="arrow" />
+          <text x="160" y="32" class="lbl center">I</text>
+          <text x="160" y="150" class="lbl center small muted">1 A = 1 C / s</text>
+        }
+      }
+
+      <!-- ───────────── Kirchhoff current law at a junction ───────────── -->
+      @case ('junction') {
+        <path d="M 30 90 L 160 90" class="wire" />
+        <path d="M 160 90 L 290 40 M 160 90 L 290 140" class="wire" />
+        <circle cx="160" cy="90" r="4" class="node" />
+        <path d="M 30 90 L 150 90" class="flow" />
+        <path d="M 165 88 L 282 43 M 165 92 L 282 137" class="flow" />
+        <path d="M 96 85 L 104 90 L 96 95" class="arrow" />
+        <path d="M 220 62 L 232 60 L 226 70" class="arrow" />
+        <path d="M 220 118 L 232 120 L 226 110" class="arrow" />
+        <text x="90" y="76" class="lbl center reading">{{ str('inA', 'I₁') }}</text>
+        <text x="240" y="46" class="lbl reading">{{ str('outA', 'I₂') }}</text>
+        <text x="240" y="150" class="lbl reading">{{ str('outB', 'I₃') }}</text>
+      }
+
+      <!-- ───────────── Wide vs narrow pipe ───────────── -->
+      @case ('pipes') {
+        <rect x="30" y="34" width="60" height="112" rx="6" class="tank" />
+        <rect x="32" y="40" width="56" height="104" class="water" />
+        <rect x="90" y="52" width="180" height="28" rx="4" class="pipe" />
+        <rect x="90" y="118" width="180" height="8" rx="4" class="pipe" />
+        <path d="M 100 66 L 260 66" class="flow wide" />
+        <path d="M 100 122 L 260 122" class="flow narrow" />
+        <text x="290" y="70" class="lbl">I</text>
+        <text x="290" y="126" class="lbl small muted">i</text>
+        <text x="180" y="100" class="lbl center small muted">R ↓</text>
+        <text x="180" y="150" class="lbl center small muted">R ↑</text>
+      }
+
+      <!-- ───────────── Resistor colour bands ───────────── -->
+      @case ('resistor-bands') {
+        <line x1="20" y1="90" x2="90" y2="90" class="wire" />
+        <line x1="230" y1="90" x2="300" y2="90" class="wire" />
+        <rect x="90" y="66" width="140" height="48" rx="20" class="body" />
+        @for (c of list('colors'); track $index) {
+          <rect [attr.x]="108 + $index * 26 + ($index === 3 ? 20 : 0)" y="66" width="12" height="48" [attr.fill]="c" />
+        }
+        <text x="160" y="150" class="lbl center reading">{{ str('value') }}</text>
+        <g transform="translate(160 32) scale(0.4)" appSymbolGlyph modelKey="resistor"></g>
+      }
+
+      <!-- ───────────── Ohm's law triangle ───────────── -->
+      @case ('ohm-triangle') {
+        <path d="M 160 20 L 60 160 L 260 160 Z" class="triangle" />
+        <line x1="110" y1="90" x2="210" y2="90" class="rung" />
+        <line x1="160" y1="90" x2="160" y2="160" class="rung" />
+        <text x="160" y="72" class="formula center">U</text>
+        <text x="125" y="135" class="formula center">I</text>
+        <text x="195" y="135" class="formula center">R</text>
+        <text x="316" y="60" class="lbl small muted" text-anchor="end">U = I·R</text>
+        <text x="316" y="90" class="lbl small muted" text-anchor="end">I = U/R</text>
+        <text x="316" y="120" class="lbl small muted" text-anchor="end">R = U/I</text>
+      }
+
+      <!-- ───────────── Current vs resistance bars ───────────── -->
+      @case ('ohm-graph') {
+        <line x1="50" y1="140" x2="300" y2="140" class="axis" />
+        <line x1="50" y1="140" x2="50" y2="20" class="axis" />
+        <text x="30" y="30" class="lbl small muted">I</text>
+        @if (str('mode') === 'iv') {
+          <text x="300" y="160" class="lbl small muted" text-anchor="end">U</text>
+          @for (l of ivLines(); track l.label) {
+            <line x1="50" y1="140" [attr.x2]="l.x2" [attr.y2]="l.y2" class="iv" />
+            <text [attr.x]="l.x2 + 4" [attr.y]="l.y2 + 4" class="lbl small reading">{{ l.label }}</text>
+          }
+        } @else if (str('mode') === 'iv-nonlinear') {
+          <text x="300" y="160" class="lbl small muted" text-anchor="end">U</text>
+          <line x1="50" y1="140" x2="250" y2="60" class="iv" />
+          <text x="256" y="62" class="lbl small reading">R</text>
+          <path d="M 50 140 L 150 138 Q 175 134 185 100 T 205 30" class="iv led" />
+          <text x="210" y="30" class="lbl small" fill="#c2410c">LED</text>
+          <line x1="180" y1="140" x2="180" y2="146" class="tick" />
+          <text x="180" y="158" class="lbl center small muted">≈2 V</text>
+        } @else {
+          <text x="300" y="160" class="lbl small muted" text-anchor="end">R</text>
+          <text x="160" y="16" class="lbl center small muted">U = {{ num('volts', 3) }} V</text>
+          @for (r of graphRows(); track r.label) {
+            <rect [attr.x]="r.x - 16" [attr.y]="140 - r.h" width="32" [attr.height]="r.h" class="bar" />
+            <text [attr.x]="r.x" [attr.y]="134 - r.h" class="lbl center small reading">{{ r.mA }} mA</text>
+            <text [attr.x]="r.x" y="156" class="lbl center small">{{ r.label }}</text>
+          }
+        }
+      }
+
+      <!-- ───────────── DC / AC waveforms ───────────── -->
+      @case ('waveform') {
+        <line x1="30" y1="95" x2="300" y2="95" class="axis" />
+        <line x1="40" y1="20" x2="40" y2="170" class="axis" />
+        <text x="298" y="110" class="lbl small muted" text-anchor="end">t</text>
+        <text x="22" y="28" class="lbl small muted">U</text>
+        @switch (str('mode')) {
+          @case ('dc') {
+            <line x1="40" y1="45" x2="295" y2="45" class="wave dc" />
+            <text x="290" y="38" class="lbl small reading" text-anchor="end">5 V</text>
+            <text x="290" y="88" class="lbl small muted" text-anchor="end">0</text>
+          }
+          @case ('ac') {
+            <path [attr.d]="wavePath(40, 295, 95, 50, 2)" class="wave ac" />
+            <path d="M 40 30 L 167 30" class="dim" />
+            <path d="M 46 26 L 40 30 L 46 34 M 161 26 L 167 30 L 161 34" class="arrow" />
+            <text x="104" y="24" class="lbl center small accent">T</text>
+            <path d="M 300 95 L 300 45" class="dim" />
+            <path d="M 296 51 L 300 45 L 304 51" class="arrow" />
+            <text x="306" y="72" class="lbl small accent">Û</text>
+          }
+          @case ('rms') {
+            <path [attr.d]="wavePath(40, 295, 95, 50, 2)" class="wave ac" />
+            <line x1="40" y1="45" x2="270" y2="45" class="ref" />
+            <text x="296" y="49" class="lbl small muted" text-anchor="end">Û</text>
+            <line x1="40" y1="59.6" x2="270" y2="59.6" class="ref rms" />
+            <text x="296" y="64" class="lbl small reading" text-anchor="end">RMS</text>
+            <path d="M 34 45 L 34 145" class="dim" />
+            <path d="M 30 51 L 34 45 L 38 51 M 30 139 L 34 145 L 38 139" class="arrow" />
+          }
+          @case ('rectified') {
+            <path [attr.d]="wavePath(40, 295, 140, 90, 2, true)" class="wave ac faint" />
+            <path [attr.d]="smoothPath(40, 295, 140, 90, 2)" class="wave dc" />
+            <text x="292" y="42" class="lbl small reading" text-anchor="end">smoothed</text>
+            <text x="120" y="150" class="lbl small muted center">rectified</text>
+          }
+          @default {
+            <line x1="40" y1="60" x2="295" y2="60" class="wave dc" />
+            <text x="290" y="54" class="lbl small reading" text-anchor="end">DC</text>
+            <path [attr.d]="wavePath(40, 295, 95, 34, 2)" class="wave ac" />
+            <text x="290" y="140" class="lbl small" fill="#1d4ed8" text-anchor="end">AC</text>
+          }
+        }
+      }
+
+      <!-- ───────────── Two loads in series / parallel ───────────── -->
+      @case ('two-loads') {
+        <g transform="translate(50 95) rotate(-90) scale(0.5)" appSymbolGlyph modelKey="battery"></g>
+        <text x="30" y="70" class="lbl accent small">+</text>
+        <text x="30" y="128" class="lbl muted small">−</text>
+        @if (twoLoads().parallel) {
+          <path d="M 50 75 L 50 30 L 260 30 M 50 115 L 50 160 L 260 160" class="wire" />
+          <path d="M 160 30 L 160 60 M 160 130 L 160 160 M 260 30 L 260 60 M 260 130 L 260 160" class="wire" />
+          <circle cx="160" cy="30" r="3" class="node" />
+          <circle cx="160" cy="160" r="3" class="node" />
+          @if (twoLoads().led) {
+            <g transform="translate(160 95) scale(0.55)" appSymbolGlyph modelKey="led" [ledBrightness]="0.8"></g>
+            <g transform="translate(260 95) scale(0.55)" appSymbolGlyph modelKey="led" [ledBrightness]="0.8"></g>
+          } @else {
+            <g transform="translate(160 95) rotate(90) scale(0.55)" appSymbolGlyph modelKey="resistor"></g>
+            <g transform="translate(260 95) rotate(90) scale(0.55)" appSymbolGlyph modelKey="resistor"></g>
+          }
+          <path d="M 50 75 L 50 30 L 260 30 M 260 160 L 50 160 L 50 115" class="flow" />
+          <path d="M 160 30 L 160 60 M 160 130 L 160 160 M 260 30 L 260 60 M 260 130 L 260 160" class="flow" />
+          <text x="130" y="99" class="lbl small reading" text-anchor="end">{{ twoLoads().labels[0] }}</text>
+          <text x="290" y="99" class="lbl small reading">{{ twoLoads().labels[1] }}</text>
+          @if (twoLoads().total) {
+            <text x="105" y="24" class="lbl small reading center">{{ twoLoads().total }}</text>
+          }
+        } @else {
+          <path d="M 50 75 L 50 30 L 100 30 M 150 30 L 200 30 M 250 30 L 280 30 L 280 160 L 50 160 L 50 115" class="wire" />
+          <g transform="translate(125 30) scale(0.5)" appSymbolGlyph modelKey="resistor"></g>
+          <g transform="translate(225 30) scale(0.5)" appSymbolGlyph modelKey="resistor"></g>
+          <path d="M 50 75 L 50 30 L 100 30 M 150 30 L 200 30 M 250 30 L 280 30 L 280 160 L 50 160 L 50 115" class="flow" />
+          <text x="125" y="58" class="lbl small reading center">{{ twoLoads().labels[0] }}</text>
+          <text x="225" y="58" class="lbl small reading center">{{ twoLoads().labels[1] }}</text>
+          @if (twoLoads().total) {
+            <text x="18" y="99" class="lbl small reading">{{ twoLoads().total }}</text>
+          }
+        }
+      }
+
+      <!-- ───────────── Labelled parts grid ───────────── -->
+      @case ('elements-grid') {
+        @for (c of gridCells(); track c.modelKey + $index) {
+          <g [attr.transform]="'translate(' + c.x + ' 78) scale(' + c.scale + ')'" appSymbolGlyph [modelKey]="c.modelKey" [closed]="false"></g>
+          @if (c.labelKey) {
+            <text [attr.x]="c.x" y="150" class="lbl center small">{{ c.labelKey | t }}</text>
+          }
+        }
+      }
+
+      <!-- ───────────── Two resistors in series ───────────── -->
+      @case ('series-resistors') {
+        <path d="M 20 70 L 60 70 M 110 70 L 150 70 M 200 70 L 240 70" class="wire" />
+        <g transform="translate(85 70) scale(0.5)" appSymbolGlyph modelKey="resistor"></g>
+        <g transform="translate(175 70) scale(0.5)" appSymbolGlyph modelKey="resistor"></g>
+        <text x="85" y="42" class="lbl center reading small">{{ str('r1') }}</text>
+        <text x="175" y="42" class="lbl center reading small">{{ str('r2') }}</text>
+        <path d="M 40 100 L 220 100" class="dim" />
+        <path d="M 46 96 L 40 100 L 46 104 M 214 96 L 220 100 L 214 104" class="arrow" />
+        <text x="130" y="128" class="lbl center reading">= {{ str('total') }}</text>
+        <path d="M 60 70 L 240 70" class="flow" />
+      }
+
+      <!-- ───────────── Heat from a resistor ───────────── -->
+      @case ('heat') {
+        <path d="M 40 110 L 100 110 M 220 110 L 280 110" class="wire" />
+        <g transform="translate(160 110) scale(0.6)" appSymbolGlyph modelKey="resistor"></g>
+        <path d="M 40 110 L 280 110" class="flow" />
+        @for (x of [130, 160, 190]; track x) {
+          <path [attr.d]="'M ' + x + ' 84 q 6 -10 0 -20 q -6 -10 0 -20'" class="heat" />
+        }
+        <text x="160" y="160" class="lbl center reading">P = {{ str('power') }}</text>
+        <text x="270" y="40" class="lbl small muted" text-anchor="end">max {{ str('rating') }}</text>
+      }
+
+      <!-- ───────────── LED current zones ───────────── -->
+      @case ('current-bar') {
+        <rect x="30" y="80" [attr.width]="currentZones().safe" height="24" class="zone safe" />
+        <rect [attr.x]="30 + currentZones().safe" y="80" [attr.width]="currentZones().warn" height="24" class="zone warn" />
+        <rect [attr.x]="30 + currentZones().safe + currentZones().warn" y="80" [attr.width]="currentZones().burn" height="24" class="zone burn" />
+        <text x="30" y="124" class="lbl small">0 mA</text>
+        <text [attr.x]="30 + currentZones().safe" y="124" class="lbl small center">{{ currentZones().safeLabel }}</text>
+        <text [attr.x]="30 + currentZones().safe + currentZones().warn" y="124" class="lbl small center">{{ currentZones().burnLabel }}</text>
+        <g transform="translate(60 44) scale(0.35)" appSymbolGlyph modelKey="led" [ledBrightness]="0.9"></g>
+        <g transform="translate(200 44) scale(0.35)" appSymbolGlyph modelKey="led" [ledBrightness]="1" [ledBurn]="0.4"></g>
+        <g transform="translate(285 44) scale(0.35)" appSymbolGlyph modelKey="led" [ledBrightness]="0" [ledBurn]="1"></g>
+      }
+    }
+  </svg>
+  @if (figure().captionKey; as cap) {
+    <figcaption>{{ cap | t }}</figcaption>
+  }
+</figure>

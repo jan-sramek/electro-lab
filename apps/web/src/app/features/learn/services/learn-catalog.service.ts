@@ -2,7 +2,9 @@ import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { LearningApiClient } from '../api/learning-api.client';
+import { LEARN_UNLOCK_ALL } from '../data/learn-flags';
 import {
+  isUnitComplete,
   LearnCatalogResponse,
   LearnModuleDto,
   LearnUnitDetailResponse,
@@ -128,14 +130,14 @@ export class LearnCatalogService {
     const unit = orderedUnits[globalIdx];
     const key = `${unit.moduleSlug}/${unit.unitSlug}`;
     const row = progressByKey?.[key];
-    if (row?.complete) return 'complete';
+    if (isUnitComplete(row)) return 'complete';
     if (row && (row.readComplete || row.quizPassed || row.labPassed)) return 'inProgress';
     if (globalIdx <= 0) return 'available';
-    // No progress exists during prerender (API unreachable) — never emit a locked state there.
-    if (this.isServer) return 'available';
+    // Temporary open-path mode (see learn-flags.ts) and prerender never lock.
+    if (LEARN_UNLOCK_ALL || this.isServer) return 'available';
     const prev = orderedUnits[globalIdx - 1];
     const prevKey = `${prev.moduleSlug}/${prev.unitSlug}`;
-    if (progressByKey?.[prevKey]?.complete) return 'available';
+    if (isUnitComplete(progressByKey?.[prevKey])) return 'available';
     return 'locked';
   }
 

@@ -1,3 +1,5 @@
+import { LEARN_SLIDES_I18N } from './learn-slides-content';
+
 /** Assessment copy for Learn units (lessons, quizzes, lab challenge labels). */
 export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.locked': 'Finish the previous project first to unlock this one.',
@@ -21,7 +23,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.labReturnHint':
     'After the challenge passes in Lab, return here to continue the path. If progress could not be saved, use Check again once you are online.',
   'learn.unit.completeHeading': 'Unit complete',
-  'learn.unit.completeBody': 'Nice work — you read the lesson, passed the quiz, and cleared the lab challenge.',
+  'learn.unit.completeBody': 'Nice work — you read the lesson, passed the quiz, and cleared the bonus lab challenge: full points for this unit.',
   'learn.unit.continueNext': 'Next project →',
   'learn.hub.status.locked': 'Locked',
   'learn.hub.status.available': 'Start',
@@ -124,6 +126,103 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.challenge.check.branch_current_min': 'Branch current meets the minimum.',
   'learn.challenge.check.branch_current_max': 'Branch current stays below the maximum.',
   'learn.challenge.check.switch_state': 'Switch is in the required state.',
+
+  // Concrete checklist wording (parameters come from the criterion itself)
+  'learn.challenge.detail.sim_ok': 'The simulation runs without errors.',
+  'learn.challenge.detail.no_circuit_errors': 'No wiring errors (every part connected, nothing floating).',
+  'learn.challenge.detail.analysis_mode': 'Analysis mode set to {mode}.',
+  'learn.challenge.detail.has_models': 'Parts on the canvas: {parts}.',
+  'learn.challenge.detail.min_wire_count': 'At least {min} wires in the circuit.',
+  'learn.challenge.detail.any_model_min_count': 'At least {min} × {part}.',
+  'learn.challenge.detail.any_model_current_min': '{part} current at least {minA}.',
+  'learn.challenge.detail.any_model_current_max': '{part} current at most {maxA}.',
+  'learn.challenge.detail.any_model_tran_current_peak_min': '{part} peak current at least {minA} during the transient.',
+  'learn.challenge.detail.any_cap_voltage_final_min': '{part} charged to at least {minV} by the end of the run.',
+  'learn.challenge.detail.any_pin_dc_voltage_between': '{part} pin {pin} between {minV} and {maxV}.',
+  'learn.challenge.detail.any_pin_ac_mag_between': '{part} pin {pin} AC magnitude between {minMag} and {maxMag}.',
+  'learn.challenge.detail.any_pin_tran_peak_min': '{part} pin {pin} peaks at least {minV}.',
+  'learn.challenge.detail.any_pin_tran_peak_to_peak_min': '{part} pin {pin} swings at least {minV} peak-to-peak.',
+  'learn.challenge.detail.any_part_not_burned': '{part} is not burned out.',
+  'learn.challenge.detail.any_switch_closed': 'A switch is closed.',
+  'learn.challenge.detail.any_pushbutton_pressed': 'The pushbutton is pressed (held) while checking.',
+  'learn.challenge.detail.branch_current_min': '{ref} current at least {minA}.',
+  'learn.challenge.detail.branch_current_max': '{ref} current at most {maxA}.',
+  'learn.challenge.detail.switch_state': '{ref} is {state}.',
+  'learn.challenge.detail.state.open': 'open',
+  'learn.challenge.detail.state.closed': 'closed',
+  'learn.challenge.detail.mode.dcOp': 'DC',
+  'learn.challenge.detail.mode.tran': 'Transient',
+  'learn.challenge.detail.mode.ac': 'AC',
+
+  // Task brief chrome
+  'learn.unit.labGoalHeading': 'Your task',
+  'learn.unit.labStepsHeading': 'Suggested steps',
+  'learn.unit.labChecksHeading': 'What will be checked',
+
+  // Task briefs — what to build and what counts (basics module)
+  'learn.project.ohmsLaw.labGoal':
+    'Build a closed loop: 5 V battery → resistor → LED → ground. Pick the resistor value so the LED carries between 8 mA and 20 mA, and the node between resistor and LED sits near 2 V. Run DC and check.',
+  'learn.project.seriesParallelCircuits.labGoal':
+    'Build two parallel branches across the battery, each with its own resistor and LED, both returning to ground. Run DC: both LEDs must conduct between 2 mA and 30 mA.',
+  'learn.project.fundamentalsLoop.labGoal':
+    'Build the smallest complete circuit: battery + → resistor → LED → ground, with the return back to battery −. Run DC so the LED conducts.',
+  'learn.project.ohmExplore.labGoal':
+    'Start from the LED loop and change only the resistor. Find a value that keeps the LED lit between 1 mA and 25 mA without burning it, then Run DC.',
+  'learn.project.led.labGoal':
+    'Wire an LED with a series resistor to a battery and ground using at least four wires. Run DC: the LED must conduct and stay intact.',
+  'learn.project.diodeDirection.labGoal':
+    'Build the diode example and orient the diode so current can pass (anode toward the battery +). Run DC and confirm the load conducts.',
+  'learn.project.seriesParallel.labGoal':
+    'Build two LED branches in parallel, each LED with its own resistor. Run DC and confirm every LED conducts.',
+  'learn.project.seriesLeds.labGoal':
+    'Put several LEDs in one series string with a single resistor on the 9 V supply. Run DC: the same current must flow through every LED.',
+  'learn.project.ledBurnLimit.labGoal':
+    'Design a safe LED loop: choose the resistor so the LED stays below 25 mA and never burns out. Run DC and check.',
+  'learn.project.rc.labGoal':
+    'Build battery → resistor → capacitor → ground. Switch to Transient analysis and run: the capacitor must charge to at least 0.5 V by the end.',
+  'learn.project.timeConstant.labGoal':
+    'Build the RC loop, run a Transient analysis long enough for the capacitor to reach at least 2 V, and read τ off the scope at ~63 % of the rise.',
+  'learn.project.ledFade.labGoal':
+    'Build the LED-fade circuit: battery and switch feeding a capacitor, with a resistor + LED returning to the capacitor. Run Transient with the switch closed to charge it.',
+  'learn.project.pulseRc.labGoal':
+    'Feed a pulse source into a resistor–capacitor pair to ground. Run a Transient analysis and watch the RC round off the pulse edges.',
+
+  // Slide-deck lesson chrome
+  'learn.slides.regionLabel': 'Lesson slides',
+  'learn.slides.dotsLabel': 'Slides',
+  'learn.slides.counter': 'Slide {n} of {total}',
+  'learn.slides.goTo': 'Go to slide {n}',
+  'learn.slides.prev': 'Back',
+  'learn.slides.next': 'Next',
+  'learn.slides.end': 'End of lesson',
+  'learn.slides.keyboardHint': 'Tip: use the ← → arrow keys or swipe.',
+  'learn.slides.callout.tip': 'Tip',
+  'learn.slides.callout.formula': 'Formula',
+  'learn.slides.callout.warning': 'Careful',
+  'learn.unit.readSlidesHint': 'Work through every slide; the confirmation appears on the last one.',
+
+  // Points and optional lab
+  'learn.points.plus': '+{pts}',
+  'learn.points.bonus': '+{pts} bonus',
+  'learn.points.unit': '{earned} / {max} pts',
+  'learn.points.total': 'Points: {earned} / {max}',
+  'learn.points.explain': 'Lesson +{read}, quiz +{quiz}, optional lab challenge +{lab} — building it earns the most.',
+  'learn.unit.labOptionalHeading': 'Bonus lab challenge (optional)',
+  'learn.unit.labOptionalUnlocked': 'Unit complete — the next project is unlocked.',
+  'learn.unit.labOptionalHint':
+    'Build the circuit in the Lab and pass the checks to earn {pts} bonus points — more than the lesson and quiz together. You can come back to it any time.',
+  'learn.unit.skipLab': 'Skip for now — next project →',
+  'learn.unit.completeBodyNoLab': 'Nice work — you read the lesson and passed the quiz. This unit has no lab challenge.',
+  'learn.unit.exploreLab': 'Explore the example circuit in the Lab (no checks)',
+
+  ...voltageIntroAssessment(),
+  ...currentIntroAssessment(),
+  ...resistanceIntroAssessment(),
+  ...ohmsLawAssessment(),
+  ...circuitElementsAssessment(),
+  ...seriesParallelCircuitsAssessment(),
+  ...acDcAssessment(),
+  ...LEARN_SLIDES_I18N,
 
   ...ledAssessment(),
   ...rcAssessment(),
@@ -240,6 +339,146 @@ function challengeKeys(prefix: string, c1: string, c2: string) {
   return {
     [`${prefix}.challenge.c1.label`]: c1,
     [`${prefix}.challenge.c2.label`]: c2
+  };
+}
+
+function voltageIntroAssessment() {
+  const p = 'learn.project.voltageIntro';
+  return {
+    ...lessonKeys(
+      p,
+      'Voltage is a difference',
+      'Voltage is the difference in electric potential between two points — the push that moves charge. It is measured in volts, across a part, against the shared ground reference.',
+      'Potential, not motion',
+      'A battery has its full voltage even when nothing is connected. Only a closed path turns that potential into current, and around a loop the drops add up to the source.'
+    ),
+    ...quizKeys(
+      p,
+      ['Voltage is best described as…', 'A difference in electric potential between two points', 'The amount of charge stored in a wire', 'The speed of electrons in a circuit', 'Voltage is always a comparison between two points — the push, not the flow.'],
+      ['A voltmeter is connected…', 'In series, inside the path', 'In parallel, across the two points', 'Only to ground', 'It must see the difference between two points without becoming part of the path.'],
+      ['With the switch open, a voltmeter across the switch reads…', '0 V, because nothing flows', 'Half the battery voltage', 'The full battery voltage', 'No current flows, but the whole potential difference appears across the gap.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'The node between resistor and LED sits between 1.5 V and 3.5 V.')
+  };
+}
+
+function currentIntroAssessment() {
+  const p = 'learn.project.currentIntro';
+  return {
+    ...lessonKeys(
+      p,
+      'Charge on the move',
+      'Current is the rate at which charge passes a point, measured in amperes; small circuits live in milliamperes. Conventional current runs from + to −.',
+      'One loop, one current',
+      'Current needs a closed path and is the same at every point of a single loop. At a junction the incoming current equals the outgoing currents.'
+    ),
+    ...quizKeys(
+      p,
+      ['One ampere means…', 'One coulomb of charge passing per second', 'One volt across one resistor', 'One electron per second', 'Current is charge per time: 1 A = 1 C/s.'],
+      ['In a single series loop the current is…', 'Largest near the battery', 'The same at every point', 'Zero after the LED', 'There is only one path, so what leaves the battery passes every part and returns.'],
+      ['An ammeter is connected…', 'Across the battery', 'Across the LED', 'In series, inside the path', 'Current must pass through the meter; across a source it would short it.']
+    ),
+    ...challengeKeys(p, 'Simulation completes without errors.', 'LED current between 5 mA and 30 mA.')
+  };
+}
+
+function resistanceIntroAssessment() {
+  const p = 'learn.project.resistanceIntro';
+  return {
+    ...lessonKeys(
+      p,
+      'Resistance pushes back',
+      'Resistance opposes current and is measured in ohms. A resistor is built to a precise value; its colour bands spell the number and it has no polarity.',
+      'Ohm’s law',
+      'U = I · R: for a fixed voltage, more resistance means less current. Series resistances add, and current through resistance turns into heat (P = I² · R).'
+    ),
+    ...quizKeys(
+      p,
+      ['With the voltage fixed, doubling the resistance…', 'Halves the current', 'Doubles the current', 'Leaves the current unchanged', 'I = U / R — current is inversely proportional to resistance.'],
+      ['A 5 V battery, an LED that takes 2 V and a 220 Ω resistor: the LED current is about…', '23 mA', '13.6 mA', '2.3 mA', 'The resistor sees 5 − 2 = 3 V; 3 V / 220 Ω ≈ 13.6 mA.'],
+      ['Two 220 Ω resistors in series behave like…', '110 Ω', '220 Ω', '440 Ω', 'Series resistances add: 220 + 220 = 440 Ω.']
+    ),
+    ...challengeKeys(p, 'At least one resistor limits the LED.', 'LED current between 8 mA and 20 mA.')
+  };
+}
+
+function ohmsLawAssessment() {
+  const p = 'learn.project.ohmsLaw';
+  return {
+    ...lessonKeys(
+      p,
+      'One law, three forms',
+      'U = I · R, I = U / R and R = U / I are the same statement. Ohmic parts draw a straight I–U line; LEDs and diodes curve, which is why they need a resistor in series.',
+      'Sizing and power',
+      'Size an LED resistor from R = (U_supply − U_LED) / I and round up to a standard value; then check the power P = U · I = I² · R against the resistor’s rating.'
+    ),
+    ...quizKeys(
+      p,
+      ['A 5 V supply, an LED taking 2 V, target 15 mA — the resistor should be about…', '200 Ω (use 220 Ω)', '333 Ω', '75 Ω', 'R = (5 − 2) V / 0.015 A = 200 Ω; the next standard value up is 220 Ω.'],
+      ['3 V across a part and 6.4 mA through it means R is about…', '19 Ω', '470 Ω', '2.1 kΩ', 'R = U / I = 3 / 0.0064 ≈ 470 Ω.'],
+      ['3 V divided by 2.2 kΩ is…', '1.36 A', '0.68 mA', '1.36 mA', 'Volts divided by kilo-ohms gives milliamperes: 3 / 2.2 = 1.36 mA.']
+    ),
+    ...challengeKeys(p, 'A resistor limits the LED.', 'LED current between 8 mA and 20 mA with the LED node near 2 V.')
+  };
+}
+
+function circuitElementsAssessment() {
+  const p = 'learn.project.circuitElements';
+  return {
+    ...lessonKeys(
+      p,
+      'Four roles',
+      'Every circuit has a source, a load, a closed path and usually a control. Sources are batteries, AC and pulse sources; passives are resistors, capacitors and inductors.',
+      'Reading the symbols',
+      'Diodes and LEDs are one-way arrows, transistors are controllable valves, switches and fuses control and protect. Dots connect wires, crossings do not, and every ground symbol is one node.'
+    ),
+    ...quizKeys(
+      p,
+      ['On the battery symbol the long line marks…', 'The + terminal', 'The − terminal', 'Ground', 'Long line +, short thick line −.'],
+      ['A capacitor…', 'Adds energy to the circuit', 'Stores charge and blocks steady DC', 'Only limits current', 'It passes changing signals and blocks DC — smoothing, timing and filtering.'],
+      ['Two schematic lines cross without a dot. They are…', 'Connected', 'Connected only if both are wires', 'Not connected', 'Only a junction dot means an electrical connection.']
+    ),
+    ...challengeKeys(p, 'Battery, resistor, LED and ground are all present with a closed loop.', 'The LED lights and does not burn.')
+  };
+}
+
+function seriesParallelCircuitsAssessment() {
+  const p = 'learn.project.seriesParallelCircuits';
+  return {
+    ...lessonKeys(
+      p,
+      'Series: one path',
+      'In series the same current flows through every part, the voltage drops add up to the source, and resistances add. One broken part stops everything.',
+      'Parallel: shared nodes',
+      'In parallel every branch sees the same voltage, the branch currents add at the supply, and the total resistance is smaller than any branch. Branches fail independently.'
+    ),
+    ...quizKeys(
+      p,
+      ['Two 220 Ω resistors in series draw a straight…', '440 Ω total', '110 Ω total', '220 Ω total', 'Series resistances add: 220 + 220 = 440 Ω.'],
+      ['Two equal LEDs in parallel on a 5 V rail: each branch sees…', '2.5 V', '5 V', '10 V', 'Parallel branches share the same two nodes, so each sees the full voltage.'],
+      ['One LED in a parallel pair burns out. The other…', 'Goes dark too', 'Gets twice the voltage', 'Keeps lighting as before', 'Each branch is its own loop; the battery simply supplies less total current.']
+    ),
+    ...challengeKeys(p, 'Two LED branches, each with a resistor.', 'Both LEDs conduct between 2 mA and 30 mA.')
+  };
+}
+
+function acDcAssessment() {
+  const p = 'learn.project.acDc';
+  return {
+    ...lessonKeys(
+      p,
+      'Steady or alternating',
+      'DC flows one way at a steady value and has polarity. AC reverses in a sine wave; one cycle lasts the period T and the frequency is f = 1 / T — 50 or 60 Hz for mains.',
+      'Describing and converting AC',
+      'AC size is given as peak, peak-to-peak or RMS (U_RMS = Û / √2 for a sine). Transformers only work with AC, electronics need DC, so chargers rectify with diodes and smooth with capacitors.'
+    ),
+    ...quizKeys(
+      p,
+      ['A 50 Hz mains cycle lasts…', '20 ms', '50 ms', '2 ms', 'T = 1 / f = 1 / 50 Hz = 0.02 s = 20 ms.'],
+      ['“230 V mains” is the…', 'Peak value', 'RMS value', 'Peak-to-peak value', 'RMS is the heating-equivalent DC value; the peak is about 325 V.'],
+      ['Under AC a capacitor…', 'Blocks everything', 'Passes DC and blocks AC', 'Passes AC and blocks DC', 'Only a changing voltage moves charge on and off the plates — the basis of filters.']
+    ),
+    ...challengeKeys(p, 'AC analysis runs on the RC example.', 'The capacitor node magnitude is a fraction of the source.')
   };
 }
 

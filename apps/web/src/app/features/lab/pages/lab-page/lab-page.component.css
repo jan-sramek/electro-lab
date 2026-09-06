@@ -231,3 +231,34 @@
     grid-template-columns: 1fr;
   }
 }
+
+.challenge-goal {
+  margin: 0 0 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #c5e6d8;
+  color: #12263a;
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+.challenge-goal-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0b6e4f;
+  margin-bottom: 0.2rem;
+}
+.challenge-steps { margin: 0 0 0.6rem; font-size: 0.88rem; color: #334155; }
+.challenge-steps summary { cursor: pointer; font-weight: 600; color: #0b6e4f; }
+.challenge-steps ol { margin: 0.35rem 0 0; padding-left: 1.2rem; line-height: 1.45; }
+.challenge-checks-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5a6b7d;
+}

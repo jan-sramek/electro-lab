@@ -20,6 +20,61 @@ export const LEARN_MODULES: readonly LearnModuleDef[] = [
 ];
 
 export const LEARN_UNITS: readonly LearnUnit[] = [
+  // Concept openers — illustrated slide decks (see learn-slides-content.ts).
+  {
+    unitSlug: 'voltage-intro',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.voltageIntro',
+    stepCount: 4,
+    lab: false
+  },
+  {
+    unitSlug: 'current-intro',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.currentIntro',
+    stepCount: 4,
+    lab: false
+  },
+  {
+    unitSlug: 'resistance-intro',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.resistanceIntro',
+    stepCount: 4,
+    lab: false
+  },
+  {
+    unitSlug: 'ohms-law',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.ohmsLaw',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'circuit-elements',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.circuitElements',
+    stepCount: 4,
+    lab: false
+  },
+  {
+    unitSlug: 'series-parallel-circuits',
+    moduleSlug: 'basics',
+    exampleId: 'seriesParallel',
+    i18nKeyPrefix: 'learn.project.seriesParallelCircuits',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ac-dc',
+    moduleSlug: 'basics',
+    exampleId: 'measureAc',
+    i18nKeyPrefix: 'learn.project.acDc',
+    stepCount: 4,
+    lab: false
+  },
   {
     unitSlug: 'fundamentals-loop',
     moduleSlug: 'basics',

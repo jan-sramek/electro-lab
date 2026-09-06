@@ -21,6 +21,9 @@ import { LearnProgressService } from '../../../learn/services/learn-progress.ser
 import { LearnUnitDetailResponse } from '../../../learn/api/learning-api.types';
 import { CriterionCheckResult } from '../../../learn/data/lab-challenge-checker';
 import { getLearnChallengeSpec, specCriteriaForCheck } from '../../../learn/data/learn-challenge-spec';
+import { CriterionLabelPipe } from '../../../learn/data/learn-criterion-label.pipe';
+import { findLearnUnit } from '../../../learn/data/learn-catalog';
+import { learnStepKey } from '../../../learn/data/learn-catalog.model';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { labMessage } from '../../data/lab-messages';
 
@@ -38,7 +41,7 @@ import { labMessage } from '../../data/lab-messages';
     CircuitTabsComponent,
     TranslatePipe,
     RouterLink
-  ],
+  , CriterionLabelPipe],
   providers: [SchematicPersistence, LabEditorStore, CircuitSimulationFacade],
   templateUrl: './lab-page.component.html',
   styleUrl: './lab-page.component.css'
@@ -87,6 +90,22 @@ export class LabPageComponent implements OnInit, OnDestroy {
     const unit = this.learnChallengeUnit();
     if (!unit) return [];
     return specCriteriaForCheck(unit.exampleId, unit.labChallenge.criteria, unit.unitSlug);
+  });
+
+  /** Plain-language task for the challenge (unit labGoal, else its summary). */
+  readonly challengeGoal = computed(() => {
+    const unit = this.learnChallengeUnit();
+    if (!unit) return '';
+    const key = `${unit.i18nKeyPrefix}.labGoal`;
+    return this.i18n.t(this.i18n.has(key) ? key : `${unit.i18nKeyPrefix}.summary`);
+  });
+
+  /** Suggested steps for the challenge (unit stepN keys). */
+  readonly challengeSteps = computed(() => {
+    const unit = this.learnChallengeUnit();
+    const def = unit ? findLearnUnit(unit.moduleSlug, unit.unitSlug) : undefined;
+    if (!def) return [] as string[];
+    return Array.from({ length: def.stepCount }, (_, i) => learnStepKey(def, i + 1)).filter((k) => this.i18n.has(k));
   });
 
   /** Context hint under the canvas: tool mode first, then example preset, else generic. */

@@ -1,4 +1,5 @@
 import { SchematicDocument } from '../../lab/data/schematic.model';
+import { unitHasLab } from './learn-catalog.model';
 import { createLedPreset } from '../../lab/data/presets/led-series.preset';
 import { createLedFadePreset } from '../../lab/data/presets/led-fade.preset';
 import { createRcStepPreset } from '../../lab/data/presets/rc-step.preset';
@@ -324,6 +325,8 @@ describe('Learn challenge preset contracts', () => {
   it('units that share an exampleId each have an explicit UNIT_CRITERIA overlay', () => {
     const byExample = new Map<string, string[]>();
     for (const u of LEARN_UNITS) {
+      // Theory-only units have no criteria; their (empty) overlays are legitimately identical.
+      if (!unitHasLab(u)) continue;
       const list = byExample.get(u.exampleId) ?? [];
       list.push(u.unitSlug);
       byExample.set(u.exampleId, list);
@@ -341,6 +344,8 @@ describe('Learn challenge preset contracts', () => {
   it('sibling unit overlays that share an exampleId are soft-unique', () => {
     const byExample = new Map<string, string[]>();
     for (const u of LEARN_UNITS) {
+      // Theory-only units have no criteria; their (empty) overlays are legitimately identical.
+      if (!unitHasLab(u)) continue;
       const list = byExample.get(u.exampleId) ?? [];
       list.push(u.unitSlug);
       byExample.set(u.exampleId, list);
@@ -359,9 +364,19 @@ describe('Learn challenge preset contracts', () => {
     }
   });
 
+  it('theory-only units (lab: false) have no lab criteria', () => {
+    for (const u of LEARN_UNITS) {
+      if (unitHasLab(u)) continue;
+      expect(hasUnitChallengeOverlay(u.unitSlug)).withContext(`${u.unitSlug} overlay`).toBeTrue();
+      expect(specCriteriaForCheck(u.exampleId, [], u.unitSlug)).withContext(u.unitSlug).toEqual([]);
+    }
+  });
+
   it('unit overlays pass on their sample preset with a generous mock sim result', () => {
     for (const u of LEARN_UNITS) {
       if (!hasUnitChallengeOverlay(u.unitSlug)) continue;
+      // No lab, no criteria to check (covered by the theory-only contract above).
+      if (!unitHasLab(u)) continue;
       const spec = getLearnChallengeSpec(u.exampleId);
       expect(spec).withContext(u.unitSlug).not.toBeNull();
       let doc = PRESET_DOCS[u.exampleId as ExamplePresetId]();

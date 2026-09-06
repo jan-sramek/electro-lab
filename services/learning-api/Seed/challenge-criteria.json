@@ -1,6 +1,141 @@
 [
   {
     "moduleSlug": "basics",
+    "unitSlug": "voltage-intro",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": []
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "current-intro",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": []
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "resistance-intro",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": []
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "ohms-law",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":1}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.008}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_max",
+        "paramsJson": "{\"modelKey\":\"led\",\"maxAmps\":0.02}",
+        "labelKey": "learn.challenge.check.any_model_current_max"
+      },
+      {
+        "order": 7,
+        "type": "any_pin_dc_voltage_between",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"pin\":\"b\",\"minVolts\":1.8,\"maxVolts\":2.7}",
+        "labelKey": "learn.challenge.check.any_pin_dc_voltage_between"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "circuit-elements",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": []
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "series-parallel-circuits",
+    "exampleId": "seriesParallel",
+    "analysisMode": "dcOp",
+    "criteria": [
+      {
+        "order": 1,
+        "type": "no_circuit_errors",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.no_circuit_errors"
+      },
+      {
+        "order": 2,
+        "type": "has_models",
+        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
+        "labelKey": "learn.challenge.check.has_models"
+      },
+      {
+        "order": 3,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"led\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 4,
+        "type": "any_model_min_count",
+        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
+        "labelKey": "learn.challenge.check.any_model_min_count"
+      },
+      {
+        "order": 5,
+        "type": "sim_ok",
+        "paramsJson": "{}",
+        "labelKey": "learn.challenge.check.sim_ok"
+      },
+      {
+        "order": 6,
+        "type": "any_model_current_min",
+        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.002}",
+        "labelKey": "learn.challenge.check.any_model_current_min"
+      },
+      {
+        "order": 7,
+        "type": "any_model_current_max",
+        "paramsJson": "{\"modelKey\":\"led\",\"maxAmps\":0.03}",
+        "labelKey": "learn.challenge.check.any_model_current_max"
+      }
+    ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "ac-dc",
+    "exampleId": "measureAc",
+    "analysisMode": "ac",
+    "criteria": []
+  },
+  {
+    "moduleSlug": "basics",
     "unitSlug": "fundamentals-loop",
     "exampleId": "led",
     "analysisMode": "dcOp",

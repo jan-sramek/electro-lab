@@ -77,5 +77,9 @@ public sealed class LearnProgressRow
 
     public LearnUnit Unit { get; set; } = null!;
 
-    public bool IsComplete => ReadComplete && QuizPassed && LabPassed;
+    /// <summary>
+    /// Lesson + quiz complete the unit and unlock the next one. The lab challenge is an
+    /// optional bonus (worth extra points on the client) and never gates progression.
+    /// </summary>
+    public bool IsComplete => ReadComplete && QuizPassed;
 }

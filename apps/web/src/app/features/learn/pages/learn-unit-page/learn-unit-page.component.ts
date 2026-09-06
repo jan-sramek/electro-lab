@@ -10,6 +10,8 @@ import {
   QuizQuestionResultDto,
   resolveUnitPhase
 } from '../../api/learning-api.types';
+import { unitHasLab } from '../../data/learn-catalog.model';
+import { LEARN_POINTS, unitPointsEarned, unitPointsMax } from '../../data/learn-points';
 import { learnUnitPath } from '../../data/learn-catalog.model';
 import { LearnAnalyticsService } from '../../services/learn-analytics.service';
 import { LearnCatalogService } from '../../services/learn-catalog.service';
@@ -20,14 +22,19 @@ import { specCriteriaForCheck } from '../../data/learn-challenge-spec';
 import { firstValueFrom } from 'rxjs';
 import { gradeQuizLocally } from '../../data/learn-quiz-grading';
 import { isApiUnreachable } from '../../services/learn-api-errors';
+import { learnSlideDeckFor } from '../../data/learn-slides-content';
+import { LearnSlideDeckComponent } from '../../components/learn-slide-deck/learn-slide-deck.component';
+import { CriterionLabelPipe } from '../../data/learn-criterion-label.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
+import { learnStepKey } from '../../data/learn-catalog.model';
 
 @Component({
   selector: 'app-learn-unit-page',
   standalone: true,
-  imports: [TranslatePipe, RouterLink, FormsModule],
+  imports: [TranslatePipe, RouterLink, FormsModule, LearnSlideDeckComponent, CriterionLabelPipe],
   template: `
     @if (unit(); as u) {
-      <article class="learn-unit">
+      <article class="learn-unit" [class.wide]="!!slideDeck()">
         <p class="back">
           <a routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
         </p>
@@ -39,10 +46,19 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
             <p class="locked" role="note">{{ 'learn.unit.locked' | t }}</p>
           } @else {
             <nav class="phase-nav" aria-label="Unit progress">
-              <span [class.active]="phase() === 'read'">{{ 'learn.unit.phase.read' | t }}</span>
-              <span [class.active]="phase() === 'quiz'">{{ 'learn.unit.phase.quiz' | t }}</span>
-              <span [class.active]="phase() === 'lab'">{{ 'learn.unit.phase.lab' | t }}</span>
+              <span [class.active]="phase() === 'read'">
+                {{ 'learn.unit.phase.read' | t }} <b>{{ 'learn.points.plus' | t: { pts: points.read } }}</b>
+              </span>
+              <span [class.active]="phase() === 'quiz'">
+                {{ 'learn.unit.phase.quiz' | t }} <b>{{ 'learn.points.plus' | t: { pts: points.quiz } }}</b>
+              </span>
+              @if (hasLab()) {
+                <span [class.active]="phase() === 'lab'" class="bonus">
+                  {{ 'learn.unit.phase.lab' | t }} <b>{{ 'learn.points.bonus' | t: { pts: points.lab } }}</b>
+                </span>
+              }
               <span [class.active]="phase() === 'complete'">{{ 'learn.unit.phase.done' | t }}</span>
+              <span class="points-earned">{{ 'learn.points.unit' | t: { earned: pointsEarned(), max: pointsMax() } }}</span>
             </nav>
           }
           @if (progress.savedLocally()) {
@@ -53,17 +69,29 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
         @if (phase() === 'read') {
           <section class="panel">
             <h2>{{ 'learn.unit.readHeading' | t }}</h2>
-            @for (block of u.lessonBlocks; track block.id) {
-              <div class="lesson-block">
-                @if (block.titleKey) {
-                  <h3>{{ block.titleKey | t }}</h3>
-                }
-                <p>{{ block.bodyKey | t }}</p>
-              </div>
+            @if (slideDeck(); as deck) {
+              <app-learn-slide-deck
+                [slides]="deck"
+                [startIndex]="startSlide()"
+                (lastReached)="onDeckFinished()"
+                (indexChange)="onSlideChange($event)"
+              />
+              @if (!isLocked(u) && !deckFinished()) {
+                <p class="hint small">{{ 'learn.unit.readSlidesHint' | t }}</p>
+              }
+            } @else {
+              @for (block of u.lessonBlocks; track block.id) {
+                <div class="lesson-block">
+                  @if (block.titleKey) {
+                    <h3>{{ block.titleKey | t }}</h3>
+                  }
+                  <p>{{ block.bodyKey | t }}</p>
+                </div>
+              }
             }
             @if (isLocked(u)) {
               <a class="cta secondary" routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
-            } @else {
+            } @else if (!slideDeck() || deckFinished()) {
               <label class="read-confirm">
                 <input type="checkbox" [checked]="readConfirmed()" (change)="onReadConfirm($event)" />
                 <span>{{ 'learn.unit.readConfirm' | t }}</span>
@@ -115,11 +143,27 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
 
         @if (phase() === 'lab') {
           <section class="panel">
-            <h2>{{ 'learn.unit.labHeading' | t }}</h2>
-            <p class="hint">{{ 'learn.unit.labHint' | t }}</p>
+            <h2>{{ 'learn.unit.labOptionalHeading' | t }}</h2>
+            <p class="notice done" role="status">{{ 'learn.unit.labOptionalUnlocked' | t }}</p>
+            <p class="hint">{{ 'learn.unit.labOptionalHint' | t: { pts: points.lab } }}</p>
+            <div class="task-brief">
+              <h3>{{ 'learn.unit.labGoalHeading' | t }}</h3>
+              <p>{{ labGoal(u) }}</p>
+            </div>
+            @if (labSteps(u).length) {
+              <details class="task-steps">
+                <summary>{{ 'learn.unit.labStepsHeading' | t }}</summary>
+                <ol>
+                  @for (k of labSteps(u); track k) {
+                    <li>{{ k | t }}</li>
+                  }
+                </ol>
+              </details>
+            }
+            <h3 class="checks-heading">{{ 'learn.unit.labChecksHeading' | t }}</h3>
             <ul class="criteria">
               @for (c of labChallengeCriteria(u); track c.id) {
-                <li>{{ c.labelKey | t }}</li>
+                <li>{{ c | criterionLabel }}</li>
               }
             </ul>
             <a
@@ -130,6 +174,13 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
             >
               {{ u.i18nKeyPrefix + '.openLab' | t }}
             </a>
+            @if (u.nextModuleSlug && u.nextUnitSlug) {
+              <a class="cta secondary" [routerLink]="['/learn', u.nextModuleSlug, u.nextUnitSlug]">
+                {{ 'learn.unit.skipLab' | t }}
+              </a>
+            } @else {
+              <a class="cta secondary" routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
+            }
             <p class="hint small">{{ 'learn.unit.labReturnHint' | t }}</p>
           </section>
         }
@@ -137,7 +188,13 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
         @if (phase() === 'complete') {
           <section class="panel complete">
             <h2>{{ 'learn.unit.completeHeading' | t }}</h2>
-            <p>{{ 'learn.unit.completeBody' | t }}</p>
+            <p>{{ (hasLab() ? 'learn.unit.completeBody' : 'learn.unit.completeBodyNoLab') | t }}</p>
+            <p class="hint">{{ 'learn.points.unit' | t: { earned: pointsEarned(), max: pointsMax() } }}</p>
+            @if (!hasLab()) {
+              <a class="cta secondary" routerLink="/lab" [queryParams]="{ example: u.exampleId }">
+                {{ 'learn.unit.exploreLab' | t }}
+              </a>
+            }
             @if (u.nextModuleSlug && u.nextUnitSlug) {
               <a
                 class="cta"
@@ -155,6 +212,8 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
   `,
   styles: `
     .learn-unit { max-width: 42rem; }
+    .learn-unit.wide { max-width: 58rem; }
+    app-learn-slide-deck { display: block; margin: 0 0 1rem; }
     .back { margin: 0 0 1rem; }
     .back a { color: #0b6e4f; text-decoration: none; font-weight: 600; }
     .back a:hover { text-decoration: underline; }
@@ -163,6 +222,11 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
     .phase-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 0.85rem; }
     .phase-nav span { padding: 0.25rem 0.55rem; border-radius: 999px; background: #eef2f6; color: #5a6b7d; }
     .phase-nav span.active { background: #0b6e4f; color: #fff; font-weight: 600; }
+    .phase-nav span b { font-weight: 700; opacity: 0.8; margin-left: 0.15rem; }
+    .phase-nav span.bonus { border: 1px dashed #0b6e4f; background: #f0f7f4; color: #0b6e4f; }
+    .phase-nav span.bonus.active { background: #0b6e4f; color: #fff; border-style: solid; }
+    .phase-nav .points-earned { margin-left: auto; background: transparent; color: #0b6e4f; font-weight: 700; }
+    .notice.done { margin: 0 0 0.75rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #e8f5f0; color: #0b6e4f; font-size: 0.92rem; }
     .panel { border-top: 1px solid #d8dee6; padding-top: 1rem; }
     .panel h2 { margin: 0 0 0.75rem; font-size: 1.15rem; color: #12263a; }
     .lesson-block { margin-bottom: 1rem; }
@@ -179,6 +243,13 @@ import { isApiUnreachable } from '../../services/learn-api-errors';
     .quiz-feedback { margin: 0.5rem 0 0; font-size: 0.92rem; }
     .quiz-feedback.ok { color: #0b6e4f; }
     .criteria { margin: 0 0 1rem; padding-left: 1.2rem; color: #334155; line-height: 1.5; }
+    .task-brief { margin: 0 0 0.85rem; padding: 0.75rem 0.9rem; border-radius: 8px; background: #f0f7f4; border: 1px solid #c5e6d8; }
+    .task-brief h3 { margin: 0 0 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #0b6e4f; }
+    .task-brief p { margin: 0; color: #12263a; line-height: 1.55; }
+    .task-steps { margin: 0 0 0.85rem; color: #334155; }
+    .task-steps summary { cursor: pointer; font-weight: 600; color: #0b6e4f; }
+    .task-steps ol { margin: 0.5rem 0 0; padding-left: 1.3rem; line-height: 1.5; }
+    .checks-heading { margin: 0 0 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #5a6b7d; }
     .cta {
       display: inline-block; margin: 0.5rem 0.5rem 0.5rem 0; padding: 0.55rem 1rem;
       background: #0b6e4f; color: #fff; text-decoration: none; border: none; border-radius: 6px;
@@ -212,14 +283,65 @@ export class LearnUnitPageComponent implements OnInit {
   /** Server definitively rejected the submission (locked unit / prerequisites) — not an offline case. */
   readonly quizRejected = signal(false);
 
+  /** Illustrated slide deck for this unit, when one is authored (else the two lesson blocks). */
+  readonly slideDeck = computed(() => {
+    const u = this.unit();
+    return u ? learnSlideDeckFor(u.unitSlug) : null;
+  });
+  /** Learner has reached the last slide — unlocks the read confirmation. */
+  readonly deckFinished = signal(false);
+  /** Slide restored from the `#slide-N` URL fragment (deep link / refresh). */
+  readonly startSlide = signal(0);
+
+  /** Theory-only units skip the Lab phase entirely. */
+  readonly hasLab = computed(() => {
+    const u = this.unit();
+    return !!u && unitHasLab(findLearnUnit(u.moduleSlug, u.unitSlug));
+  });
+  readonly points = LEARN_POINTS;
+  readonly pointsEarned = computed(() => {
+    const u = this.unit();
+    return u ? unitPointsEarned(this.progress.progressFor(u.moduleSlug, u.unitSlug), this.hasLab()) : 0;
+  });
+  readonly pointsMax = computed(() => unitPointsMax(this.hasLab()));
+
   readonly phase = computed((): LearnUnitPhase => {
     const u = this.unit();
     if (!u) return 'read';
     const p = this.progress.progressFor(u.moduleSlug, u.unitSlug);
-    return resolveUnitPhase(p, u.availability);
+    return resolveUnitPhase(p, u.availability, this.hasLab());
   });
 
   readonly learnUnitPath = learnUnitPath;
+
+  private readonly i18n = inject(I18nService);
+
+  /** Plain-language task: what to build and what counts (falls back to the unit summary). */
+  labGoal(u: LearnUnitDetailResponse): string {
+    const key = `${u.i18nKeyPrefix}.labGoal`;
+    return this.i18n.t(this.i18n.has(key) ? key : `${u.i18nKeyPrefix}.summary`);
+  }
+
+  /** Suggested steps (the unit's stepN keys). */
+  labSteps(u: LearnUnitDetailResponse): string[] {
+    const unit = findLearnUnit(u.moduleSlug, u.unitSlug);
+    if (!unit) return [];
+    return Array.from({ length: unit.stepCount }, (_, i) => learnStepKey(unit, i + 1)).filter((k) => this.i18n.has(k));
+  }
+
+  onDeckFinished(): void {
+    this.deckFinished.set(true);
+  }
+
+  /** Mirror the current slide into the URL fragment without adding history entries. */
+  onSlideChange(index: number): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      fragment: `slide-${index + 1}`,
+      queryParamsHandling: 'preserve',
+      replaceUrl: true
+    });
+  }
 
   /** Bumped on every navigation so a slow earlier bootstrap cannot overwrite the current unit. */
   private bootstrapGeneration = 0;
@@ -227,6 +349,8 @@ export class LearnUnitPageComponent implements OnInit {
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.resetUnitState();
+      const m = /^slide-(\d+)$/.exec(this.route.snapshot.fragment ?? '');
+      this.startSlide.set(m ? Math.max(0, Number(m[1]) - 1) : 0);
       void this.bootstrap(
         ++this.bootstrapGeneration,
         params.get('moduleSlug') ?? '',
@@ -240,6 +364,7 @@ export class LearnUnitPageComponent implements OnInit {
   }
 
   private resetUnitState(): void {
+    this.deckFinished.set(false);
     this.unit.set(null);
     this.readConfirmed.set(false);
     this.answers.set({});

@@ -49,9 +49,14 @@ public static class LearnCatalogSeeder
         var unitsByKey = units.ToDictionary(u => $"{moduleIdToSlug[u.ModuleId]}/{u.Slug}");
 
         var orderedUnits = new List<LearnUnit>();
+        // Sort order follows the position inside UnitDefs per module (the same order the web
+        // catalog ships), so inserting a unit ahead of existing ones re-orders existing rows too.
+        var positionInModule = new Dictionary<string, int>();
         foreach (var def in UnitDefs)
         {
             var key = $"{def.ModuleSlug}/{def.UnitSlug}";
+            var sortOrder = positionInModule.GetValueOrDefault(def.ModuleSlug) + 1;
+            positionInModule[def.ModuleSlug] = sortOrder;
             if (!unitsByKey.TryGetValue(key, out var unit))
             {
                 unit = new LearnUnit
@@ -60,7 +65,7 @@ public static class LearnCatalogSeeder
                     Slug = def.UnitSlug,
                     ExampleId = def.ExampleId,
                     I18nKeyPrefix = def.I18nKeyPrefix,
-                    SortOrder = def.Order
+                    SortOrder = sortOrder
                 };
                 db.LearnUnits.Add(unit);
                 await db.SaveChangesAsync();
@@ -70,7 +75,7 @@ public static class LearnCatalogSeeder
             {
                 unit.ExampleId = def.ExampleId;
                 unit.I18nKeyPrefix = def.I18nKeyPrefix;
-                unit.SortOrder = def.Order;
+                unit.SortOrder = sortOrder;
                 unit.ModuleId = modulesBySlug[def.ModuleSlug].Id;
             }
 
@@ -337,6 +342,9 @@ public static class LearnCatalogSeeder
         new($"{prefix}.challenge.c2.label", "analysis_mode", new { mode = "tran" })
     ];
 
+    /** Units without a lab challenge (theory-only) — the client hides the Lab phase. */
+    private static LabCriterionDef[] NoLab() => [];
+
     /** Fallback only — prefer challenge-criteria.json via ResolveCriteria. */
     private static LabCriterionDef[] DcSimOk(string prefix) =>
     [
@@ -346,6 +354,27 @@ public static class LearnCatalogSeeder
 
     private static readonly UnitDef[] UnitDefs =
     [
+        new("basics", "voltage-intro", "led", "learn.project.voltageIntro", 1,
+            StandardLessons("learn.project.voltageIntro"), StandardQuiz("learn.project.voltageIntro"),
+            NoLab()),
+        new("basics", "current-intro", "led", "learn.project.currentIntro", 1,
+            StandardLessons("learn.project.currentIntro"), StandardQuiz("learn.project.currentIntro"),
+            NoLab()),
+        new("basics", "resistance-intro", "led", "learn.project.resistanceIntro", 1,
+            StandardLessons("learn.project.resistanceIntro"), StandardQuiz("learn.project.resistanceIntro"),
+            NoLab()),
+        new("basics", "ohms-law", "led", "learn.project.ohmsLaw", 1,
+            StandardLessons("learn.project.ohmsLaw"), StandardQuiz("learn.project.ohmsLaw"),
+            LedLab("learn.project.ohmsLaw")),
+        new("basics", "circuit-elements", "led", "learn.project.circuitElements", 1,
+            StandardLessons("learn.project.circuitElements"), StandardQuiz("learn.project.circuitElements"),
+            NoLab()),
+        new("basics", "series-parallel-circuits", "seriesParallel", "learn.project.seriesParallelCircuits", 1,
+            StandardLessons("learn.project.seriesParallelCircuits"), StandardQuiz("learn.project.seriesParallelCircuits"),
+            DcSimOk("learn.project.seriesParallelCircuits")),
+        new("basics", "ac-dc", "measureAc", "learn.project.acDc", 1,
+            StandardLessons("learn.project.acDc"), StandardQuiz("learn.project.acDc"),
+            NoLab()),
         new("basics", "fundamentals-loop", "led", "learn.project.fundamentalsLoop", 1,
             StandardLessons("learn.project.fundamentalsLoop"), StandardQuiz("learn.project.fundamentalsLoop"),
             LedLab("learn.project.fundamentalsLoop")),

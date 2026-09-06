@@ -14,10 +14,25 @@
       @if (learnChallengeUnit(); as challenge) {
         <div class="learn-challenge">
           <h2>{{ 'lab.challenge.heading' | t }}</h2>
+          <p class="challenge-goal">
+            <span class="challenge-goal-label">{{ 'learn.unit.labGoalHeading' | t }}</span>
+            {{ challengeGoal() }}
+          </p>
+          @if (challengeSteps().length) {
+            <details class="challenge-steps">
+              <summary>{{ 'learn.unit.labStepsHeading' | t }}</summary>
+              <ol>
+                @for (k of challengeSteps(); track k) {
+                  <li>{{ k | t }}</li>
+                }
+              </ol>
+            </details>
+          }
+          <p class="challenge-checks-label">{{ 'learn.unit.labChecksHeading' | t }}</p>
           <ul>
             @for (c of challengeCriteria(); track c.id) {
               <li [class.pass]="criterionPassed(c.id) === true" [class.fail]="criterionPassed(c.id) === false">
-                {{ c.labelKey | t }}
+                {{ c | criterionLabel }}
               </li>
             }
           </ul>

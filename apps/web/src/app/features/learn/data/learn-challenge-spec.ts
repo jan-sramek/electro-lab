@@ -944,6 +944,37 @@ function cloneSpecCriteria(exampleId: ExamplePresetId): LearnChallengeLabSpec['c
 }
 
 const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
+  // Theory-only openers (catalog `lab: false`) carry no lab criteria; the hands-on
+  // openers (ohms-law, series-parallel-circuits) check that a correct circuit was built.
+  'voltage-intro': [],
+  'current-intro': [],
+  'resistance-intro': [],
+  'ohms-law': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 1 }) },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.008 }) },
+    { type: 'any_model_current_max', paramsJson: JSON.stringify({ modelKey: 'led', maxAmps: 0.02 }) },
+    {
+      type: 'any_pin_dc_voltage_between',
+      paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 1.8, maxVolts: 2.7 })
+    }
+  ],
+  // Theory-only unit (catalog `lab: false`): no lab challenge, no criteria.
+  'circuit-elements': [],
+  // The two series/parallel units share the seriesParallel sample.
+  'series-parallel-intro': cloneSpecCriteria('seriesParallel'),
+  'series-parallel-circuits': [
+    { type: 'no_circuit_errors', paramsJson: '{}' },
+    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'led', min: 2 }) },
+    { type: 'any_model_min_count', paramsJson: JSON.stringify({ modelKey: 'resistor', min: 2 }) },
+    { type: 'sim_ok', paramsJson: '{}' },
+    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.002 }) },
+    { type: 'any_model_current_max', paramsJson: JSON.stringify({ modelKey: 'led', maxAmps: 0.03 }) }
+  ],
+  'ac-dc': [],
   'led-burn-limit': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },

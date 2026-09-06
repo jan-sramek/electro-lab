@@ -1,0 +1,75 @@
+<section
+  class="deck"
+  #card
+  tabindex="0"
+  role="region"
+  [attr.aria-label]="'learn.slides.regionLabel' | t"
+  [attr.aria-roledescription]="'learn.slides.regionLabel' | t"
+  (keydown)="onKeydown($event)"
+  (pointerdown)="onPointerDown($event)"
+  (pointerup)="onPointerUp($event)"
+  (pointercancel)="swipeStartXReset()"
+>
+  <header class="deck-head">
+    <span class="counter" aria-live="polite">
+      {{ 'learn.slides.counter' | t: { n: index() + 1, total: count() } }}
+    </span>
+    <ol class="dots" [attr.aria-label]="'learn.slides.dotsLabel' | t">
+      @for (s of slides(); track s.id; let i = $index) {
+        <li>
+          <button
+            type="button"
+            class="dot"
+            [class.active]="i === index()"
+            [class.visited]="isVisited(i)"
+            [attr.aria-current]="i === index() ? 'step' : null"
+            [attr.aria-label]="'learn.slides.goTo' | t: { n: i + 1 }"
+            (click)="goTo(i)"
+          ></button>
+        </li>
+      }
+    </ol>
+  </header>
+  <div class="progress" aria-hidden="true"><span [style.width.%]="progressPct()"></span></div>
+
+  @if (current(); as s) {
+    <article class="slide" [class.forward]="direction() === 'forward'" [class.back]="direction() === 'back'">
+      <h3 class="slide-title">{{ s.titleKey | t }}</h3>
+      <div class="slide-body" [class.with-figure]="!!s.figure">
+        @if (s.figure; as fig) {
+          <app-learn-figure [figure]="fig" />
+        }
+        <div class="text">
+          @for (k of s.bodyKeys; track k) {
+            <p>{{ k | t }}</p>
+          }
+          @if (s.factKeys?.length) {
+            <ul class="facts">
+              @for (k of s.factKeys!; track k) {
+                <li>{{ k | t }}</li>
+              }
+            </ul>
+          }
+          @if (s.callout; as c) {
+            <p class="callout" [class.tip]="c.kind === 'tip'" [class.formula]="c.kind === 'formula'" [class.warning]="c.kind === 'warning'">
+              <span class="callout-tag">{{ ('learn.slides.callout.' + c.kind) | t }}</span>
+              <span class="callout-text">{{ c.textKey | t }}</span>
+            </p>
+          }
+        </div>
+      </div>
+    </article>
+  }
+
+  <footer class="deck-nav">
+    <button type="button" class="nav secondary" (click)="prev()" [disabled]="isFirst()">
+      ← {{ 'learn.slides.prev' | t }}
+    </button>
+    <span class="kbd-hint">{{ 'learn.slides.keyboardHint' | t }}</span>
+    @if (!isLast()) {
+      <button type="button" class="nav" (click)="next()">{{ 'learn.slides.next' | t }} →</button>
+    } @else {
+      <span class="nav done" role="status">{{ 'learn.slides.end' | t }}</span>
+    }
+  </footer>
+</section>

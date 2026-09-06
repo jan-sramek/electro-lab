@@ -1,0 +1,94 @@
+.learn-figure {
+  margin: 0;
+  background: #f7f9fc;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem 0.65rem;
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  font-family: inherit;
+}
+
+figcaption {
+  margin: 0.5rem 0 0;
+  color: #5a6b7d;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* drawing primitives */
+.wire { fill: none; stroke: #334155; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.lead { fill: none; stroke: #1d4ed8; stroke-width: 1; stroke-dasharray: 3 3; }
+.axis { fill: none; stroke: #334155; stroke-width: 1.4; }
+.axis.muted, .arrow.muted { stroke: #94a3b8; }
+.tick { stroke: #334155; stroke-width: 1.2; }
+.dim { fill: none; stroke: #0b6e4f; stroke-width: 1; }
+.arrow { fill: none; stroke: #0b6e4f; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.rail { stroke: #94a3b8; stroke-width: 2; }
+.rung { stroke: #334155; stroke-width: 2; }
+.node { fill: #334155; }
+.gate { stroke: #0b6e4f; stroke-width: 1.2; stroke-dasharray: 4 3; }
+
+.tank { fill: #ffffff; stroke: #334155; stroke-width: 1.4; }
+.water { fill: #93c5fd; }
+.pipe { fill: #cbd5e1; stroke: #334155; stroke-width: 1; }
+.conductor { fill: #e2e8f0; stroke: #334155; stroke-width: 1.2; }
+.charge { fill: #1d4ed8; animation: lf-drift 2.8s linear infinite; }
+.meter { fill: #ffffff; stroke: #1d4ed8; stroke-width: 1.6; }
+.meter-letter { font-size: 18px; font-weight: 700; fill: #1d4ed8; }
+.meter-letter.small { font-size: 12px; }
+.body { fill: #f1e2c3; stroke: #a16207; stroke-width: 1; }
+.triangle { fill: #f0f7f4; stroke: #0b6e4f; stroke-width: 1.6; stroke-linejoin: round; }
+.bar { fill: #0b6e4f; opacity: 0.85; }
+.heat { fill: none; stroke: #c2410c; stroke-width: 1.6; stroke-linecap: round; animation: lf-heat 1.6s ease-in-out infinite; }
+.iv { fill: none; stroke: #0b6e4f; stroke-width: 2; stroke-linecap: round; }
+.iv.led { stroke: #c2410c; }
+.wave { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.wave.dc { stroke: #0b6e4f; }
+.wave.ac { stroke: #1d4ed8; }
+.wave.faint { stroke: #93c5fd; stroke-width: 1.6; }
+.ref { stroke: #94a3b8; stroke-width: 1; stroke-dasharray: 4 3; }
+.ref.rms { stroke: #0b6e4f; }
+.zone.safe { fill: #4ade80; }
+.zone.warn { fill: #fb923c; }
+.zone.burn { fill: #ef4444; }
+
+.flow {
+  fill: none;
+  stroke: #2dd4bf;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 6 8;
+  animation: lf-flow 0.7s linear infinite;
+}
+.flow.wide { stroke-width: 10; stroke-dasharray: 14 8; }
+.flow.narrow { stroke-width: 3; stroke-dasharray: 3 12; animation-duration: 1.4s; }
+
+.lbl { font-size: 12px; fill: #12263a; }
+.lbl.small { font-size: 10px; }
+.lbl.center, .center { text-anchor: middle; }
+.lbl.muted { fill: #64748b; }
+.lbl.accent { fill: #0b6e4f; font-weight: 700; }
+.lbl.reading { fill: #0b6e4f; font-weight: 600; }
+.unit { font-size: 22px; font-weight: 700; fill: #0b6e4f; }
+.formula { font-size: 26px; font-weight: 700; fill: #0b6e4f; }
+
+@keyframes lf-flow { to { stroke-dashoffset: -14; } }
+@keyframes lf-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(40px); }
+}
+@keyframes lf-heat {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow, .charge, .heat { animation: none; }
+}

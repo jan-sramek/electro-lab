@@ -111,7 +111,9 @@ export class LearnProgressService {
     const row: LearnUnitProgressDto = {
       ...this.progressFor(moduleSlug, unitSlug),
       readComplete: true,
-      quizPassed: true
+      quizPassed: true,
+      // Lesson + quiz complete the unit offline too; the lab stays an optional bonus.
+      complete: true
     };
     this.pendingQuiz[this.key(moduleSlug, unitSlug)] = { ...answers };
     this.upsert(row);

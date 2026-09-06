@@ -63,10 +63,17 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 
 ### Module A — Voltage, current, resistance
 
-**Intent:** Comfortable with a simple loop and Ohm’s law at teaching level.
+**Intent:** Comfortable with a simple loop and Ohm’s law at teaching level. The three `*-intro` openers use the slide-deck Read phase (`learn-slides-content.ts`: one idea per slide, an inline-SVG figure, callouts, a takeaways slide); other units keep the two lesson blocks. Lesson + quiz complete a unit and unlock the next; the lab challenge is optional and only present where it makes sense (`lab: false` hides it: the concept openers `voltage-intro`, `current-intro`, `resistance-intro`, `circuit-elements`, `ac-dc` are theory-only; `ohms-law` and `series-parallel-circuits` check a built circuit). Points: lesson 10, quiz 30, lab bonus 60 (`learn-points.ts`). **Temporary:** all units are unlocked via `Learn:UnlockAll` (API appsettings) + `LEARN_UNLOCK_ALL` (`learn-flags.ts`); set both to false to restore sequential unlocking.
 
 | Unit id | Topic | Lab | Learn ship |
 |---------|--------|-----|------------|
+| `voltage-intro` | What voltage is — 8 illustrated slides (potential difference, volts, ground, KVL) | ready (`led`) | **shipped** |
+| `current-intro` | What current is — 8 illustrated slides (amperes, direction, closed loop, KCL, overload) | ready (`led`) | **shipped** |
+| `resistance-intro` | What resistance is — 8 illustrated slides (ohms, resistor bands, Ohm’s law, series, heat) | ready (`led`) | **shipped** |
+| `ohms-law` | Ohm’s law — 8 slides (I–U line, two worked examples, prefixes, non-ohmic parts, power) | ready (`led`) | **shipped** |
+| `circuit-elements` | Circuit elements — 8 slides (sources, passives, semiconductors, controls, wires/ground/meters, reading a schematic) | ready (`led`) | **shipped** |
+| `series-parallel-circuits` | Series & parallel — 8 slides (rules, failures, mixed circuits, quick test) | ready (`seriesParallel`) | **shipped** |
+| `ac-dc` | AC and DC — 8 slides (polarity, T and f, peak/RMS, grid vs gadgets, rectify/smooth, AC analysis) | ready (`measureAc`) | **shipped** |
 | `fundamentals-loop` | Battery, resistor, current, ground | ready (`led`) | **mvp** |
 | `ohm-explore` | Change R, see I (probe) | ready (`led`) | **mvp** |
 | `series-parallel-intro` | Series vs parallel intuition | ready (`seriesParallel`) | **mvp** |

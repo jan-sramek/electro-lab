@@ -38,6 +38,11 @@ export class I18nService {
    * Resolve a message key. Optional `params` replace `{name}` placeholders in a single pass,
    * so a substituted value containing `{x}` is never re-substituted.
    */
+  /** True when a message exists for the key (server bundle or bundled fallback). */
+  has(key: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.messages, key) || Object.prototype.hasOwnProperty.call(EN_FALLBACK, key);
+  }
+
   t(key: string, params?: Record<string, string | number>): string {
     const text = this.messages[key] ?? EN_FALLBACK[key] ?? key;
     if (!params) return text;
