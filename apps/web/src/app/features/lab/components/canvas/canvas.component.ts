@@ -26,18 +26,24 @@ import {
   symbolDisplayScale
 } from '../../data/symbol-scale';
 import {
+  alignJunctionToward,
+  applyWireBends,
+  bendOfPolyline,
+  captureWireBends,
   clearWireWaypoints,
   nearestOrthogonalTee,
   routeOrthogonal,
   updateAxisLock,
+  withWireBend,
   withWireWaypoint
 } from '../../data/wire-routing';
-import type { Point, PreferAxis } from '../../data/wire-routing';
+import type { Point, PreferAxis, WireBend } from '../../data/wire-routing';
 import { PALETTE_DRAG_MIME } from '../../data/palette-drag';
 import { SimulateResponse } from '../../api/circuit-api.types';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { SymbolGlyphComponent } from '../symbol-glyph/symbol-glyph.component';
 import { WireFlowBuilder } from '../../data/wire-flow/wire-flow.builder';
+import { RELAY_COIL_SUFFIX } from '../../data/wire-current';
 import { resolveCapacitorBranchCurrent } from '../../data/cap-branch-current';
 import { equalizeSeriesBranchCurrent } from '../../data/series-branch-current';
 import { LED_BURN_A, LED_FULL_BRIGHT_A } from '../../data/led-limits';
@@ -53,6 +59,8 @@ interface DragState {
   moveArmed: boolean;
   /** Pushbutton hold — convert to move-drag after a small threshold. */
   pushHoldId?: string;
+  /** L orientation of every attached wire at drag start — kept while moving. */
+  wireBends: Map<string, WireBend | null>;
 }
 
 interface WireDragState {
@@ -114,6 +122,8 @@ export class SchematicCanvasComponent {
   readonly wireMotion = signal<Point[]>([]);
   /** Sticky L orientation for the in-progress wire (follows the traced side). */
   readonly wireAxisLock = signal<PreferAxis | null>(null);
+  /** Junction created by tapping a wire to start this gesture (slid to align on commit). */
+  private wireTapJunctionId: string | null = null;
   readonly dragOver = signal(false);
   /** Normalized marquee rect while dragging on empty canvas. */
   readonly marqueeRect = signal<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -192,6 +202,7 @@ export class SchematicCanvasComponent {
   });
 
   private clearWireGesture(): void {
+    this.wireTapJunctionId = null;
     this.wireFrom.set(null);
     this.wireCursor.set(null);
     this.wireMotion.set([]);
@@ -213,21 +224,6 @@ export class SchematicCanvasComponent {
     this.wireAxisLock.set(updateAxisLock(this.wireAxisLock(), next, from, cursor));
   }
 
-  /** Interior elbow of an orthogonal route — stored so the drawn L survives commit. */
-  private elbowWaypointFromRoute(pts: Point[]): Point | null {
-    for (let i = 1; i < pts.length - 1; i++) {
-      const a = pts[i - 1]!;
-      const b = pts[i]!;
-      const c = pts[i + 1]!;
-      const abH = Math.abs(a.y - b.y) < 0.5;
-      const bcH = Math.abs(b.y - c.y) < 0.5;
-      if (abH === bcH) continue;
-      // Skip tiny exit-stub corners.
-      if (Math.hypot(b.x - a.x, b.y - a.y) < 12) continue;
-      return { x: b.x, y: b.y };
-    }
-    return null;
-  }
   readonly netTags = computed(() => {
     const d = this.nettled();
     const seen = new Set<string>();
@@ -464,7 +460,14 @@ export class SchematicCanvasComponent {
       this.pushbuttonPress.emit({ id: pushHoldId, pressed: true });
     }
 
-    this.drag = { ids, origins, pointer0: { x: pt.x, y: pt.y }, moveArmed: false, pushHoldId };
+    this.drag = {
+      ids,
+      origins,
+      pointer0: { x: pt.x, y: pt.y },
+      moveArmed: false,
+      pushHoldId,
+      wireBends: captureWireBends(this.doc(), ids)
+    };
     this.gestureStart.emit();
     (ev.currentTarget as Element).setPointerCapture(ev.pointerId);
   }
@@ -496,21 +499,18 @@ export class SchematicCanvasComponent {
     const dx = snap(origin.x + rawDx) - origin.x;
     const dy = snap(origin.y + rawDy) - origin.y;
     const moving = new Set(this.drag.ids);
-    this.docChange.emit({
+    const moved: SchematicDocument = {
       ...this.doc(),
       components: this.doc().components.map((c) => {
         if (!moving.has(c.id)) return c;
         const o = this.drag!.origins.get(c.id);
         if (!o) return c;
         return { ...c, x: o.x + dx, y: o.y + dy };
-      }),
-      // Re-auto-route when endpoints move so manual elbows do not drift.
-      wires: this.doc().wires.map((w) =>
-        moving.has(w.a.componentId) || moving.has(w.b.componentId)
-          ? clearWireWaypoints(w)
-          : w
-      )
-    });
+      })
+    };
+    // Attached wires keep the L they had when the drag started; only the
+    // corner slides with the pins (no span re-route flipping the shape).
+    this.docChange.emit(applyWireBends(moved, this.drag.wireBends));
   }
 
   onSymbolPointerUp(ev: PointerEvent): void {
@@ -560,6 +560,7 @@ export class SchematicCanvasComponent {
 
     const from = this.wireFrom();
     if (!from) {
+      this.wireTapJunctionId = null;
       this.wireFrom.set(ref);
       this.wireMotion.set([]);
       this.wireAxisLock.set(null);
@@ -575,11 +576,15 @@ export class SchematicCanvasComponent {
       return;
     }
 
-    const d = this.nettled();
-    const a = this.endpoint(d, from);
-    const b = this.endpoint(d, ref);
+    let next = this.doc();
+    const target = this.endpoint(next, ref);
+    if (this.wireTapJunctionId && target) {
+      next = alignJunctionToward(next, this.wireTapJunctionId, target);
+    }
+    const a = this.endpoint(next, from);
+    const b = target;
     let wire: SchematicWire = {
-      id: nextFreeId(this.doc(), 'W'),
+      id: nextFreeId(next, 'W'),
       a: from,
       b: ref
     };
@@ -588,13 +593,12 @@ export class SchematicCanvasComponent {
         motion: this.wireMotion(),
         axisLock: this.wireAxisLock()
       });
-      const elbow = this.elbowWaypointFromRoute(pts);
-      if (elbow) wire = withWireWaypoint(wire, elbow);
+      wire = withWireBend(wire, a, b, bendOfPolyline(pts));
     }
 
     this.docChange.emit({
-      ...this.doc(),
-      wires: [...this.doc().wires, wire]
+      ...next,
+      wires: [...next.wires, wire]
     });
     this.clearWireGesture();
   }
@@ -635,8 +639,7 @@ export class SchematicCanvasComponent {
             motion: this.wireMotion(),
             axisLock: this.wireAxisLock()
           });
-          const elbow = this.elbowWaypointFromRoute(pts);
-          if (elbow) branch = withWireWaypoint(branch, elbow);
+          branch = withWireBend(branch, start, hit, bendOfPolyline(pts));
         }
         next = {
           ...next,
@@ -649,6 +652,7 @@ export class SchematicCanvasComponent {
 
       // Start a branch from the tap point.
       this.docChange.emit(next);
+      this.wireTapJunctionId = junction.id;
       this.wireFrom.set(jRef);
       this.wireMotion.set([]);
       this.wireAxisLock.set(null);
@@ -756,7 +760,23 @@ export class SchematicCanvasComponent {
 
   /** Branch current with capacitor I = C·dV/dt fallback when the engine reports ~0. */
   branchCurrentOf(id: string): number | null {
+    if (id.endsWith(RELAY_COIL_SUFFIX)) {
+      return this.relayCoilCurrent(id.slice(0, -RELAY_COIL_SUFFIX.length));
+    }
     return this.branchCurrentOfInner(id, new Set());
+  }
+
+  /** Coil current from the node voltages: the engine only reports the contact branch. */
+  private relayCoilCurrent(relayId: string): number | null {
+    const c = this.nettled().components.find((x) => x.id === relayId);
+    if (!c || c.modelKey !== 'relay') return null;
+    const vp = this.voltageOf(c.pins['cp']?.net ?? '');
+    const vn = this.voltageOf(c.pins['cn']?.net ?? '');
+    if (vp === null || vn === null) return null;
+    const r = paramNumber(c.params, 'rCoil', 0);
+    if (!(r > 0)) return null;
+    const i = (vp - vn) / r;
+    return Math.abs(i) < 1e-5 ? 0 : i;
   }
 
   private branchCurrentOfInner(id: string, visiting: Set<string>): number | null {

@@ -15,6 +15,9 @@ export interface WireSegment {
 /** First long run after the pin exit stub. */
 export type PreferAxis = 'h' | 'v';
 
+/** Which two sides of the pin→pin rectangle an L follows: HV = across first, VH = down first. */
+export type WireBend = 'hv' | 'vh';
+
 /**
  * L — single elbow (two sides of the pin→target rectangle).
  * U — mid corridor detour (obstacle dodge / rare).

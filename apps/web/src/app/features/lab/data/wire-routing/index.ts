@@ -4,7 +4,15 @@
  * Intent (mouse motion / axis lock) picks which two sides of the pin→target
  * rectangle to follow so squared circuits are drawable.
  */
-export type { Point, PreferAxis, RouteOptions, RouteShape, RoutingIntent, WireSegment } from './types';
+export type {
+  Point,
+  PreferAxis,
+  RouteOptions,
+  RouteShape,
+  RoutingIntent,
+  WireBend,
+  WireSegment
+} from './types';
 
 export {
   collinearOverlap,
@@ -32,6 +40,10 @@ export { nearestOrthogonalTee, orthogonalTeeOnPolyline } from './tee';
 
 export {
   SYMBOL_DISPLAY_SCALE,
+  alignJunctionToward,
+  applyWireBends,
+  bendOfPolyline,
+  captureWireBends,
   clearWireWaypoints,
   documentWireObstacles,
   pinExitDirection,
@@ -40,6 +52,7 @@ export {
   symbolDisplayScale,
   symbolDisplaySize,
   wirePolyline,
+  withWireBend,
   withWireWaypoint
 } from './document';
 

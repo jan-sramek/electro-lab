@@ -397,11 +397,17 @@ export function closestPointOnOrthogonalWire(
     const len2 = dx * dx + dy * dy;
     let t = len2 < 1e-12 ? 0 : ((px - a.x) * dx + (py - a.y) * dy) / len2;
     t = Math.max(0, Math.min(1, t));
-    const x = a.x + t * dx;
-    const y = a.y + t * dy;
+    // Snap along the segment only — the tap must stay on the wire even when the
+    // rail runs along an off-grid pin row/column.
+    const horizontal = Math.abs(dy) < 0.5;
+    const vertical = Math.abs(dx) < 0.5;
+    let x = a.x + t * dx;
+    let y = a.y + t * dy;
+    if (horizontal) x = Math.max(Math.min(a.x, b.x), Math.min(Math.max(a.x, b.x), snap(x)));
+    if (vertical) y = Math.max(Math.min(a.y, b.y), Math.min(Math.max(a.y, b.y), snap(y)));
     if (!best || d < best.d) best = { x, y, d };
   }
-  return best ? { x: snap(best.x), y: snap(best.y) } : null;
+  return best ? { x: best.x, y: best.y } : null;
 }
 
 /** Split wire at junction: replace one wire with two pin→junction wires. */

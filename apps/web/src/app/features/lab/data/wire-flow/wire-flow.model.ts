@@ -9,6 +9,8 @@ export interface WireFlowOverlay {
   strength: number;
   /** Magnitude used for visibility threshold checks. */
   amps: number;
+  /** SVG stroke-dasharray — shortened on stubs so part of the wire is always lit. */
+  dash: string;
 }
 
 export interface WireRenderPath {

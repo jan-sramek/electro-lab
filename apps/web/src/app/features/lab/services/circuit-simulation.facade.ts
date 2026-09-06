@@ -640,10 +640,8 @@ export class CircuitSimulationFacade {
 
     this.tranPlaybackActive = true;
     this.activePlaybackMode = noteKey.includes('charge') ? 'charge-once' : 'discharge-once';
-    const gen = this.playbackGeneration;
     const ownerSlotId = this.editor.activeSlotId();
     this.startScrubPlayback(n, timing, () => {
-      if (gen !== this.playbackGeneration) return;
       if (ownerSlotId !== this.editor.activeSlotId()) return;
       this.zone.run(() => {
         this.tranPlaybackActive = false;
@@ -691,6 +689,11 @@ export class CircuitSimulationFacade {
     onStop?: () => void
   ): void {
     this.stopScrubPlaybackTimer();
+    // Capture the generation *after* the bump above: only this sweep's natural end
+    // reaches `onStop`. A replacement stop (newer result, slot switch) bumps the
+    // generation first and is ignored, so a superseded charge sweep never parks
+    // the scrub on its own settled frame.
+    const gen = this.playbackGeneration;
     this.playbackSlotId = this.editor.activeSlotId();
     this.zone.runOutsideAngular(() => {
       this.scrubPlayback = new TransientPlayback(
@@ -698,7 +701,10 @@ export class CircuitSimulationFacade {
         (idx) => {
           this.zone.run(() => this.scrubIndex.set(idx));
         },
-        onStop
+        () => {
+          if (gen !== this.playbackGeneration) return;
+          onStop?.();
+        }
       );
       this.scrubPlayback.start(opts);
     });

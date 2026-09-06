@@ -22,6 +22,7 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
       if (pin === 'b') return branchI;
       return 0;
     case 'relay':
+      // Engine branch = contact current; the coil is handled by relayCoilOutflowAmps.
       if (pin === 'a') return -branchI;
       if (pin === 'b') return branchI;
       return 0;
@@ -83,6 +84,51 @@ export function pinOutflowAmps(modelKey: string, pin: string, branchI: number): 
   }
 }
 
+/**
+ * The engine reports only the relay *contact* current as the relay's branch. The coil
+ * current is derived by the canvas (V_cp − V_cn) / rCoil and served through the same
+ * lookup under `<relayId>:coil`, so the coil wires get a real direction and magnitude.
+ */
+export const RELAY_COIL_SUFFIX = ':coil';
+
+export function isRelayCoilPin(modelKey: string, pin: string): boolean {
+  return simModelOf(modelKey) === 'relay' && (pin === 'cp' || pin === 'cn');
+}
+
+/** Conventional current leaving a relay coil pin for a given coil current (flows in at cp). */
+export function relayCoilOutflowAmps(pin: string, coilI: number): number {
+  if (pin === 'cp') return -coilI;
+  if (pin === 'cn') return coilI;
+  return 0;
+}
+
+/** Branch current relevant to one pin (relay coil pins use the derived coil current). */
+function pinBranchCurrent(
+  c: SchematicComponent,
+  pin: string,
+  currentOf: BranchCurrentLookup
+): number | null {
+  const i = isRelayCoilPin(c.modelKey, pin)
+    ? currentOf(c.id + RELAY_COIL_SUFFIX)
+    : currentOf(c.id);
+  return typeof i === 'number' ? i : null;
+}
+
+/** Outflow from a device pin given the lookup, or null when the pin carries no modeled current. */
+function pinOutflowFor(
+  c: SchematicComponent,
+  pin: string,
+  currentOf: BranchCurrentLookup
+): number | null {
+  if (isRelayCoilPin(c.modelKey, pin)) {
+    const coil = pinBranchCurrent(c, pin, currentOf);
+    return coil === null ? null : relayCoilOutflowAmps(pin, coil);
+  }
+  if (!isPinCurrentModeled(c.modelKey, pin)) return null;
+  const i = currentOf(c.id);
+  return typeof i === 'number' ? pinOutflowAmps(c.modelKey, pin, i) : null;
+}
+
 /** True when branch current maps to a pin's wire outflow (false → KCL treats pin as pass-through). */
 export function isPinCurrentModeled(modelKey: string, pin: string): boolean {
   if (modelKey === 'ground' || modelKey === 'junction' || modelKey === 'voltmeter') return false;
@@ -91,6 +137,9 @@ export function isPinCurrentModeled(modelKey: string, pin: string): boolean {
       return pin === 'out';
     case 'op_amp':
       return pin === 'out';
+    case 'vreg_7805':
+      // The engine reports no quiescent current, so the gnd pin is a teaching stub.
+      return pin === 'in' || pin === 'out';
     case 'nmos':
       return pin === 'd' || pin === 's';
     case 'arduino_dio':
@@ -186,10 +235,7 @@ function pinInjectedOutflow(
   const c = componentOf(components, ref.componentId);
   if (!c) return null;
   if (isPassiveNetNode(c.modelKey)) return 0;
-  if (!isPinCurrentModeled(c.modelKey, ref.pin)) return null;
-  const i = currentOf(c.id);
-  if (typeof i !== 'number') return null;
-  return pinOutflowAmps(c.modelKey, ref.pin, i);
+  return pinOutflowFor(c, ref.pin, currentOf);
 }
 
 function leavingThroughWire(w: SchematicWire, pin: PinRef, iAlongAtoB: number): number {
@@ -273,6 +319,16 @@ function isUnmodeledDevicePin(c: SchematicComponent, pin: string): boolean {
  */
 export class WireCurrentField {
   private readonly along = new Map<string, number>();
+  /**
+   * Wires carrying a teaching-only visual (ground-symbol return, high-Z sensing
+   * stubs) — no physical current, so KCL sums must ignore them or the fiction
+   * gets "balanced" by a ghost current on a neighbouring rail.
+   */
+  private readonly visualOnly = new Set<string>();
+
+  private leavingKcl(w: SchematicWire, pin: PinRef, iAlong: number): number {
+    return this.visualOnly.has(w.id) ? 0 : leavingThroughWire(w, pin, iAlong);
+  }
 
   constructor(
     private readonly components: SchematicComponent[],
@@ -283,6 +339,16 @@ export class WireCurrentField {
   private assignWire(id: string, iAlong: number): boolean {
     if (Math.abs(iAlong) < 1e-15) return false;
     this.along.set(id, iAlong);
+    return true;
+  }
+
+  /**
+   * Record a wire whose current is known to be (about) zero from exact KCL, so
+   * later passes treat it as solved instead of guessing a hint current for it.
+   */
+  private settleZero(id: string): boolean {
+    if (this.along.has(id)) return false;
+    this.along.set(id, 0);
     return true;
   }
 
@@ -343,19 +409,33 @@ export class WireCurrentField {
             unknown.push(w);
             continue;
           }
-          knownLeaving += leavingThroughWire(w, pin, i);
+          knownLeaving += this.leavingKcl(w, pin, i);
         }
         if (unknown.length !== 1) continue;
 
         const w = unknown[0]!;
         const other = otherPin(w, pin);
         const oc = componentOf(this.components, other.componentId);
-        // Idle gate-drive / open sources must not absorb ground-return residuals
-        // (boost PWM return shares the ground symbol with the power path).
-        if (oc && explicitZero(oc)) continue;
-        if (oc?.modelKey === 'ground') continue;
+        const pc = componentOf(this.components, pin.componentId);
+        const atDevicePin = !!pc && !isPassiveNetNode(pc.modelKey);
+        const towardSink = (oc && explicitZero(oc)) || oc?.modelKey === 'ground';
+        // At a passive node, idle gate-drive / open sources must not absorb
+        // ground-return residuals (boost PWM return shares the ground symbol
+        // with the power path). At a modeled device pin the balance is exact:
+        // whatever the pin's other wires do not carry must go down this one
+        // (cap charging through the LED cathode's ground wire), and when they
+        // carry all of it this wire is settled at zero (cap↔LED discharge loop).
+        if (towardSink && !atDevicePin) continue;
 
         const needLeave = required - knownLeaving;
+        if (towardSink) {
+          let scale = Math.abs(required);
+          for (const x of ws) scale = Math.max(scale, Math.abs(this.along.get(x.id) ?? 0));
+          if (Math.abs(needLeave) < Math.max(1e-7, scale * 0.02)) {
+            if (this.settleZero(w.id)) changed = true;
+            continue;
+          }
+        }
         const iAlong = pinKey(w.a) === pinKey(pin) ? needLeave : -needLeave;
         if (this.assignWire(w.id, iAlong)) changed = true;
       }
@@ -390,7 +470,7 @@ export class WireCurrentField {
         const other = otherPin(w, pin);
         const oc = componentOf(this.components, other.componentId);
         if (!oc || !isPinCurrentModeled(oc.modelKey, other.pin)) continue;
-        const lv = leavingThroughWire(w, pin, i);
+        const lv = this.leavingKcl(w, pin, i);
         if (best === null || Math.abs(lv) > Math.abs(best)) best = lv;
       }
       return best;
@@ -416,7 +496,7 @@ export class WireCurrentField {
           const i = this.along.get(w.id);
           if (i === undefined) unknown.push(w);
           else {
-            knownLeaving += leavingThroughWire(w, pin, i);
+            knownLeaving += this.leavingKcl(w, pin, i);
             if (Math.abs(i) > 1e-9) knownMags.push(Math.abs(i));
           }
         }
@@ -466,11 +546,8 @@ export class WireCurrentField {
             weights.push({ w, mag: 0 });
             continue;
           }
-          const bi = this.currentOf(oc.id);
-          const mag =
-            typeof bi === 'number'
-              ? Math.abs(pinOutflowAmps(oc.modelKey, other.pin, bi))
-              : 0;
+          const out = pinOutflowFor(oc, other.pin, this.currentOf);
+          const mag = out === null ? 0 : Math.abs(out);
           weights.push({ w, mag });
         }
         const total = weights.reduce((s, x) => s + x.mag, 0);
@@ -498,6 +575,24 @@ export class WireCurrentField {
           const other = otherPin(w, pin);
           const oc = componentOf(this.components, other.componentId);
           if (!oc || isPinCurrentModeled(oc.modelKey, other.pin)) continue;
+          if (isRelayCoilPin(oc.modelKey, other.pin) && pinBranchCurrent(oc, other.pin, this.currentOf) !== null) continue;
+          // A wire to another junction is a rail, not a high-Z stub: mirroring a
+          // sibling current onto it breaks KCL at that junction (bridge rectifier
+          // idle leg lit up with the conducting leg's current).
+          if (oc.modelKey === 'junction') continue;
+          if (oc.modelKey === 'ground') {
+            // Ground stub: the exact KCL remainder when the node has one (shared
+            // coil + contact return), else the teaching return visual — flow
+            // toward the ground symbol with the sibling magnitude.
+            const real = Math.abs(remainder) > 1e-9;
+            const leave = real ? remainder : stubMag;
+            const iAlong = (pinKey(w.a) === pinKey(pin) ? 1 : -1) * leave;
+            if (this.assignWire(w.id, iAlong)) {
+              changed = true;
+              if (!real) this.visualOnly.add(w.id);
+            }
+            continue;
+          }
           if (explicitZero(oc)) continue;
           if (oc.modelKey === 'voltmeter') continue;
           if (oc.modelKey === 'nmos' && other.pin === 'g') continue;
@@ -505,7 +600,10 @@ export class WireCurrentField {
           // Rheostat: a/b already seeded — don't double-count the tied wiper stub.
           if (isPotWiperWithEndFlow(oc, other.pin, this.wires, this.along)) continue;
           const iAlong = (pinKey(w.a) === pinKey(pin) ? 1 : -1) * sign * stubMag;
-          if (this.assignWire(w.id, iAlong)) changed = true;
+          if (this.assignWire(w.id, iAlong)) {
+            changed = true;
+            this.visualOnly.add(w.id);
+          }
         }
       }
       return changed;
@@ -526,7 +624,7 @@ export class WireCurrentField {
         for (const w of ws) {
           const i = this.along.get(w.id);
           if (i === undefined) unknown.push(w);
-          else knownLeaving += leavingThroughWire(w, pin, i);
+          else knownLeaving += this.leavingKcl(w, pin, i);
         }
         if (unknown.length !== 1) continue;
         const w = unknown[0]!;
@@ -588,7 +686,7 @@ export class WireCurrentField {
             const ji = this.along.get(jw.id);
             if (ji === undefined) continue;
             anyKnown = true;
-            sumLeaving += leavingThroughWire(jw, jPin, ji);
+            sumLeaving += this.leavingKcl(jw, jPin, ji);
           }
           if (!anyKnown) continue;
           const needLeave = -sumLeaving;
@@ -617,7 +715,7 @@ export class WireCurrentField {
         let knownLeaving = 0;
         for (const w of ws) {
           const i = this.along.get(w.id);
-          if (i !== undefined) knownLeaving += leavingThroughWire(w, pin, i);
+          if (i !== undefined) knownLeaving += this.leavingKcl(w, pin, i);
         }
         const remainder = required - knownLeaving;
 
@@ -635,11 +733,8 @@ export class WireCurrentField {
             weights.push({ w, mag: allowGnd ? Math.abs(required) : 0 });
             continue;
           }
-          const bi = this.currentOf(oc.id);
-          const mag =
-            typeof bi === 'number'
-              ? Math.abs(pinOutflowAmps(oc.modelKey, other.pin, bi))
-              : 0;
+          const out = pinOutflowFor(oc, other.pin, this.currentOf);
+          const mag = out === null ? 0 : Math.abs(out);
           weights.push({ w, mag });
         }
 

@@ -172,6 +172,7 @@
         class="wire-flow"
         [attr.d]="flow.path"
         [style.--flow-period]="flow.periodMs + 'ms'"
+        [style.stroke-dasharray]="flow.dash"
         [style.opacity]="0.4 + flow.strength * 0.28"
         pointer-events="none"
       />
@@ -179,6 +180,7 @@
         class="wire-flow-core"
         [attr.d]="flow.path"
         [style.--flow-period]="flow.periodMs + 'ms'"
+        [style.stroke-dasharray]="flow.dash"
         [style.opacity]="0.28 + flow.strength * 0.25"
         pointer-events="none"
       />

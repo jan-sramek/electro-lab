@@ -56,7 +56,7 @@ import { createOpAmpIntegratorPreset } from '../presets/opamp-integrator.preset'
 import { createOpAmpDifferentiatorPreset } from '../presets/opamp-differentiator.preset';
 import { createOpAmpActiveFilterPreset } from '../presets/opamp-active-filter.preset';
 import { createNe555PotBlinkPreset } from '../presets/ne555-pot-blink.preset';
-import { estimateAllWireCurrents } from '../wire-current';
+import { RELAY_COIL_SUFFIX, estimateAllWireCurrents } from '../wire-current';
 import { SchematicDocument } from '../schematic.model';
 
 function missingWires(
@@ -415,6 +415,8 @@ describe('wire flow coverage on presets', () => {
         .withContext(`${id} idle bridge leg`)
         .toBeLessThan(1e-6);
     }
+    // Junction-to-junction rail behind the idle D2 must not borrow the conducting leg's current.
+    expect(Math.abs(currents.get('W7') ?? 0)).withContext('W7 idle rail').toBeLessThan(1e-6);
   });
 
   it('Filter-cap — AC→diode→C/R→return animates while charging', () => {
@@ -717,6 +719,30 @@ describe('wire flow coverage on presets', () => {
         .withContext(`${id} open diagonal`)
         .toBeLessThan(1e-6);
     }
+  });
+
+  it('Relay + flyback — coil wires run into cp and out of cn when the coil current is known', () => {
+    const doc = createRelayDiodePreset();
+    const Icoil = 0.0125;
+    const Iled = 0.0125;
+    const currents = estimateAllWireCurrents(doc.components, doc.wires, (id) => {
+      if (id === 'GND1' || id.startsWith('J')) return null;
+      if (id === `K1${RELAY_COIL_SUFFIX}`) return Icoil;
+      if (id === 'Dfly') return 0;
+      if (id === 'VB') return Icoil + Iled;
+      if (id === 'S1') return Icoil;
+      // Engine relay branch = contact current.
+      if (id === 'K1' || id === 'RC' || id === 'D1') return Iled;
+      return null;
+    });
+    // JC → K1.cp carries the coil current *into* the coil (was drawn backwards before).
+    expect(currents.get('W4')).toBeCloseTo(Icoil, 6);
+    // K1.cn → J1 carries it out, and the shared return to ground sums coil + contact.
+    expect(currents.get('W7')).toBeCloseTo(Icoil, 6);
+    expect(currents.get('W13')).toBeCloseTo(Icoil + Iled, 6);
+    // Flyback diode idle while the coil is powered.
+    expect(Math.abs(currents.get('W5') ?? 0)).toBeLessThan(1e-6);
+    expect(Math.abs(currents.get('W6') ?? 0)).toBeLessThan(1e-6);
   });
 
   it('E-stop relay — series switches + coil and contact LED paths animate', () => {

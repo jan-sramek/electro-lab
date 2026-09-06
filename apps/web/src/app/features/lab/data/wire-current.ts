@@ -1,7 +1,7 @@
 import { SchematicComponent, SchematicWire } from './schematic.model';
-import { WireCurrentField, pinOutflowAmps, wireCurrentAtoB } from './wire-flow/wire-current-field';
+import { RELAY_COIL_SUFFIX, WireCurrentField, pinOutflowAmps, wireCurrentAtoB } from './wire-flow/wire-current-field';
 
-export { pinOutflowAmps, wireCurrentAtoB };
+export { RELAY_COIL_SUFFIX, pinOutflowAmps, wireCurrentAtoB };
 
 /**
  * Conventional current leaving a schematic pin into attached wires (amperes),

@@ -1,4 +1,3 @@
-import { snap } from '../schematic.model';
 import { inferRoutingIntent } from './intent';
 import { Point, RouteOptions } from './types';
 import { dedupePoints, simpleElbow } from './geometry';
@@ -6,6 +5,7 @@ import { dedupePoints, simpleElbow } from './geometry';
 /**
  * Orthogonal route between two points: a straight run or a single L on two
  * sides of the pin→target rectangle. Motion / axis lock picks which L.
+ * Endpoints are used as given (pins may sit off-grid).
  *
  * Existing wires are not obstacles. Joining a rail must be allowed to share
  * that corridor — dodging it produced U-turns and staircases.
@@ -17,11 +17,8 @@ export function routeOrthogonal(
   y2: number,
   opts?: RouteOptions
 ): Point[] {
-  x1 = snap(x1);
-  y1 = snap(y1);
-  x2 = snap(x2);
-  y2 = snap(y2);
-
+  // Endpoints are pins and stay exactly where the pins are — snapping them to
+  // the grid left a visible stub whenever a scaled pin sat off-grid.
   const mids = usableWaypoints(x1, y1, x2, y2, opts?.midpoints ?? []);
   if (mids.length) {
     const pts: Point[] = [{ x: x1, y: y1 }];
@@ -57,9 +54,7 @@ export function usableWaypoints(
 ): Point[] {
   const hv: Point = { x: x2, y: y1 };
   const vh: Point = { x: x1, y: y2 };
-  return raw
-    .map((p) => ({ x: snap(p.x), y: snap(p.y) }))
-    .filter((p) => {
+  return raw.filter((p) => {
       if (samePoint(p, hv) || samePoint(p, vh)) return true;
       if (Math.hypot(p.x - x1, p.y - y1) < 24) return false;
       if (Math.abs(p.x - x1) <= 20 && Math.abs(p.x - x2) > 1) return false;

@@ -1,5 +1,9 @@
 import {
+  alignJunctionToward,
+  applyWireBends,
+  bendOfPolyline,
   candidateElbows,
+  captureWireBends,
   collinearOverlap,
   documentWireObstacles,
   firstLegAxis,
@@ -8,6 +12,7 @@ import {
   motionPrimaryAxis,
   orthogonalTeeOnPolyline,
   polylineSegments,
+  nearestOrthogonalTee,
   routeAllWirePolylines,
   routeOrthogonal,
   spanPrimaryAxis,
@@ -297,5 +302,92 @@ describe('wire routing (refactored)', () => {
     expect(spanPrimaryAxis(80, 100)).toBe('v');
     expect(spanPrimaryAxis(100, 50)).toBe('h');
     expect(inferPreferAxis(100, 50)).toBe('h');
+  });
+  it('keeps wire ends exactly on off-grid pins (no stub)', () => {
+    const pts = routeOrthogonal(116, 204, 300, 84);
+    expect(pts[0]).toEqual({ x: 116, y: 204 });
+    expect(pts[pts.length - 1]).toEqual({ x: 300, y: 84 });
+    expect(pts.length).toBe(3);
+  });
+
+  it('tee lands exactly on an off-grid rail, aligned with the start pin', () => {
+    const rail = [
+      { x: 0, y: 204 },
+      { x: 300, y: 204 }
+    ];
+    const tee = nearestOrthogonalTee({ x: 116, y: 100 }, [rail], { x: 118, y: 200 }, 16);
+    expect(tee).toEqual({ x: 116, y: 204 });
+  });
+
+  it('moving a part keeps the L the wire was drawn with', () => {
+    resetIdSeq(20);
+    const a = createComponent('junction', 100, 100, 'JA');
+    const b = createComponent('junction', 300, 200, 'JB');
+    const doc: SchematicDocument = {
+      components: [a, b],
+      wires: [{ id: 'W1', a: { componentId: 'JA', pin: 'j' }, b: { componentId: 'JB', pin: 'j' }, waypoints: [{ x: 100, y: 200 }] }]
+    } as unknown as SchematicDocument;
+    // Drawn VH: down the left column, then across the bottom.
+    expect(bendOfPolyline(routeAllWirePolylines(doc).get('W1')!)).toBe('vh');
+    const bends = captureWireBends(doc, ['JB']);
+    expect(bends.get('W1')).toBe('vh');
+
+    // Move JB far up-right; a span re-route would flip this to HV.
+    const moved: SchematicDocument = {
+      ...doc,
+      components: doc.components.map((c) => (c.id === 'JB' ? { ...c, x: 400, y: 120 } : c))
+    };
+    const kept = applyWireBends(moved, bends);
+    const pts = routeAllWirePolylines(kept).get('W1')!;
+    expect(bendOfPolyline(pts)).toBe('vh');
+    expect(pts).toEqual([
+      { x: 100, y: 100 },
+      { x: 100, y: 120 },
+      { x: 400, y: 120 }
+    ]);
+    // Dragging onto the same row straightens it.
+    const flat = applyWireBends(
+      { ...doc, components: doc.components.map((c) => (c.id === 'JB' ? { ...c, y: 100 } : c)) },
+      bends
+    );
+    expect(flat.wires[0].waypoints).toBeUndefined();
+  });
+
+  it('a straight wire stays straight at its fixed end when the other end moves', () => {
+    const a = createComponent('junction', 100, 100, 'SA');
+    const b = createComponent('junction', 300, 100, 'SB');
+    const doc: SchematicDocument = {
+      components: [a, b],
+      wires: [{ id: 'W2', a: { componentId: 'SA', pin: 'j' }, b: { componentId: 'SB', pin: 'j' } }]
+    } as unknown as SchematicDocument;
+    const bends = captureWireBends(doc, ['SB']);
+    expect(bends.get('W2')).toBe('hv');
+    const moved = applyWireBends(
+      { ...doc, components: doc.components.map((c) => (c.id === 'SB' ? { ...c, y: 250 } : c)) },
+      bends
+    );
+    expect(routeAllWirePolylines(moved).get('W2')).toEqual([
+      { x: 100, y: 100 },
+      { x: 300, y: 100 },
+      { x: 300, y: 250 }
+    ]);
+  });
+
+  it('a tapped junction slides along its rail to meet the finishing pin', () => {
+    const l = createComponent('junction', 0, 204, 'L');
+    const r = createComponent('junction', 300, 204, 'R');
+    const j = createComponent('junction', 130, 204, 'J');
+    const doc: SchematicDocument = {
+      components: [l, r, j],
+      wires: [
+        { id: 'Wa', a: { componentId: 'L', pin: 'j' }, b: { componentId: 'J', pin: 'j' } },
+        { id: 'Wb', a: { componentId: 'J', pin: 'j' }, b: { componentId: 'R', pin: 'j' } }
+      ]
+    } as unknown as SchematicDocument;
+    const aligned = alignJunctionToward(doc, 'J', { x: 216, y: 80 });
+    expect(aligned.components.find((c) => c.id === 'J')!.x).toBe(216);
+    // Outside the rail: leave it where it was tapped.
+    const outside = alignJunctionToward(doc, 'J', { x: 350, y: 80 });
+    expect(outside.components.find((c) => c.id === 'J')!.x).toBe(130);
   });
 });

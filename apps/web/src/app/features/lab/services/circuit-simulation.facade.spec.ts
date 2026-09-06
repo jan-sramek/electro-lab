@@ -238,3 +238,124 @@ describe('CircuitSimulationFacade job lifecycle', () => {
     expect(editor.tStop()).toBe(0.3);
   });
 });
+
+describe('CircuitSimulationFacade charge playback parking', () => {
+  let facade: CircuitSimulationFacade;
+  let editor: LabEditorStore;
+  let api: { simulate: jasmine.Spy };
+  let pending: Subject<SimulateResponse>[];
+
+  const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+  /** Full RC charge of the LED-fade preset: τ ≈ 0.48 s, sampled through ~8τ so the run settles. */
+  const tranFullCharge = (): SimulateResponse => {
+    const doc = editor.doc();
+    const cap = doc.components.find((c) => c.modelKey === 'capacitor')!;
+    const na = cap.pins['a'].net;
+    const dt = 0.01;
+    const n = 401;
+    const tau = 220 * 0.0022;
+    const time: number[] = [];
+    const vc: number[] = [];
+    const iC: number[] = [];
+    const iLed: number[] = [];
+    for (let k = 0; k < n; k++) {
+      const t = k * dt;
+      const v = 5 * (1 - Math.exp(-t / tau));
+      time.push(t);
+      vc.push(v);
+      iC.push((5 / 220) * Math.exp(-t / tau));
+      iLed.push(v > 2 ? (v - 2) / 20 : 0);
+    }
+    return {
+      schemaVersion: 1,
+      ok: true,
+      analysisType: 'tran',
+      errors: [],
+      warnings: [],
+      tran: {
+        time,
+        nodeVoltages: [{ id: na, values: vc }],
+        branchCurrents: [
+          { id: 'C1', values: iC },
+          { id: 'D1', values: iLed },
+          { id: 'R1', values: iC.map((i, k) => i + iLed[k]!) },
+          { id: 'V1', values: iC.map((i, k) => i + iLed[k]!) },
+          { id: 'S1', values: iC.map((i, k) => i + iLed[k]!) }
+        ]
+      }
+    };
+  };
+
+  beforeEach(() => {
+    localStorage.clear();
+    pending = [];
+    api = {
+      simulate: jasmine.createSpy('simulate').and.callFake(() => {
+        const s = new Subject<SimulateResponse>();
+        pending.push(s);
+        return s.asObservable();
+      })
+    };
+    TestBed.configureTestingModule({
+      providers: [
+        SchematicPersistence,
+        LabEditorStore,
+        CircuitSimulationFacade,
+        { provide: CircuitApiClient, useValue: api },
+        { provide: I18nService, useValue: { t: (k: string) => k } }
+      ]
+    });
+    facade = TestBed.inject(CircuitSimulationFacade);
+    editor = TestBed.inject(LabEditorStore);
+    editor.initFromStorage();
+    editor.loadLedFadePreset();
+    TestBed.flushEffects();
+  });
+
+  afterEach(() => {
+    editor.flushPersist();
+    localStorage.clear();
+  });
+
+  it('parks the scrub on the settled frame (LED lit) once the charge sweep finishes', async () => {
+    editor.setTStop(4);
+    editor.setDt(0.01);
+    facade.run();
+    expect(pending.length).toBe(1);
+    pending[0].next(tranFullCharge());
+    pending[0].complete();
+    await settle();
+    // Any extra continuation segment: answer with the same settled waveform.
+    for (let i = 1; i < pending.length; i++) {
+      pending[i].next(tranFullCharge());
+      pending[i].complete();
+      await settle();
+    }
+    const tran = facade.result()?.tran;
+    expect(tran?.time.length).toBeGreaterThan(100);
+
+    // The sweep animates only the inrush window (a fraction of a second)…
+    const sweepStart = facade.scrubIndex();
+    expect(sweepStart).toBeLessThan(50);
+
+    // …then must park on the settled frame, where the capacitor is idle and the LED conducts.
+    let last = -1;
+    let stable = 0;
+    for (let waited = 0; waited < 6000 && stable < 4; waited += 100) {
+      await sleep(100);
+      const idx = facade.scrubIndex();
+      stable = idx === last ? stable + 1 : 0;
+      last = idx;
+    }
+    const idx = facade.scrubIndex();
+    const capSeries = tran!.branchCurrents.find((s) => s.id === 'C1')!.values;
+    const led = tran!.branchCurrents.find((s) => s.id === 'D1')!.values[idx]!;
+    const cap = capSeries[idx]!;
+    expect(idx).withContext('scrub index after sweep').toBeGreaterThan(200);
+    expect(led).withContext('LED current at parked frame').toBeGreaterThan(1e-3);
+    // Parked well past the inrush: the capacitor is nearly charged (≥ ~5τ).
+    expect(Math.abs(cap)).withContext('capacitor current at parked frame').toBeLessThan(capSeries[1]! * 0.02);
+  }, 12000);
+});
