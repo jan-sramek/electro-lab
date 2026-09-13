@@ -24,7 +24,8 @@ export type LearnFigureKind =
   | 'current-bar'
   | 'waveform'
   | 'two-loads'
-  | 'elements-grid';
+  | 'elements-grid'
+  | 'rc-curve';
 
 export interface LearnFigure {
   kind: LearnFigureKind;

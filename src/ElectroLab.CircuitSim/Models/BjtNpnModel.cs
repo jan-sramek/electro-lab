@@ -11,6 +11,18 @@ namespace ElectroLab.CircuitSim.Models;
 /// </summary>
 public sealed class BjtNpnModel : IDeviceModel
 {
+    /// <summary>
+    /// Smallest base current that keeps the switch on. Anything below this is leakage
+    /// (an open switch still passes ~pA through its 1e12 Ω off-resistance) and must read as OFF.
+    /// </summary>
+    public const double MinBaseCurrent = 1e-6;
+
+    /// <summary>
+    /// Weak base-emitter path while OFF. It pins an otherwise floating base near the emitter so the
+    /// bias loop does not see a leakage-divided rail voltage and flip the device back on.
+    /// </summary>
+    public const double RoffBe = 1e6;
+
     public string ModelKey => "bjt_npn";
 
     public IReadOnlyList<string> Validate(ElementInstance element)
@@ -34,16 +46,20 @@ public sealed class BjtNpnModel : IDeviceModel
         if (DeviceBurned.IsBurned(element))
             return;
 
+        var b = element.Pins["b"];
+        var e = element.Pins["e"];
+        var c = element.Pins["c"];
+
         var on = hint?.BjtOn.GetValueOrDefault(element.Id, true) ?? true;
         if (!on)
+        {
+            ctx.StampConductance(b, e, 1.0 / RoffBe);
             return;
+        }
 
         var vf = element.Params["vf"];
         var rb = element.Params["rb"];
         var ron = element.Params["ron"];
-        var b = element.Pins["b"];
-        var e = element.Pins["e"];
-        var c = element.Pins["c"];
 
         var gb = 1.0 / rb;
         ctx.StampConductance(b, e, gb);

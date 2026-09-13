@@ -1,4 +1,5 @@
-import { gradeQuizLocally } from './learn-quiz-grading';
+import { gradeQuizLocally, quizPassCountFor } from './learn-quiz-grading';
+import { LEARN_QUIZ_KEYS } from './learn-final-quizzes';
 
 describe('gradeQuizLocally', () => {
   const unit = {
@@ -31,5 +32,27 @@ describe('gradeQuizLocally', () => {
     expect(r.results.find((x) => x.questionId === 32)?.correct).toBeFalse();
     expect(r.results.find((x) => x.questionId === 32)?.correctOptionId).toBe('b');
     expect(r.results.find((x) => x.questionId === 33)?.correct).toBeFalse();
+  });
+
+  it('long quizzes pass at 80 % with their own answer key', () => {
+    expect(quizPassCountFor(3)).toBe(3);
+    expect(quizPassCountFor(10)).toBe(8);
+    const key = LEARN_QUIZ_KEYS['basics-final-quiz'];
+    expect(key.length).toBe(10);
+    const final = {
+      unitSlug: 'basics-final-quiz',
+      i18nKeyPrefix: 'learn.project.basicsFinal',
+      quiz: { passCount: 8, questions: key.map((_, i) => ({ id: 100 + i, order: i + 1, promptKey: 'p', options: [] })) }
+    };
+    const answers: Record<number, string> = {};
+    key.forEach((c, i) => (answers[100 + i] = c));
+    expect(gradeQuizLocally(final, answers).passed).toBeTrue();
+    // Two wrong still passes, three wrong fails.
+    answers[100] = 'z'; answers[101] = 'z';
+    expect(gradeQuizLocally(final, answers).passed).toBeTrue();
+    answers[102] = 'z';
+    const r = gradeQuizLocally(final, answers);
+    expect(r.passed).toBeFalse();
+    expect(r.correctCount).toBe(7);
   });
 });

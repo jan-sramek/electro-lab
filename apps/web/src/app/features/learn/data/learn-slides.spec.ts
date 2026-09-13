@@ -6,7 +6,7 @@ import { LearnFigureKind } from './learn-slides.model';
 const FIGURE_KINDS: readonly LearnFigureKind[] = [
   'water-tanks', 'battery-meter', 'scale', 'potential-ladder', 'loop', 'charge-flow', 'junction',
   'pipes', 'resistor-bands', 'ohm-triangle', 'ohm-graph', 'series-resistors', 'heat', 'current-bar',
-  'waveform', 'two-loads', 'elements-grid'
+  'waveform', 'two-loads', 'elements-grid', 'rc-curve'
 ];
 
 describe('learn slide decks', () => {
@@ -55,7 +55,7 @@ describe('learn slide decks', () => {
   });
 
   it('learnSlideDeckFor returns null for units without a deck', () => {
-    expect(learnSlideDeckFor('fundamentals-loop')).toBeNull();
+    expect(learnSlideDeckFor('half-wave-rectifier')).toBeNull();
     expect(learnSlideDeckFor('nope')).toBeNull();
   });
 });

@@ -118,6 +118,8 @@ public sealed class LearnCatalogService(LearningDbContext db, Microsoft.Extensio
 
         return await db.LearnUnits
             .AsNoTracking()
+            // Optional (difficult) units never gate the next one.
+            .Where(u => !u.IsOptional)
             .Where(u =>
                 u.Module.SortOrder < moduleOrder
                 || (u.Module.SortOrder == moduleOrder && u.ModuleId < moduleId)
@@ -202,8 +204,18 @@ public sealed class LearnCatalogService(LearningDbContext db, Microsoft.Extensio
         }
 
         var row = progress.GetValueOrDefault(unit.Id);
-        var prevRow = index > 0 ? progress.GetValueOrDefault(orderedUnits[index - 1].Id) : null;
-        return ResolveAvailability(row, hasPredecessor: index > 0, prevRow);
+        // Optional (difficult) units never gate: the predecessor is the nearest earlier required unit.
+        var predecessor = -1;
+        for (var i = index - 1; i >= 0; i--)
+        {
+            if (!orderedUnits[i].IsOptional)
+            {
+                predecessor = i;
+                break;
+            }
+        }
+        var prevRow = predecessor >= 0 ? progress.GetValueOrDefault(orderedUnits[predecessor].Id) : null;
+        return ResolveAvailability(row, hasPredecessor: predecessor >= 0, prevRow);
     }
 
     /// <summary>Single source of truth for the unlock rule: first unit is open, later units need the previous one complete.</summary>
@@ -229,7 +241,7 @@ public sealed class LearnCatalogService(LearningDbContext db, Microsoft.Extensio
                 q.PromptKey,
                 ParseOptions(q.OptionsJson)))
             .ToList();
-        return new LearnQuizDto(questions.Count, questions);
+        return new LearnQuizDto(LearnQuizRules.PassCountFor(questions.Count), questions);
     }
 
     private static LearnLabChallengeDto BuildLabChallenge(LearnUnit unit) =>

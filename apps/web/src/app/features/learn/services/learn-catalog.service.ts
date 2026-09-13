@@ -3,6 +3,9 @@ import { isPlatformServer } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { LearningApiClient } from '../api/learning-api.client';
 import { LEARN_UNLOCK_ALL } from '../data/learn-flags';
+import { unitIsOptional } from '../data/learn-catalog.model';
+import { finalQuizQuestionCount } from '../data/learn-final-quizzes';
+import { quizPassCountFor } from '../data/learn-quiz-grading';
 import {
   isUnitComplete,
   LearnCatalogResponse,
@@ -135,7 +138,11 @@ export class LearnCatalogService {
     if (globalIdx <= 0) return 'available';
     // Temporary open-path mode (see learn-flags.ts) and prerender never lock.
     if (LEARN_UNLOCK_ALL || this.isServer) return 'available';
-    const prev = orderedUnits[globalIdx - 1];
+    // Optional (difficult) units never gate: look back to the nearest required unit.
+    let prevIdx = globalIdx - 1;
+    while (prevIdx >= 0 && unitIsOptional(orderedUnits[prevIdx])) prevIdx--;
+    if (prevIdx < 0) return 'available';
+    const prev = orderedUnits[prevIdx];
     const prevKey = `${prev.moduleSlug}/${prev.unitSlug}`;
     if (isUnitComplete(progressByKey?.[prevKey])) return 'available';
     return 'locked';
@@ -170,8 +177,8 @@ export class LearnCatalogService {
         { id: 2, order: 2, titleKey: `${prefix}.lesson2.title`, bodyKey: `${prefix}.lesson2.body` }
       ],
       quiz: {
-        passCount: 3,
-        questions: [1, 2, 3].map((n) => ({
+        passCount: quizPassCountFor(finalQuizQuestionCount(unitSlug) ?? 3),
+        questions: Array.from({ length: finalQuizQuestionCount(unitSlug) ?? 3 }, (_, i) => i + 1).map((n) => ({
           id: n,
           order: n,
           promptKey: `${prefix}.quiz.q${n}.prompt`,

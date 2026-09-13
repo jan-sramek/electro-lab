@@ -1,4 +1,5 @@
 import { LEARN_SLIDES_I18N } from './learn-slides-content';
+import { LEARN_FINAL_QUIZ_I18N } from './learn-final-quizzes';
 
 /** Assessment copy for Learn units (lessons, quizzes, lab challenge labels). */
 export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
@@ -13,7 +14,12 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.readConfirm': 'I have read and understand this section.',
   'learn.unit.continueToQuiz': 'Continue to quiz',
   'learn.unit.quizHeading': 'Quick check',
-  'learn.unit.quizHint': 'Formative quiz — retry until all answers are correct. We show why after each try.',
+  'learn.unit.quizHint': 'Quick check: retry until all answers are correct. You get the reason after each try.',
+  'learn.unit.quizHintThreshold': 'Final quiz: {total} questions, you need at least {pass} correct. You can retry.',
+  'learn.unit.finalQuizHeading': 'Final quiz',
+  'learn.unit.quizScorePassed': '{correct} of {total} correct. Passed.',
+  'learn.unit.quizScoreFailed': '{correct} of {total} correct. You need {pass}. Check the explanations and try again.',
+  'learn.unit.finishUnit': 'Finish unit',
   'learn.unit.submitQuiz': 'Check answers',
   'learn.unit.retryQuiz': 'Try again',
   'learn.unit.continueToLab': 'Continue to lab challenge',
@@ -200,6 +206,12 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.slides.callout.formula': 'Formula',
   'learn.slides.callout.warning': 'Careful',
   'learn.unit.readSlidesHint': 'Work through every slide; the confirmation appears on the last one.',
+  'learn.unit.optionalNote': 'Optional unit: harder material. Skip it if you like, the next unit is not blocked. Points here are a bonus.',
+  'learn.unit.reviewing': 'You are looking back at a finished part.',
+  'learn.unit.backToCurrent': 'Back to where you are',
+  'learn.hub.optional': 'Optional',
+  'learn.slides.inTheLab': 'In the Lab',
+  'learn.slides.inTheLabIntro': 'Suggested steps:',
 
   // Points and optional lab
   'learn.points.plus': '+{pts}',
@@ -222,7 +234,9 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...circuitElementsAssessment(),
   ...seriesParallelCircuitsAssessment(),
   ...acDcAssessment(),
+  ...basicsFinalAssessment(),
   ...LEARN_SLIDES_I18N,
+  ...LEARN_FINAL_QUIZ_I18N,
 
   ...ledAssessment(),
   ...rcAssessment(),
@@ -479,6 +493,20 @@ function acDcAssessment() {
       ['Under AC a capacitor…', 'Blocks everything', 'Passes DC and blocks AC', 'Passes AC and blocks DC', 'Only a changing voltage moves charge on and off the plates — the basis of filters.']
     ),
     ...challengeKeys(p, 'AC analysis runs on the RC example.', 'The capacitor node magnitude is a fraction of the source.')
+  };
+}
+
+function basicsFinalAssessment() {
+  const p = 'learn.project.basicsFinal';
+  return {
+    ...lessonKeys(
+      p,
+      'What this group covered',
+      'Voltage pushes, current flows, resistance limits. Ohm’s law ties them together. Series shares one current, parallel shares one voltage. DC is steady, AC swings.',
+      'How the final works',
+      'Ten questions, mixed across the group. Eight correct passes. Wrong answers show the reason, and you can retry as often as you like.'
+    ),
+    ...challengeKeys(p, 'No lab for the final quiz.', 'No lab for the final quiz.')
   };
 }
 

@@ -43,7 +43,7 @@ describe('optional lab + points', () => {
     for (const slug of ['voltage-intro', 'current-intro', 'resistance-intro', 'circuit-elements', 'ac-dc']) {
       expect(unitHasLab(findLearnUnit('basics', slug))).withContext(slug).toBeFalse();
     }
-    for (const slug of ['ohms-law', 'series-parallel-circuits', 'fundamentals-loop']) {
+    for (const slug of ['ohms-law', 'series-parallel-circuits', 'fundamentals-loop', 'led-fade']) {
       expect(unitHasLab(findLearnUnit('basics', slug))).withContext(slug).toBeTrue();
     }
   });
@@ -51,12 +51,21 @@ describe('optional lab + points', () => {
   it('totals sum over the catalog', () => {
     const empty = totalPoints({});
     expect(empty.earned).toBe(0);
-    const labUnits = LEARN_UNITS.filter((u) => unitHasLab(u)).length;
-    expect(empty.max).toBe(labUnits * 100 + (LEARN_UNITS.length - labUnits) * 40);
+    const required = LEARN_UNITS.filter((u) => !u.optional);
+    const labUnits = required.filter((u) => unitHasLab(u)).length;
+    const finals = required.filter((u) => u.finalQuiz).length;
+    expect(empty.max).toBe(labUnits * 100 + (required.length - labUnits - finals) * 40 + finals * 70);
     const some = totalPoints({
       'basics/ohms-law': row({ unitSlug: 'ohms-law', readComplete: true, quizPassed: true, labPassed: true }),
       'basics/voltage-intro': row({ readComplete: true, quizPassed: true })
     });
     expect(some.earned).toBe(140);
+  });
+
+  it('the group final quiz is worth more than a unit quiz and has no lab', () => {
+    expect(unitPointsMax(false, true)).toBe(70);
+    expect(unitPointsEarned(row({ readComplete: true, quizPassed: true }), false, true)).toBe(70);
+    expect(unitHasLab(findLearnUnit('basics', 'basics-final-quiz'))).toBeFalse();
+    expect(findLearnUnit('basics', 'basics-final-quiz')?.finalQuiz).toBeTrue();
   });
 });

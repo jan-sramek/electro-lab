@@ -134,6 +134,37 @@ public class NewDevicesTests
     }
 
     [Fact]
+    public void BjtSwitch_TurnsOff_WhenBaseSwitchIsOpen()
+    {
+        // Mirrors the Lab BC547 preset: 5 V → S1 → RB → base; LED + RC on the collector.
+        // An open switch still leaks ~pA through its off-resistance; that must not count as base drive.
+        static Circuit Build(bool switchClosed) => new()
+        {
+            Ground = "gnd",
+            Elements =
+            [
+                El("VB", "battery", Pins(("p", "vcc"), ("n", "gnd")), P(("v", 5), ("esr", 0))),
+                El("S1", "switch", Pins(("a", "vcc"), ("b", "sw")), P(("openAt", -1), ("closeAt", -1)),
+                    new Dictionary<string, bool> { ["closed"] = switchClosed }),
+                El("RB", "resistor", Pins(("a", "sw"), ("b", "nb")), P(("r", 2200))),
+                El("RC", "resistor", Pins(("a", "vcc"), ("b", "rc")), P(("r", 220))),
+                El("D1", "led", Pins(("a", "rc"), ("c", "c")), P(("vf", 2.0), ("ron", 1), ("iMax", 0.03))),
+                El("Q1", "bjt_npn", Pins(("c", "c"), ("b", "nb"), ("e", "gnd")), P(("vf", 0.7), ("rb", 10), ("ron", 10)))
+            ]
+        };
+
+        var off = _sim.Simulate(Build(switchClosed: false));
+        Assert.True(off.Ok, string.Join("; ", off.Errors));
+        Assert.True(Math.Abs(off.DcOp!.BranchCurrents["Q1"]) < 1e-6, $"Ic={off.DcOp.BranchCurrents["Q1"]} should be ~0 with S1 open");
+        Assert.True(Math.Abs(off.DcOp.BranchCurrents["D1"]) < 1e-6, $"LED current {off.DcOp.BranchCurrents["D1"]} should be ~0 with S1 open");
+        Assert.DoesNotContain(off.Warnings, w => w.Contains("did not fully settle"));
+
+        var on = _sim.Simulate(Build(switchClosed: true));
+        Assert.True(on.Ok, string.Join("; ", on.Errors));
+        Assert.InRange(on.DcOp!.BranchCurrents["D1"], 0.008, 0.02);
+    }
+
+    [Fact]
     public void BurnedBjt_IsOpenCircuit()
     {
         var circuit = new Circuit

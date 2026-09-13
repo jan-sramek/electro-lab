@@ -101,7 +101,7 @@ public sealed class LearnProgressService(LearningDbContext db, LearnCatalogServi
         }
 
         // An empty quiz is trivially passed; persist it so the unit can still reach Complete.
-        var passed = correct == questions.Count;
+        var passed = correct >= LearnQuizRules.PassCountFor(questions.Count);
         await UpsertRowAsync(sessionId, unit.Id, r => r.QuizPassed |= passed, ct);
 
         return LearnResult<QuizSubmitResponse>.Ok(new QuizSubmitResponse(passed, correct, questions.Count, results));

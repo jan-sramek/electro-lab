@@ -19,6 +19,8 @@ public sealed class LearnUnit
     public required string I18nKeyPrefix { get; set; }
     public int SortOrder { get; set; }
     public int? NextUnitId { get; set; }
+    /// <summary>Difficult / advanced unit: never gates the next unit; counts as bonus on the client.</summary>
+    public bool IsOptional { get; set; }
 
     public LearnModule Module { get; set; } = null!;
     public LearnUnit? NextUnit { get; set; }

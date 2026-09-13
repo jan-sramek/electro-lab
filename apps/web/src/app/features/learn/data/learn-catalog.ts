@@ -83,13 +83,6 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
-    unitSlug: 'ohm-explore',
-    moduleSlug: 'basics',
-    exampleId: 'led',
-    i18nKeyPrefix: 'learn.project.ohmExplore',
-    stepCount: 4
-  },
-  {
     unitSlug: 'led-series',
     moduleSlug: 'basics',
     exampleId: 'led',
@@ -101,13 +94,6 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'basics',
     exampleId: 'diodeDirection',
     i18nKeyPrefix: 'learn.project.diodeDirection',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'series-parallel-intro',
-    moduleSlug: 'basics',
-    exampleId: 'seriesParallel',
-    i18nKeyPrefix: 'learn.project.seriesParallel',
     stepCount: 4
   },
   {
@@ -132,25 +118,30 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
-    unitSlug: 'time-constant-estimate',
-    moduleSlug: 'basics',
-    exampleId: 'rc',
-    i18nKeyPrefix: 'learn.project.timeConstant',
-    stepCount: 4
-  },
-  {
     unitSlug: 'led-fade',
     moduleSlug: 'basics',
     exampleId: 'ledFade',
     i18nKeyPrefix: 'learn.project.ledFade',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'pulse-rc',
     moduleSlug: 'basics',
     exampleId: 'pulse',
     i18nKeyPrefix: 'learn.project.pulseRc',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
+  },
+  // Group final for the basics module: 10 questions, pass at 8.
+  {
+    unitSlug: 'basics-final-quiz',
+    moduleSlug: 'basics',
+    exampleId: 'led',
+    i18nKeyPrefix: 'learn.project.basicsFinal',
+    stepCount: 3,
+    lab: false,
+    finalQuiz: true
   },
   {
     unitSlug: 'half-wave-rectifier',
@@ -213,14 +204,16 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'power',
     exampleId: 'buck',
     i18nKeyPrefix: 'learn.project.buck',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'boost-converter',
     moduleSlug: 'power',
     exampleId: 'boost',
     i18nKeyPrefix: 'learn.project.boost',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'opamp-follower',
@@ -255,7 +248,8 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'opamps',
     exampleId: 'opampSchmitt',
     i18nKeyPrefix: 'learn.project.opampSchmitt',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'opamp-summing',
@@ -269,21 +263,24 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'opamps',
     exampleId: 'opampIntegrator',
     i18nKeyPrefix: 'learn.project.opampIntegrator',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'opamp-differentiator',
     moduleSlug: 'opamps',
     exampleId: 'opampDifferentiator',
     i18nKeyPrefix: 'learn.project.opampDifferentiator',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'opamp-active-filter',
     moduleSlug: 'opamps',
     exampleId: 'opampActiveFilter',
     i18nKeyPrefix: 'learn.project.opampActiveFilter',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'rc-low-pass',
@@ -311,21 +308,24 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'filters',
     exampleId: 'rlcSeries',
     i18nKeyPrefix: 'learn.project.rlcSeries',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'band-pass',
     moduleSlug: 'filters',
     exampleId: 'bandPass',
     i18nKeyPrefix: 'learn.project.bandPass',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'notch-filter',
     moduleSlug: 'filters',
     exampleId: 'notchFilter',
     i18nKeyPrefix: 'learn.project.notchFilter',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'voltage-divider',
@@ -360,7 +360,8 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'filters',
     exampleId: 'measureAc',
     i18nKeyPrefix: 'learn.project.bodeIntuition',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'motor-mosfet',

@@ -6,6 +6,7 @@ import { LEARN_ASSESSMENT_I18N } from '../../features/learn/data/learn-assessmen
 
 export const EN_FALLBACK: Record<string, string> = {
   'shell.brand': 'Electro Lab',
+  'shell.language': 'Language',
   'shell.nav.lab': 'Lab',
   'shell.nav.learn': 'Learn',
   'shell.nav.account': 'Account',
@@ -1994,6 +1995,14 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.acDc.step3': 'Run and read the capacitor node magnitude — a fraction of the source.',
   'learn.project.acDc.step4': 'Raise the frequency and run again: the capacitor node magnitude falls.',
   'learn.project.acDc.openLab': 'Open in Lab',
+
+  'learn.project.basicsFinal.title': 'Final quiz: voltage, current & resistance',
+  'learn.project.basicsFinal.summary':
+    'Ten mixed questions on everything in this group. Eight correct passes and closes the module.',
+  'learn.project.basicsFinal.step1': 'Skim the recap slides.',
+  'learn.project.basicsFinal.step2': 'Answer all ten questions.',
+  'learn.project.basicsFinal.step3': 'Score at least eight. Retry if needed.',
+  'learn.project.basicsFinal.openLab': 'Open in Lab',
 
   'learn.project.fundamentalsLoop.title': 'The simple loop',
   'learn.project.fundamentalsLoop.summary':

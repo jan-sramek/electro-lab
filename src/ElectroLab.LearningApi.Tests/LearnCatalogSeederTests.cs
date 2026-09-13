@@ -91,6 +91,59 @@ public class LearnCatalogSeederTests : IDisposable
         Assert.Null(units[^1].NextUnitId);
     }
 
+    [Fact]
+    public async Task Reseed_removes_units_that_left_the_catalog()
+    {
+        await using (var db = _fixture.CreateContext()) await LearnCatalogSeeder.SeedAsync(db);
+        int strayId;
+        await using (var db = _fixture.CreateContext())
+        {
+            var module = await db.LearnModules.FirstAsync(m => m.Slug == "basics");
+            var stray = new Data.Entities.LearnUnit
+            {
+                ModuleId = module.Id, Slug = "ohm-explore", ExampleId = "led", I18nKeyPrefix = "learn.project.ohmExplore", SortOrder = 99
+            };
+            db.LearnUnits.Add(stray);
+            await db.SaveChangesAsync();
+            strayId = stray.Id;
+            db.LearnProgress.Add(new Data.Entities.LearnProgressRow { SessionId = Guid.NewGuid(), UnitId = strayId, ReadComplete = true, UpdatedAt = DateTimeOffset.UtcNow });
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _fixture.CreateContext()) await LearnCatalogSeeder.SeedAsync(db);
+
+        await using (var check = _fixture.CreateContext())
+        {
+            Assert.Null(await check.LearnUnits.FirstOrDefaultAsync(u => u.Id == strayId));
+            Assert.False(await check.LearnProgress.AnyAsync(r => r.UnitId == strayId));
+            Assert.False(await check.LearnUnits.AnyAsync(u => u.NextUnitId == strayId));
+        }
+    }
+
+    [Fact]
+    public async Task Optional_units_are_flagged_and_never_gate_the_next_unit()
+    {
+        await using (var db = _fixture.CreateContext()) await LearnCatalogSeeder.SeedAsync(db);
+        await using var check = _fixture.CreateContext();
+        var ledFade = await check.LearnUnits.Include(u => u.Module).FirstAsync(u => u.Slug == "led-fade");
+        var pulseRc = await check.LearnUnits.Include(u => u.Module).FirstAsync(u => u.Slug == "pulse-rc");
+        var finalQuiz = await check.LearnUnits.Include(u => u.Module).FirstAsync(u => u.Slug == "basics-final-quiz");
+        var rcCharge = await check.LearnUnits.Include(u => u.Module).FirstAsync(u => u.Slug == "rc-charge");
+        Assert.True(ledFade.IsOptional);
+        Assert.True(pulseRc.IsOptional);
+        Assert.False(finalQuiz.IsOptional);
+
+        // Nothing complete: the final quiz is locked because rc-charge (the nearest required unit) is not done.
+        var svc = new Services.LearnCatalogService(check);
+        var session = Guid.NewGuid();
+        Assert.Equal(Contracts.UnitAvailability.Locked, await svc.GetAvailabilityAsync(finalQuiz, session));
+
+        // Complete rc-charge only (skipping both optional units) → the final quiz unlocks.
+        check.LearnProgress.Add(new Data.Entities.LearnProgressRow { SessionId = session, UnitId = rcCharge.Id, ReadComplete = true, QuizPassed = true, UpdatedAt = DateTimeOffset.UtcNow });
+        await check.SaveChangesAsync();
+        Assert.Equal(Contracts.UnitAvailability.Available, await svc.GetAvailabilityAsync(finalQuiz, session));
+    }
+
     private async Task<(int Modules, int Units, int Lessons, int Questions, int Criteria, string LessonIds, string QuestionIds)> SnapshotAsync()
     {
         await using var db = _fixture.CreateContext();

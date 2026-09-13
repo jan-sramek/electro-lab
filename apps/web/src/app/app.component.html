@@ -4,6 +4,13 @@
     <a routerLink="/lab" routerLinkActive="active">{{ 'shell.nav.lab' | t }}</a>
     <a routerLink="/learn" routerLinkActive="active">{{ 'shell.nav.learn' | t }}</a>
     <a routerLink="/account" routerLinkActive="active">{{ 'shell.nav.account' | t }}</a>
+    <div class="lang" role="group" [attr.aria-label]="'shell.language' | t">
+      @for (l of locales; track l) {
+        <button type="button" [class.active]="i18n.locale() === l" [attr.aria-pressed]="i18n.locale() === l" (click)="setLocale(l)">
+          {{ l.toUpperCase() }}
+        </button>
+      }
+    </div>
   </nav>
 </header>
 <main class="shell-main">

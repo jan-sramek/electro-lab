@@ -18,6 +18,14 @@ export interface LearnUnit {
   stepCount: number;
   /** False for theory-only units: no Lab phase, no lab bonus points. Defaults to true. */
   lab?: boolean;
+  /** Group final: a longer quiz that closes a module (worth more quiz points). */
+  finalQuiz?: boolean;
+  /** Difficult / advanced unit: never gates the next unit; its points are bonus (not in the max). */
+  optional?: boolean;
+}
+
+export function unitIsOptional(unit: Pick<LearnUnit, 'optional'> | null | undefined): boolean {
+  return unit?.optional === true;
 }
 
 export function unitHasLab(unit: Pick<LearnUnit, 'lab'> | null | undefined): boolean {

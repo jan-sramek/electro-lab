@@ -963,8 +963,7 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
   ],
   // Theory-only unit (catalog `lab: false`): no lab challenge, no criteria.
   'circuit-elements': [],
-  // The two series/parallel units share the seriesParallel sample.
-  'series-parallel-intro': cloneSpecCriteria('seriesParallel'),
+  'basics-final-quiz': [],
   'series-parallel-circuits': [
     { type: 'no_circuit_errors', paramsJson: '{}' },
     { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
@@ -991,21 +990,6 @@ const UNIT_CRITERIA: Record<string, LearnChallengeLabSpec['criteria']> = {
       type: 'any_pin_dc_voltage_between',
       paramsJson: JSON.stringify({ modelKey: 'resistor', pin: 'b', minVolts: 2.0, maxVolts: 3.0 })
     }
-  ],
-  'ohm-explore': [
-    { type: 'no_circuit_errors', paramsJson: '{}' },
-    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'led', 'resistor', 'ground'] }) },
-    { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_model_current_min', paramsJson: JSON.stringify({ modelKey: 'led', minAmps: 0.001 }) },
-    { type: 'any_model_current_max', paramsJson: JSON.stringify({ modelKey: 'led', maxAmps: 0.025 }) },
-    { type: 'any_part_not_burned', paramsJson: JSON.stringify({ modelKey: 'led' }) }
-  ],
-  'time-constant-estimate': [
-    { type: 'no_circuit_errors', paramsJson: '{}' },
-    { type: 'has_models', paramsJson: JSON.stringify({ models: ['battery', 'resistor', 'capacitor', 'ground'] }) },
-    { type: 'analysis_mode', paramsJson: JSON.stringify({ mode: 'tran' }) },
-    { type: 'sim_ok', paramsJson: '{}' },
-    { type: 'any_cap_voltage_final_min', paramsJson: JSON.stringify({ modelKey: 'capacitor', minVolts: 2.0 }) }
   ],
   'inductive-why-diode': [
     { type: 'no_circuit_errors', paramsJson: '{}' },

@@ -28,32 +28,30 @@ function loadFallback() {
     process.exit(2);
   }
   const outDir = mkdtempSync(join(tmpdir(), 'i18n-seeder-check-'));
-  const bundle = join(outDir, 'en-fallback.cjs');
+  const build = (entry, out) => {
+    esbuild.buildSync({ entryPoints: [entry], bundle: true, platform: 'node', format: 'cjs', outfile: out, logLevel: 'error' });
+    return require(out);
+  };
   try {
-    esbuild.buildSync({
-      entryPoints: [fallbackTs],
-      bundle: true,
-      platform: 'node',
-      format: 'cjs',
-      outfile: bundle,
-      logLevel: 'error'
-    });
-    return require(bundle).EN_FALLBACK;
+    return {
+      en: build(fallbackTs, join(outDir, 'en-fallback.cjs')).EN_FALLBACK,
+      cs: build(join(webRoot, 'src/app/core/i18n/cs.ts'), join(outDir, 'cs.cjs')).CS_MESSAGES
+    };
   } finally {
     rmSync(outDir, { recursive: true, force: true });
   }
 }
 
-function loadSeederEnglish() {
+function loadSeederDict(name) {
   if (!existsSync(seederPath)) {
     process.stderr.write(`Seeder not found: ${seederPath}\n`);
     process.exit(2);
   }
   const src = readFileSync(seederPath, 'utf8');
-  const marker = 'IReadOnlyDictionary<string, string> English = new Dictionary<string, string>';
+  const marker = `IReadOnlyDictionary<string, string> ${name} = new Dictionary<string, string>`;
   const start = src.indexOf(marker);
   if (start < 0) {
-    process.stderr.write('English dictionary not found in TranslationSeeder.cs\n');
+    process.stderr.write(`${name} dictionary not found in TranslationSeeder.cs\n`);
     process.exit(2);
   }
   const open = src.indexOf('{', start);
@@ -77,18 +75,26 @@ function loadSeederEnglish() {
   return dict;
 }
 
-const fallback = loadFallback();
-const seeder = loadSeederEnglish();
-
+const bundles = loadFallback();
 const problems = [];
-for (const [key, value] of Object.entries(fallback)) {
-  if (!(key in seeder)) problems.push(`missing in seeder: ${key}`);
-  else if (seeder[key] !== value) {
-    problems.push(`value differs: ${key}\n    client: ${JSON.stringify(value)}\n    seeder: ${JSON.stringify(seeder[key])}`);
+for (const [locale, name] of [['en', 'English'], ['cs', 'Czech']]) {
+  const client = bundles[locale] ?? {};
+  const seeder = loadSeederDict(name);
+  for (const [key, value] of Object.entries(client)) {
+    if (!(key in seeder)) problems.push(`[${locale}] missing in seeder: ${key}`);
+    else if (seeder[key] !== value) {
+      problems.push(`[${locale}] value differs: ${key}\n    client: ${JSON.stringify(value)}\n    seeder: ${JSON.stringify(seeder[key])}`);
+    }
   }
-}
-for (const key of Object.keys(seeder)) {
-  if (!(key in fallback)) problems.push(`missing in EN_FALLBACK: ${key}`);
+  for (const key of Object.keys(seeder)) {
+    if (!(key in client)) problems.push(`[${locale}] missing in client bundle: ${key}`);
+  }
+  // Every Czech key must exist in English (no orphan translations).
+  if (locale === 'cs') {
+    for (const key of Object.keys(client)) {
+      if (!(key in bundles.en)) problems.push(`[cs] key not in EN_FALLBACK: ${key}`);
+    }
+  }
 }
 
 if (problems.length) {
@@ -100,4 +106,4 @@ if (problems.length) {
   );
   process.exit(1);
 }
-process.stdout.write(`i18n seeder OK (${Object.keys(fallback).length} keys match)\n`);
+process.stdout.write(`i18n seeder OK (${Object.keys(bundles.en).length} en + ${Object.keys(bundles.cs).length} cs keys match)\n`);

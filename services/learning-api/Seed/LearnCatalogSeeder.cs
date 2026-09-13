@@ -65,7 +65,8 @@ public static class LearnCatalogSeeder
                     Slug = def.UnitSlug,
                     ExampleId = def.ExampleId,
                     I18nKeyPrefix = def.I18nKeyPrefix,
-                    SortOrder = sortOrder
+                    SortOrder = sortOrder,
+                    IsOptional = def.Optional || OptionalUnits.Contains(key)
                 };
                 db.LearnUnits.Add(unit);
                 await db.SaveChangesAsync();
@@ -77,6 +78,7 @@ public static class LearnCatalogSeeder
                 unit.I18nKeyPrefix = def.I18nKeyPrefix;
                 unit.SortOrder = sortOrder;
                 unit.ModuleId = modulesBySlug[def.ModuleSlug].Id;
+                unit.IsOptional = def.Optional || OptionalUnits.Contains(key);
             }
 
             // Content is synced on every seed (not just for new units) so catalog edits reach existing
@@ -86,6 +88,16 @@ public static class LearnCatalogSeeder
             SyncQuiz(db, unit, def.Quiz);
             SyncLabCriteria(db, unit, ResolveCriteria(def, criteriaByUnit));
             orderedUnits.Add(unit);
+        }
+
+        // Units removed from the catalog (merged or redundant) disappear from existing databases too.
+        // Cascades drop their lessons, quiz, criteria and progress rows; NextUnitId links are set null.
+        var keep = orderedUnits.Select(u => u.Id).ToHashSet();
+        var stale = units.Where(u => !keep.Contains(u.Id)).ToList();
+        if (stale.Count > 0)
+        {
+            foreach (var u in units) if (u.NextUnitId is int n && !keep.Contains(n)) u.NextUnitId = null;
+            db.LearnUnits.RemoveRange(stale);
         }
 
         await db.SaveChangesAsync();
@@ -280,7 +292,19 @@ public static class LearnCatalogSeeder
         int Order,
         (int Order, string? TitleKey, string BodyKey)[] Lessons,
         QuizDef[] Quiz,
-        LabCriterionDef[] LabCriteria);
+        LabCriterionDef[] LabCriteria,
+        bool Optional = false);
+
+    /// <summary>Slugs of difficult units that never gate progression (mirrors `optional: true` in learn-catalog.ts).</summary>
+    private static readonly HashSet<string> OptionalUnits =
+    [
+        "basics/led-fade", "basics/pulse-rc",
+        "power/buck-converter", "power/boost-converter",
+        "opamps/opamp-schmitt", "opamps/opamp-integrator", "opamps/opamp-differentiator", "opamps/opamp-active-filter",
+        "filters/rlc-series", "filters/band-pass", "filters/notch-filter", "filters/bode-intuition"
+    ];
+
+
 
     private static readonly ModuleDef[] ModuleDefs =
     [
@@ -314,6 +338,16 @@ public static class LearnCatalogSeeder
             [new("a", $"{prefix}.quiz.q3.a"), new("b", $"{prefix}.quiz.q3.b"), new("c", $"{prefix}.quiz.q3.c")],
             "c", $"{prefix}.quiz.q3.explain")
     ];
+
+    /// <summary>Longer quiz (e.g. a module final): N questions, each with its own correct option.</summary>
+    private static QuizDef[] LongQuiz(string prefix, string[] correctIds) =>
+        correctIds
+            .Select((correct, i) => new QuizDef(
+                $"{prefix}.quiz.q{i + 1}.prompt",
+                [new("a", $"{prefix}.quiz.q{i + 1}.a"), new("b", $"{prefix}.quiz.q{i + 1}.b"), new("c", $"{prefix}.quiz.q{i + 1}.c")],
+                correct,
+                $"{prefix}.quiz.q{i + 1}.explain"))
+            .ToArray();
 
     private static (int, string?, string)[] StandardLessons(string prefix) =>
     [
@@ -378,17 +412,11 @@ public static class LearnCatalogSeeder
         new("basics", "fundamentals-loop", "led", "learn.project.fundamentalsLoop", 1,
             StandardLessons("learn.project.fundamentalsLoop"), StandardQuiz("learn.project.fundamentalsLoop"),
             LedLab("learn.project.fundamentalsLoop")),
-        new("basics", "ohm-explore", "led", "learn.project.ohmExplore", 2,
-            StandardLessons("learn.project.ohmExplore"), StandardQuiz("learn.project.ohmExplore"),
-            LedLab("learn.project.ohmExplore")),
         new("basics", "led-series", "led", "learn.project.led", 3,
             StandardLessons("learn.project.led"), StandardQuiz("learn.project.led"), LedLab("learn.project.led")),
         new("basics", "diode-direction", "diodeDirection", "learn.project.diodeDirection", 4,
             StandardLessons("learn.project.diodeDirection"), StandardQuiz("learn.project.diodeDirection"),
             LedLab("learn.project.diodeDirection")),
-        new("basics", "series-parallel-intro", "seriesParallel", "learn.project.seriesParallel", 5,
-            StandardLessons("learn.project.seriesParallel"), StandardQuiz("learn.project.seriesParallel"),
-            LedLab("learn.project.seriesParallel")),
         new("basics", "series-leds", "seriesLeds", "learn.project.seriesLeds", 6,
             StandardLessons("learn.project.seriesLeds"), StandardQuiz("learn.project.seriesLeds"),
             LedLab("learn.project.seriesLeds")),
@@ -397,15 +425,17 @@ public static class LearnCatalogSeeder
             LedLab("learn.project.ledBurnLimit")),
         new("basics", "rc-charge", "rc", "learn.project.rc", 8,
             StandardLessons("learn.project.rc"), StandardQuiz("learn.project.rc"), TranLab("learn.project.rc")),
-        new("basics", "time-constant-estimate", "rc", "learn.project.timeConstant", 9,
-            StandardLessons("learn.project.timeConstant"), StandardQuiz("learn.project.timeConstant"),
-            TranLab("learn.project.timeConstant")),
         new("basics", "led-fade", "ledFade", "learn.project.ledFade", 10,
             StandardLessons("learn.project.ledFade"), StandardQuiz("learn.project.ledFade"), TranLab("learn.project.ledFade")),
         new("basics", "pulse-rc", "pulse", "learn.project.pulseRc", 11,
             StandardLessons("learn.project.pulseRc"), StandardQuiz("learn.project.pulseRc"),
             TranLab("learn.project.pulseRc")),
 
+        // Group final: 10 questions, pass at 8 (LearnQuizRules). Answer key mirrors learn-final-quizzes.ts.
+        new("basics", "basics-final-quiz", "led", "learn.project.basicsFinal", 12,
+            StandardLessons("learn.project.basicsFinal"),
+            LongQuiz("learn.project.basicsFinal", ["b", "c", "a", "b", "c", "a", "b", "a", "c", "b"]),
+            NoLab()),
         new("power", "half-wave-rectifier", "halfWave", "learn.project.halfWave", 1,
             StandardLessons("learn.project.halfWave"), StandardQuiz("learn.project.halfWave"), TranLab("learn.project.halfWave")),
         new("power", "bridge-rectifier", "bridge", "learn.project.bridge", 2,

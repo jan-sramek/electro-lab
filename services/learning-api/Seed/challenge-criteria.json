@@ -174,50 +174,6 @@
   },
   {
     "moduleSlug": "basics",
-    "unitSlug": "ohm-explore",
-    "exampleId": "led",
-    "analysisMode": "dcOp",
-    "criteria": [
-      {
-        "order": 1,
-        "type": "no_circuit_errors",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.no_circuit_errors"
-      },
-      {
-        "order": 2,
-        "type": "has_models",
-        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
-        "labelKey": "learn.challenge.check.has_models"
-      },
-      {
-        "order": 3,
-        "type": "sim_ok",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.sim_ok"
-      },
-      {
-        "order": 4,
-        "type": "any_model_current_min",
-        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.001}",
-        "labelKey": "learn.challenge.check.any_model_current_min"
-      },
-      {
-        "order": 5,
-        "type": "any_model_current_max",
-        "paramsJson": "{\"modelKey\":\"led\",\"maxAmps\":0.025}",
-        "labelKey": "learn.challenge.check.any_model_current_max"
-      },
-      {
-        "order": 6,
-        "type": "any_part_not_burned",
-        "paramsJson": "{\"modelKey\":\"led\"}",
-        "labelKey": "learn.challenge.check.any_part_not_burned"
-      }
-    ]
-  },
-  {
-    "moduleSlug": "basics",
     "unitSlug": "led-series",
     "exampleId": "led",
     "analysisMode": "dcOp",
@@ -292,50 +248,6 @@
       },
       {
         "order": 4,
-        "type": "any_model_current_min",
-        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
-        "labelKey": "learn.challenge.check.any_model_current_min"
-      }
-    ]
-  },
-  {
-    "moduleSlug": "basics",
-    "unitSlug": "series-parallel-intro",
-    "exampleId": "seriesParallel",
-    "analysisMode": "dcOp",
-    "criteria": [
-      {
-        "order": 1,
-        "type": "no_circuit_errors",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.no_circuit_errors"
-      },
-      {
-        "order": 2,
-        "type": "has_models",
-        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
-        "labelKey": "learn.challenge.check.has_models"
-      },
-      {
-        "order": 3,
-        "type": "any_model_min_count",
-        "paramsJson": "{\"modelKey\":\"led\",\"min\":2}",
-        "labelKey": "learn.challenge.check.any_model_min_count"
-      },
-      {
-        "order": 4,
-        "type": "any_model_min_count",
-        "paramsJson": "{\"modelKey\":\"resistor\",\"min\":2}",
-        "labelKey": "learn.challenge.check.any_model_min_count"
-      },
-      {
-        "order": 5,
-        "type": "sim_ok",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.sim_ok"
-      },
-      {
-        "order": 6,
         "type": "any_model_current_min",
         "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
         "labelKey": "learn.challenge.check.any_model_current_min"
@@ -470,44 +382,6 @@
   },
   {
     "moduleSlug": "basics",
-    "unitSlug": "time-constant-estimate",
-    "exampleId": "rc",
-    "analysisMode": "tran",
-    "criteria": [
-      {
-        "order": 1,
-        "type": "no_circuit_errors",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.no_circuit_errors"
-      },
-      {
-        "order": 2,
-        "type": "has_models",
-        "paramsJson": "{\"models\":[\"battery\",\"resistor\",\"capacitor\",\"ground\"]}",
-        "labelKey": "learn.challenge.check.has_models"
-      },
-      {
-        "order": 3,
-        "type": "analysis_mode",
-        "paramsJson": "{\"mode\":\"tran\"}",
-        "labelKey": "learn.challenge.check.analysis_mode"
-      },
-      {
-        "order": 4,
-        "type": "sim_ok",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.sim_ok"
-      },
-      {
-        "order": 5,
-        "type": "any_cap_voltage_final_min",
-        "paramsJson": "{\"modelKey\":\"capacitor\",\"minVolts\":2}",
-        "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
-      }
-    ]
-  },
-  {
-    "moduleSlug": "basics",
     "unitSlug": "led-fade",
     "exampleId": "ledFade",
     "analysisMode": "tran",
@@ -581,6 +455,13 @@
         "labelKey": "learn.challenge.check.any_cap_voltage_final_min"
       }
     ]
+  },
+  {
+    "moduleSlug": "basics",
+    "unitSlug": "basics-final-quiz",
+    "exampleId": "led",
+    "analysisMode": "dcOp",
+    "criteria": []
   },
   {
     "moduleSlug": "power",

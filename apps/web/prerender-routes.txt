@@ -7,16 +7,14 @@
 /learn/basics/series-parallel-circuits
 /learn/basics/ac-dc
 /learn/basics/fundamentals-loop
-/learn/basics/ohm-explore
 /learn/basics/led-series
 /learn/basics/diode-direction
-/learn/basics/series-parallel-intro
 /learn/basics/series-leds
 /learn/basics/led-burn-limit
 /learn/basics/rc-charge
-/learn/basics/time-constant-estimate
 /learn/basics/led-fade
 /learn/basics/pulse-rc
+/learn/basics/basics-final-quiz
 /learn/power/half-wave-rectifier
 /learn/power/bridge-rectifier
 /learn/power/filter-capacitor

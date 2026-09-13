@@ -6,6 +6,9 @@ export class TranslatePipe implements PipeTransform {
   private readonly i18n = inject(I18nService);
 
   transform(key: string, params?: Record<string, string | number>): string {
+    // Impure pipe: reading the version signal ties re-evaluation to locale switches.
+    // (Optional call: lightweight test doubles of I18nService may not provide it.)
+    this.i18n.version?.();
     return this.i18n.t(key, params);
   }
 }

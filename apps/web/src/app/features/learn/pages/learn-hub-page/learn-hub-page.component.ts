@@ -7,7 +7,7 @@ import { LearnCatalogService } from '../../services/learn-catalog.service';
 import { LearnProgressService } from '../../services/learn-progress.service';
 import { LEARN_POINTS, totalPoints, unitPointsEarned, unitPointsMax } from '../../data/learn-points';
 import { findLearnUnit } from '../../data/learn-catalog';
-import { unitHasLab } from '../../data/learn-catalog.model';
+import { unitHasLab, unitIsOptional } from '../../data/learn-catalog.model';
 import { LearnSeoService } from '../../services/learn-seo.service';
 
 @Component({
@@ -33,6 +33,9 @@ import { LearnSeoService } from '../../services/learn-seo.service';
                   <!-- Always a real link so crawlers discover every unit; the badge conveys lock state. -->
                   <a [routerLink]="unitPath(unit)">{{ unit.i18nKeyPrefix + '.title' | t }}</a>
                 </h3>
+                @if (isOptional(unit)) {
+                  <span class="status optional">{{ 'learn.hub.optional' | t }}</span>
+                }
                 <span class="unit-points">{{ 'learn.points.unit' | t: unitPoints(unit) }}</span>
                 <span class="status" [attr.data-status]="unit.availability">
                   {{ statusKey(unit.availability) | t }}
@@ -77,6 +80,7 @@ import { LearnSeoService } from '../../services/learn-seo.service';
     .status[data-status='available'] { background: #e8f5f0; color: #0b6e4f; }
     .status[data-status='inProgress'] { background: #fff7ed; color: #c2410c; }
     .status[data-status='complete'] { background: #0b6e4f; color: #fff; }
+    .status.optional { background: #eef2f6; color: #4a5d73; border: 1px dashed #94a3b8; }
     .project p { margin: 0 0 0.75rem; color: #5a6b7d; line-height: 1.45; }
     .cta-link { color: #0b6e4f; font-weight: 600; text-decoration: none; }
     .cta-link:hover { text-decoration: underline; }
@@ -91,11 +95,17 @@ export class LearnHubPageComponent implements OnInit {
   readonly pts = LEARN_POINTS;
   readonly total = computed(() => totalPoints(this.progress.progressSnapshot()));
 
+  isOptional(unit: LearnUnitSummaryDto): boolean {
+    return unitIsOptional(findLearnUnit(unit.moduleSlug, unit.unitSlug));
+  }
+
   unitPoints(unit: LearnUnitSummaryDto): { earned: number; max: number } {
-    const hasLab = unitHasLab(findLearnUnit(unit.moduleSlug, unit.unitSlug));
+    const def = findLearnUnit(unit.moduleSlug, unit.unitSlug);
+    const hasLab = unitHasLab(def);
+    const finalQuiz = !!def?.finalQuiz;
     return {
-      earned: unitPointsEarned(this.progress.progressFor(unit.moduleSlug, unit.unitSlug), hasLab),
-      max: unitPointsMax(hasLab)
+      earned: unitPointsEarned(this.progress.progressFor(unit.moduleSlug, unit.unitSlug), hasLab, finalQuiz),
+      max: unitPointsMax(hasLab, finalQuiz)
     };
   }
 

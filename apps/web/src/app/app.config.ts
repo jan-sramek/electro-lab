@@ -14,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch()),
     provideAppInitializer(() => {
       const i18n = inject(I18nService);
-      return i18n.load(DEFAULT_LOCALE);
+      return i18n.load(i18n.storedLocale() || DEFAULT_LOCALE);
     }),
     provideClientHydration(
       withEventReplay(),

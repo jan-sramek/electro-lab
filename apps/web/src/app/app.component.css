@@ -43,3 +43,29 @@ nav a.active {
 .shell-main {
   padding: 1.25rem 1.5rem 2rem;
 }
+
+.lang {
+  display: inline-flex;
+  margin-left: 0.75rem;
+  border: 1px solid #d8dee6;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.lang button {
+  border: none;
+  background: transparent;
+  color: #4a5d73;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+}
+
+.lang button.active {
+  background: #0b6e4f;
+  color: #ffffff;
+}

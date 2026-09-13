@@ -13,7 +13,10 @@ import { LearnFigure } from '../../data/learn-slides.model';
   standalone: true,
   imports: [TranslatePipe, SymbolGlyphComponent],
   templateUrl: './learn-figure.component.html',
-  styleUrl: './learn-figure.component.css'
+  styleUrl: './learn-figure.component.css',
+  // SVG built from control flow does not hydrate reliably (NG0500 mismatches left the
+  // figure frozen on the first slide). Re-render it on the client instead.
+  host: { ngSkipHydration: 'true' }
 })
 export class LearnFigureComponent {
   readonly figure = input.required<LearnFigure>();
@@ -136,9 +139,82 @@ export class LearnFigureComponent {
   readonly loop = computed(() => ({
     switchOpen: this.flag('switchOpen'),
     hasSwitch: this.flag('switchOpen') || this.p()['switchOpen'] === false,
-    flow: this.p()['flow'] !== false,
+    flow: this.p()['flow'] !== false && !this.flag('reverseLed'),
     drops: this.flag('drops'),
     designators: this.flag('designators'),
-    meter: this.str('meter')
+    meter: this.str('meter'),
+    /** LED mounted cathode-up: blocks, nothing flows. */
+    reverseLed: this.flag('reverseLed'),
+    /** Overdriven LED: burn visual + red current label. */
+    ledBurn: this.flag('ledBurn'),
+    /** 'capacitor' swaps the LED for a capacitor (RC loop). */
+    load: this.str('load', 'led')
   }));
+
+  /** RC charge / discharge curve: exponential toward the final value with τ markers. */
+  rcPath(discharge: boolean): string {
+    const x0 = 44;
+    const x1 = 300;
+    const yLow = 150;
+    const yHigh = 40;
+    const steps = 96;
+    let d = '';
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * 5; // in units of τ
+      const frac = discharge ? Math.exp(-t) : 1 - Math.exp(-t);
+      const y = yLow - frac * (yLow - yHigh);
+      const x = x0 + (i / steps) * (x1 - x0);
+      d += `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)} `;
+    }
+    return d;
+  }
+
+  /** x position of n·τ on the RC plot (5τ spans the width). */
+  tauX(n: number): number {
+    return 44 + (n / 5) * (300 - 44);
+  }
+
+  /** Tick marks for 2τ..5τ (precomputed so the SVG case needs no nested loop). */
+  readonly rcTicks = [2, 3, 4, 5].map((n) => ({ n, x: 44 + (n / 5) * (300 - 44), label: `${n}τ` }));
+
+  /** RC figure derived values. */
+  readonly rc = computed(() => {
+    const discharge = this.str('mode') === 'discharge';
+    return {
+      discharge,
+      path: this.rcPath(discharge),
+      tauX: this.tauX(1),
+      tauY: this.tauY(discharge),
+      pct: discharge ? '37 %' : '63 %',
+      final: this.str('final', 'U'),
+      tau: this.str('tau') ? `τ = ${this.str('tau')}` : ''
+    };
+  });
+
+  /** y of 63 % (charge) or 37 % (discharge) line. */
+  tauY(discharge: boolean): number {
+    const frac = discharge ? Math.exp(-1) : 1 - Math.exp(-1);
+    return 150 - frac * (150 - 40);
+  }
+
+  /** Square pulse and the rounded RC response for the waveform 'pulse-rc' mode. */
+  pulsePath(): string {
+    return 'M 40 130 L 90 130 L 90 50 L 190 50 L 190 130 L 295 130';
+  }
+
+  pulseRcPath(): string {
+    let d = 'M 40 130 L 90 130 ';
+    for (let i = 1; i <= 40; i++) {
+      const t = i / 40;
+      const y = 130 - (1 - Math.exp(-t * 4)) * 80;
+      d += `L ${(90 + t * 100).toFixed(1)} ${y.toFixed(1)} `;
+    }
+    const top = 130 - (1 - Math.exp(-4)) * 80;
+    for (let i = 1; i <= 40; i++) {
+      const t = i / 40;
+      const y = 130 - (top < 130 ? (130 - top) * Math.exp(-t * 4) : 0);
+      d += `L ${(190 + t * 105).toFixed(1)} ${y.toFixed(1)} `;
+    }
+    return d;
+  }
 }

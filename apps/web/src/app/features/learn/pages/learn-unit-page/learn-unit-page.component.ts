@@ -23,6 +23,8 @@ import { firstValueFrom } from 'rxjs';
 import { gradeQuizLocally } from '../../data/learn-quiz-grading';
 import { isApiUnreachable } from '../../services/learn-api-errors';
 import { learnSlideDeckFor } from '../../data/learn-slides-content';
+import { autoDeckFor } from '../../data/learn-auto-deck';
+import { unitIsOptional } from '../../data/learn-catalog.model';
 import { LearnSlideDeckComponent } from '../../components/learn-slide-deck/learn-slide-deck.component';
 import { CriterionLabelPipe } from '../../data/learn-criterion-label.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
@@ -32,6 +34,10 @@ import { learnStepKey } from '../../data/learn-catalog.model';
   selector: 'app-learn-unit-page',
   standalone: true,
   imports: [TranslatePipe, RouterLink, FormsModule, LearnSlideDeckComponent, CriterionLabelPipe],
+  // The page depends on the visitor's session (progress, phase) which the server cannot know, so the
+  // client re-renders it from scratch instead of hydrating the anonymous server markup. Without this
+  // the server-rendered article lingered above the client one when the fresh data arrived.
+  host: { ngSkipHydration: 'true' },
   template: `
     @if (unit(); as u) {
       <article class="learn-unit" [class.wide]="!!slideDeck()">
@@ -46,27 +52,36 @@ import { learnStepKey } from '../../data/learn-catalog.model';
             <p class="locked" role="note">{{ 'learn.unit.locked' | t }}</p>
           } @else {
             <nav class="phase-nav" aria-label="Unit progress">
-              <span [class.active]="phase() === 'read'">
+              <button type="button" [class.active]="displayPhase() === 'read'" [class.done]="phaseIndex(phase()) > 0" [disabled]="!canView('read')" (click)="showPhase('read')">
                 {{ 'learn.unit.phase.read' | t }} <b>{{ 'learn.points.plus' | t: { pts: points.read } }}</b>
-              </span>
-              <span [class.active]="phase() === 'quiz'">
-                {{ 'learn.unit.phase.quiz' | t }} <b>{{ 'learn.points.plus' | t: { pts: points.quiz } }}</b>
-              </span>
+              </button>
+              <button type="button" [class.active]="displayPhase() === 'quiz'" [class.done]="phaseIndex(phase()) > 1" [disabled]="!canView('quiz')" (click)="showPhase('quiz')">
+                {{ 'learn.unit.phase.quiz' | t }} <b>{{ 'learn.points.plus' | t: { pts: quizPoints() } }}</b>
+              </button>
               @if (hasLab()) {
-                <span [class.active]="phase() === 'lab'" class="bonus">
+                <button type="button" [class.active]="displayPhase() === 'lab'" [class.done]="phaseIndex(phase()) > 2" class="bonus" [disabled]="!canView('lab')" (click)="showPhase('lab')">
                   {{ 'learn.unit.phase.lab' | t }} <b>{{ 'learn.points.bonus' | t: { pts: points.lab } }}</b>
-                </span>
+                </button>
               }
-              <span [class.active]="phase() === 'complete'">{{ 'learn.unit.phase.done' | t }}</span>
+              <button type="button" [class.active]="displayPhase() === 'complete'" [disabled]="!canView('complete')" (click)="showPhase('complete')">{{ 'learn.unit.phase.done' | t }}</button>
               <span class="points-earned">{{ 'learn.points.unit' | t: { earned: pointsEarned(), max: pointsMax() } }}</span>
             </nav>
+            @if (isOptional()) {
+              <p class="notice optional" role="note">{{ 'learn.unit.optionalNote' | t }}</p>
+            }
+            @if (viewPhase() && viewPhase() !== phase()) {
+              <p class="notice reviewing" role="status">
+                {{ 'learn.unit.reviewing' | t }}
+                <button type="button" class="link" (click)="viewPhase.set(null)">{{ 'learn.unit.backToCurrent' | t }}</button>
+              </p>
+            }
           }
           @if (progress.savedLocally()) {
             <p class="notice offline" role="status">{{ 'learn.unit.offlineSaved' | t }}</p>
           }
         </header>
 
-        @if (phase() === 'read') {
+        @if (displayPhase() === 'read') {
           <section class="panel">
             <h2>{{ 'learn.unit.readHeading' | t }}</h2>
             @if (slideDeck(); as deck) {
@@ -76,7 +91,7 @@ import { learnStepKey } from '../../data/learn-catalog.model';
                 (lastReached)="onDeckFinished()"
                 (indexChange)="onSlideChange($event)"
               />
-              @if (!isLocked(u) && !deckFinished()) {
+              @if (!isLocked(u) && !deckFinished() && phase() === 'read') {
                 <p class="hint small">{{ 'learn.unit.readSlidesHint' | t }}</p>
               }
             } @else {
@@ -91,7 +106,7 @@ import { learnStepKey } from '../../data/learn-catalog.model';
             }
             @if (isLocked(u)) {
               <a class="cta secondary" routerLink="/learn">{{ 'learn.unit.backToHub' | t }}</a>
-            } @else if (!slideDeck() || deckFinished()) {
+            } @else if (phase() === 'read' && (!slideDeck() || deckFinished())) {
               <label class="read-confirm">
                 <input type="checkbox" [checked]="readConfirmed()" (change)="onReadConfirm($event)" />
                 <span>{{ 'learn.unit.readConfirm' | t }}</span>
@@ -103,10 +118,15 @@ import { learnStepKey } from '../../data/learn-catalog.model';
           </section>
         }
 
-        @if (phase() === 'quiz') {
+        @if (displayPhase() === 'quiz') {
           <section class="panel">
-            <h2>{{ 'learn.unit.quizHeading' | t }}</h2>
-            <p class="hint">{{ 'learn.unit.quizHint' | t }}</p>
+            <h2>{{ (isFinalQuiz() ? 'learn.unit.finalQuizHeading' : 'learn.unit.quizHeading') | t }}</h2>
+            <p class="hint">
+              {{
+                (u.quiz.passCount < u.quiz.questions.length ? 'learn.unit.quizHintThreshold' : 'learn.unit.quizHint')
+                  | t: { pass: u.quiz.passCount, total: u.quiz.questions.length }
+              }}
+            </p>
             @for (q of u.quiz.questions; track q.id) {
               <fieldset class="quiz-q" [class.correct]="quizResult(q.id) === true" [class.wrong]="quizResult(q.id) === false">
                 <legend>{{ q.promptKey | t }}</legend>
@@ -130,18 +150,23 @@ import { learnStepKey } from '../../data/learn-catalog.model';
             @if (quizRejected()) {
               <p class="notice rejected" role="alert">{{ 'learn.unit.quizRejected' | t }}</p>
             }
+            @if (quizScore(); as score) {
+              <p class="quiz-score" [class.ok]="quizPassed()" role="status">
+                {{ (quizPassed() ? 'learn.unit.quizScorePassed' : 'learn.unit.quizScoreFailed') | t: { correct: score.correct, total: score.total, pass: u.quiz.passCount } }}
+              </p>
+            }
             <button class="cta" type="button" [disabled]="!canSubmitQuiz()" (click)="submitQuiz()">
               {{ quizSubmitted() ? ('learn.unit.retryQuiz' | t) : ('learn.unit.submitQuiz' | t) }}
             </button>
             @if (quizPassed()) {
               <button class="cta secondary" type="button" (click)="goToLab()">
-                {{ 'learn.unit.continueToLab' | t }}
+                {{ (hasLab() ? 'learn.unit.continueToLab' : 'learn.unit.finishUnit') | t }}
               </button>
             }
           </section>
         }
 
-        @if (phase() === 'lab') {
+        @if (displayPhase() === 'lab') {
           <section class="panel">
             <h2>{{ 'learn.unit.labOptionalHeading' | t }}</h2>
             <p class="notice done" role="status">{{ 'learn.unit.labOptionalUnlocked' | t }}</p>
@@ -185,7 +210,7 @@ import { learnStepKey } from '../../data/learn-catalog.model';
           </section>
         }
 
-        @if (phase() === 'complete') {
+        @if (displayPhase() === 'complete') {
           <section class="panel complete">
             <h2>{{ 'learn.unit.completeHeading' | t }}</h2>
             <p>{{ (hasLab() ? 'learn.unit.completeBody' : 'learn.unit.completeBodyNoLab') | t }}</p>
@@ -220,11 +245,18 @@ import { learnStepKey } from '../../data/learn-catalog.model';
     h1 { margin: 0 0 0.75rem; color: #12263a; font-size: 1.75rem; }
     .summary { color: #5a6b7d; margin: 0 0 1rem; line-height: 1.5; }
     .phase-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 0.85rem; }
-    .phase-nav span { padding: 0.25rem 0.55rem; border-radius: 999px; background: #eef2f6; color: #5a6b7d; }
-    .phase-nav span.active { background: #0b6e4f; color: #fff; font-weight: 600; }
-    .phase-nav span b { font-weight: 700; opacity: 0.8; margin-left: 0.15rem; }
-    .phase-nav span.bonus { border: 1px dashed #0b6e4f; background: #f0f7f4; color: #0b6e4f; }
-    .phase-nav span.bonus.active { background: #0b6e4f; color: #fff; border-style: solid; }
+    .phase-nav span, .phase-nav button { padding: 0.25rem 0.55rem; border-radius: 999px; background: #eef2f6; color: #5a6b7d; border: 1px solid transparent; font: inherit; font-size: 0.85rem; }
+    .phase-nav button { cursor: pointer; }
+    .phase-nav button:disabled { cursor: default; opacity: 0.7; }
+    .phase-nav button.done:not(.active) { background: #e8f5f0; color: #0b6e4f; }
+    .phase-nav button:not(:disabled):hover:not(.active) { border-color: #0b6e4f; }
+    .phase-nav .active { background: #0b6e4f; color: #fff; font-weight: 600; }
+    .phase-nav b { font-weight: 700; opacity: 0.8; margin-left: 0.15rem; }
+    .phase-nav .bonus { border: 1px dashed #0b6e4f; background: #f0f7f4; color: #0b6e4f; }
+    .phase-nav .bonus.active { background: #0b6e4f; color: #fff; border-style: solid; }
+    .notice.optional { margin: 0 0 1rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #eef2f6; color: #4a5d73; font-size: 0.92rem; }
+    .notice.reviewing { margin: 0 0 1rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #f0f7f4; color: #0b6e4f; font-size: 0.92rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    .link { background: none; border: none; padding: 0; color: #0b6e4f; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
     .phase-nav .points-earned { margin-left: auto; background: transparent; color: #0b6e4f; font-weight: 700; }
     .notice.done { margin: 0 0 0.75rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: #e8f5f0; color: #0b6e4f; font-size: 0.92rem; }
     .panel { border-top: 1px solid #d8dee6; padding-top: 1rem; }
@@ -242,6 +274,8 @@ import { learnStepKey } from '../../data/learn-catalog.model';
     .quiz-opt { display: flex; gap: 0.5rem; margin: 0.35rem 0; cursor: pointer; }
     .quiz-feedback { margin: 0.5rem 0 0; font-size: 0.92rem; }
     .quiz-feedback.ok { color: #0b6e4f; }
+    .quiz-score { margin: 0 0 0.75rem; font-weight: 600; color: #c2410c; }
+    .quiz-score.ok { color: #0b6e4f; }
     .criteria { margin: 0 0 1rem; padding-left: 1.2rem; color: #334155; line-height: 1.5; }
     .task-brief { margin: 0 0 0.85rem; padding: 0.75rem 0.9rem; border-radius: 8px; background: #f0f7f4; border: 1px solid #c5e6d8; }
     .task-brief h3 { margin: 0 0 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #0b6e4f; }
@@ -286,8 +320,35 @@ export class LearnUnitPageComponent implements OnInit {
   /** Illustrated slide deck for this unit, when one is authored (else the two lesson blocks). */
   readonly slideDeck = computed(() => {
     const u = this.unit();
-    return u ? learnSlideDeckFor(u.unitSlug) : null;
+    if (!u) return null;
+    return learnSlideDeckFor(u.unitSlug) ?? (u.lessonBlocks.length ? autoDeckFor(u) : null);
   });
+  readonly isOptional = computed(() => {
+    const u = this.unit();
+    return !!u && unitIsOptional(findLearnUnit(u.moduleSlug, u.unitSlug));
+  });
+  /** Phase the learner chose to look at again (null = current phase). */
+  readonly viewPhase = signal<LearnUnitPhase | null>(null);
+  readonly displayPhase = computed((): LearnUnitPhase => {
+    const chosen = this.viewPhase();
+    if (!chosen) return this.phase();
+    return this.phaseIndex(chosen) <= this.phaseIndex(this.phase()) ? chosen : this.phase();
+  });
+  private readonly phaseOrder: LearnUnitPhase[] = ['read', 'quiz', 'lab', 'complete'];
+  phaseIndex(p: LearnUnitPhase): number {
+    return this.phaseOrder.indexOf(p);
+  }
+  /** A phase can be revisited once the learner has reached it. */
+  canView(p: LearnUnitPhase): boolean {
+    const u = this.unit();
+    if (!u || this.isLocked(u)) return false;
+    if (p === 'lab' && !this.hasLab()) return false;
+    return this.phaseIndex(p) <= this.phaseIndex(this.phase());
+  }
+  showPhase(p: LearnUnitPhase): void {
+    if (!this.canView(p)) return;
+    this.viewPhase.set(p === this.phase() ? null : p);
+  }
   /** Learner has reached the last slide — unlocks the read confirmation. */
   readonly deckFinished = signal(false);
   /** Slide restored from the `#slide-N` URL fragment (deep link / refresh). */
@@ -299,11 +360,18 @@ export class LearnUnitPageComponent implements OnInit {
     return !!u && unitHasLab(findLearnUnit(u.moduleSlug, u.unitSlug));
   });
   readonly points = LEARN_POINTS;
+  readonly isFinalQuiz = computed(() => {
+    const u = this.unit();
+    return !!u && !!findLearnUnit(u.moduleSlug, u.unitSlug)?.finalQuiz;
+  });
+  readonly quizPoints = computed(() => (this.isFinalQuiz() ? LEARN_POINTS.finalQuiz : LEARN_POINTS.quiz));
   readonly pointsEarned = computed(() => {
     const u = this.unit();
-    return u ? unitPointsEarned(this.progress.progressFor(u.moduleSlug, u.unitSlug), this.hasLab()) : 0;
+    return u ? unitPointsEarned(this.progress.progressFor(u.moduleSlug, u.unitSlug), this.hasLab(), this.isFinalQuiz()) : 0;
   });
-  readonly pointsMax = computed(() => unitPointsMax(this.hasLab()));
+  readonly pointsMax = computed(() => unitPointsMax(this.hasLab(), this.isFinalQuiz()));
+  /** Last graded attempt, for the score line. */
+  readonly quizScore = signal<{ correct: number; total: number } | null>(null);
 
   readonly phase = computed((): LearnUnitPhase => {
     const u = this.unit();
@@ -365,6 +433,7 @@ export class LearnUnitPageComponent implements OnInit {
 
   private resetUnitState(): void {
     this.deckFinished.set(false);
+    this.viewPhase.set(null);
     this.unit.set(null);
     this.readConfirmed.set(false);
     this.answers.set({});
@@ -441,6 +510,7 @@ export class LearnUnitPageComponent implements OnInit {
       this.quizResults.set(result.results);
       this.quizSubmitted.set(true);
       this.quizPassed.set(result.passed);
+      this.quizScore.set({ correct: result.correctCount, total: result.totalCount });
       if (result.passed) {
         await this.progress.sync();
         const p = this.progress.progressFor(u.moduleSlug, u.unitSlug);
@@ -452,6 +522,7 @@ export class LearnUnitPageComponent implements OnInit {
         this.quizResults.set([]);
         this.quizSubmitted.set(false);
         this.quizPassed.set(false);
+        this.quizScore.set(null);
         this.quizRejected.set(true);
         return;
       }
@@ -460,6 +531,7 @@ export class LearnUnitPageComponent implements OnInit {
       this.quizResults.set(graded.results);
       this.quizSubmitted.set(true);
       this.quizPassed.set(graded.passed);
+      this.quizScore.set({ correct: graded.correctCount, total: graded.totalCount });
       if (graded.passed) {
         const row = this.progress.recordLocalQuizPass(u.moduleSlug, u.unitSlug, answers);
         this.patchUnitProgress(row);

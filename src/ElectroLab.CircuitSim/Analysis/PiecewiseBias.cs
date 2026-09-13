@@ -86,7 +86,7 @@ internal static class PiecewiseBias
                 var rb = el.Params["rb"];
                 var previouslyOn = hint.BjtOn[el.Id];
                 var baseCurrent = previouslyOn ? (vb - ve - vf) / rb : 0;
-                var nextOn = previouslyOn ? baseCurrent > 1e-12 : vb - ve >= vf;
+                var nextOn = previouslyOn ? baseCurrent > BjtNpnModel.MinBaseCurrent : vb - ve >= vf;
                 if (nextOn != previouslyOn)
                 {
                     hint.BjtOn[el.Id] = nextOn;
