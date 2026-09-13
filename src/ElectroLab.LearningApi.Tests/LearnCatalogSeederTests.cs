@@ -69,12 +69,12 @@ public class LearnCatalogSeederTests : IDisposable
             Assert.Equal([1, 2], lessons.Select(b => b.SortOrder));
 
             var questions = await db.LearnQuizQuestions.Where(q => q.UnitId == unitId).OrderBy(q => q.SortOrder).ToListAsync();
-            Assert.Equal(3, questions.Count);
+            Assert.Equal(5, questions.Count);
             Assert.Equal(keptQuestionId, questions[0].Id);
             Assert.Equal(questionPrompt, questions[0].PromptKey);
             Assert.Equal(correctId, questions[0].CorrectOptionId);
             Assert.DoesNotContain(questions, q => q.PromptKey == "stray");
-            Assert.Equal([1, 2, 3], questions.Select(q => q.SortOrder));
+            Assert.Equal([1, 2, 3, 4, 5], questions.Select(q => q.SortOrder));
         }
     }
 

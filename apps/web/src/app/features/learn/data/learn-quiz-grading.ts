@@ -8,19 +8,31 @@ import { LEARN_QUIZ_KEYS } from './learn-final-quizzes';
 /**
  * Offline answer key. Standard units use the seeder's StandardQuiz shape
  * (services/learning-api/Seed/LearnCatalogSeeder.cs): q1 → a, q2 → b, q3 → c,
- * keyed by question order (API question ids are database ids, not positions).
+ * q4 → a, q5 → b, keyed by question order (API question ids are database ids, not positions).
  * Longer quizzes (group finals) carry their own key in learn-final-quizzes.ts.
  */
-export const STANDARD_QUIZ_CORRECT_BY_ORDER: readonly string[] = ['a', 'b', 'c'];
+export const STANDARD_QUIZ_CORRECT_BY_ORDER: readonly string[] = ['a', 'b', 'c', 'a', 'b'];
 
 export function correctOptionForOrder(order: number, unitSlug?: string | null): string | undefined {
   const key = (unitSlug && LEARN_QUIZ_KEYS[unitSlug]) || STANDARD_QUIZ_CORRECT_BY_ORDER;
   return key[order - 1];
 }
 
-/** Mirrors LearnQuizRules.PassCountFor: short quizzes must be perfect, long ones pass at 80 %. */
+/** Mirrors LearnQuizRules.PassCountFor: short quizzes (≤3) must be perfect; longer pass at 80 %. */
 export function quizPassCountFor(questionCount: number): number {
   return questionCount <= 3 ? questionCount : Math.ceil(questionCount * 0.8);
+}
+
+/** Fisher–Yates shuffle of a shallow copy (option ids stay stable for grading). */
+export function shuffleCopy<T>(items: readonly T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i]!;
+    a[i] = a[j]!;
+    a[j] = tmp;
+  }
+  return a;
 }
 
 /** Grade locally with the same rule as the server. */

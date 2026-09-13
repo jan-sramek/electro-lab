@@ -5,13 +5,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 import { LearningApiClient } from '../../api/learning-api.client';
 import {
+  LearnQuizQuestionDto,
   LearnUnitDetailResponse,
   LearnUnitPhase,
   QuizQuestionResultDto,
   resolveUnitPhase
 } from '../../api/learning-api.types';
 import { unitHasLab } from '../../data/learn-catalog.model';
-import { LEARN_POINTS, unitPointsEarned, unitPointsMax } from '../../data/learn-points';
+import {
+  LEARN_POINTS,
+  quizMaxPointsFor,
+  quizPointsForCorrect,
+  unitPointsEarned,
+  unitPointsMax
+} from '../../data/learn-points';
 import { learnUnitPath } from '../../data/learn-catalog.model';
 import { LearnAnalyticsService } from '../../services/learn-analytics.service';
 import { LearnCatalogService } from '../../services/learn-catalog.service';
@@ -20,7 +27,7 @@ import { LearnSeoService } from '../../services/learn-seo.service';
 import { findLearnUnit } from '../../data/learn-catalog';
 import { specCriteriaForCheck } from '../../data/learn-challenge-spec';
 import { firstValueFrom } from 'rxjs';
-import { gradeQuizLocally } from '../../data/learn-quiz-grading';
+import { gradeQuizLocally, correctOptionForOrder, shuffleCopy } from '../../data/learn-quiz-grading';
 import { isApiUnreachable } from '../../services/learn-api-errors';
 import { learnSlideDeckFor } from '../../data/learn-slides-content';
 import { autoDeckFor } from '../../data/learn-auto-deck';
@@ -29,6 +36,18 @@ import { LearnSlideDeckComponent } from '../../components/learn-slide-deck/learn
 import { CriterionLabelPipe } from '../../data/learn-criterion-label.pipe';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { learnStepKey } from '../../data/learn-catalog.model';
+
+const QUIZ_SECONDS = 20;
+const TIMER_CIRCUMFERENCE = 2 * Math.PI * 15.5;
+
+type QuizStage = 'ready' | 'answering' | 'feedback' | 'summary';
+
+interface QuizQuestionFeedback {
+  correct: boolean;
+  correctOptionId: string;
+  explanationKey: string;
+  timedOut: boolean;
+}
 
 @Component({
   selector: 'app-learn-unit-page',
@@ -119,49 +138,120 @@ import { learnStepKey } from '../../data/learn-catalog.model';
         }
 
         @if (displayPhase() === 'quiz') {
-          <section class="panel">
+          <section class="panel quiz-panel">
             <h2>{{ (isFinalQuiz() ? 'learn.unit.finalQuizHeading' : 'learn.unit.quizHeading') | t }}</h2>
             <p class="hint">
               {{
                 (u.quiz.passCount < u.quiz.questions.length ? 'learn.unit.quizHintThreshold' : 'learn.unit.quizHint')
-                  | t: { pass: u.quiz.passCount, total: u.quiz.questions.length }
+                  | t: { pass: u.quiz.passCount, total: u.quiz.questions.length, seconds: quizSeconds }
               }}
             </p>
-            @for (q of u.quiz.questions; track q.id) {
-              <fieldset class="quiz-q" [class.correct]="quizResult(q.id) === true" [class.wrong]="quizResult(q.id) === false">
-                <legend>{{ q.promptKey | t }}</legend>
-                @for (opt of q.options; track opt.id) {
-                  <label class="quiz-opt">
-                    <input
-                      type="radio"
-                      [name]="'q' + q.id"
-                      [value]="opt.id"
-                      [checked]="answers()[q.id] === opt.id"
-                      (change)="setAnswer(q.id, opt.id)"
-                    />
-                    <span>{{ opt.labelKey | t }}</span>
-                  </label>
-                }
-                @if (quizFeedback(q.id); as fb) {
-                  <p class="quiz-feedback" [class.ok]="fb.correct">{{ fb.explanationKey | t }}</p>
-                }
-              </fieldset>
-            }
-            @if (quizRejected()) {
-              <p class="notice rejected" role="alert">{{ 'learn.unit.quizRejected' | t }}</p>
-            }
-            @if (quizScore(); as score) {
-              <p class="quiz-score" [class.ok]="quizPassed()" role="status">
-                {{ (quizPassed() ? 'learn.unit.quizScorePassed' : 'learn.unit.quizScoreFailed') | t: { correct: score.correct, total: score.total, pass: u.quiz.passCount } }}
-              </p>
-            }
-            <button class="cta" type="button" [disabled]="!canSubmitQuiz()" (click)="submitQuiz()">
-              {{ quizSubmitted() ? ('learn.unit.retryQuiz' | t) : ('learn.unit.submitQuiz' | t) }}
-            </button>
-            @if (quizPassed()) {
-              <button class="cta secondary" type="button" (click)="goToLab()">
-                {{ (hasLab() ? 'learn.unit.continueToLab' : 'learn.unit.finishUnit') | t }}
+
+            @if (quizStage() === 'ready') {
+              <button class="cta" type="button" (click)="startQuiz()">
+                {{ 'learn.unit.startQuiz' | t }}
               </button>
+            } @else if (quizStage() === 'summary') {
+              @if (quizRejected()) {
+                <p class="notice rejected" role="alert">{{ 'learn.unit.quizRejected' | t }}</p>
+              }
+              @if (quizScore(); as score) {
+                <div class="quiz-summary" [class.ok]="quizPassed()" [class.bad]="!quizPassed()" role="status">
+                  <div class="quiz-summary-badge" aria-hidden="true">{{ quizPassed() ? '✓' : '✗' }}</div>
+                  <div>
+                    <p class="quiz-score" [class.ok]="quizPassed()">
+                      {{ (quizPassed() ? 'learn.unit.quizScorePassed' : 'learn.unit.quizScoreFailed') | t: { correct: score.correct, total: score.total, pass: u.quiz.passCount } }}
+                    </p>
+                    <p class="quiz-points-line">{{ 'learn.unit.quizPointsEarned' | t: { pts: score.points } }}</p>
+                  </div>
+                </div>
+              }
+              <button class="cta" type="button" (click)="restartQuiz()">
+                {{ 'learn.unit.retryQuiz' | t }}
+              </button>
+              @if (quizPassed()) {
+                <button class="cta secondary" type="button" (click)="continueAfterQuiz()">
+                  {{ (hasLab() ? 'learn.unit.continueToLab' : 'learn.unit.finishUnit') | t }}
+                </button>
+              }
+            } @else {
+              @if (currentQuizQuestion(); as q) {
+                <div class="quiz-toolbar">
+                  <span class="quiz-progress">{{ 'learn.unit.quizProgress' | t: { n: quizIndex() + 1, total: u.quiz.questions.length } }}</span>
+                  <div
+                    class="quiz-timer"
+                    [class.urgent]="secondsLeft() <= 5"
+                    [class.stopped]="quizStage() === 'feedback'"
+                    role="timer"
+                    [attr.aria-label]="('learn.unit.quizTimerLabel' | t) + ': ' + secondsLeft()"
+                  >
+                    <svg class="quiz-timer-ring" viewBox="0 0 36 36" aria-hidden="true">
+                      <circle class="quiz-timer-track" cx="18" cy="18" r="15.5" />
+                      <circle
+                        class="quiz-timer-value"
+                        cx="18"
+                        cy="18"
+                        r="15.5"
+                        [style.stroke-dasharray]="timerDash()"
+                      />
+                    </svg>
+                    <span class="quiz-timer-text">{{ 'learn.unit.quizTimer' | t: { s: secondsLeft() } }}</span>
+                  </div>
+                </div>
+
+                <fieldset
+                  class="quiz-q"
+                  [class.correct]="quizStage() === 'feedback' && lastFeedback()?.correct === true"
+                  [class.wrong]="quizStage() === 'feedback' && lastFeedback()?.correct === false"
+                  [disabled]="quizStage() === 'feedback'"
+                >
+                  <legend>{{ q.promptKey | t }}</legend>
+                  @for (opt of currentQuizOptions(); track opt.id) {
+                    <label
+                      class="quiz-opt"
+                      [class.picked]="answers()[q.id] === opt.id"
+                      [class.right]="quizStage() === 'feedback' && lastFeedback()?.correctOptionId === opt.id"
+                      [class.miss]="quizStage() === 'feedback' && answers()[q.id] === opt.id && lastFeedback()?.correct === false"
+                    >
+                      <input
+                        type="radio"
+                        [name]="'q' + q.id"
+                        [value]="opt.id"
+                        [checked]="answers()[q.id] === opt.id"
+                        [disabled]="quizStage() === 'feedback'"
+                        (change)="pickQuizAnswer(opt.id)"
+                      />
+                      <span>{{ opt.labelKey | t }}</span>
+                    </label>
+                  }
+                </fieldset>
+
+                @if (quizStage() === 'feedback' && lastFeedback(); as fb) {
+                  <div class="quiz-verdict" [class.ok]="fb.correct" [class.bad]="!fb.correct" role="status">
+                    <div class="quiz-verdict-badge" aria-hidden="true">{{ fb.correct ? '✓' : '✗' }}</div>
+                    <div class="quiz-verdict-copy">
+                      <strong>{{
+                        (fb.timedOut
+                          ? 'learn.unit.quizTimedOut'
+                          : fb.correct
+                            ? 'learn.unit.quizCorrect'
+                            : 'learn.unit.quizWrong') | t
+                      }}</strong>
+                      @if (fb.correct) {
+                        <p class="quiz-points-line">{{ 'learn.unit.quizPointsEarned' | t: { pts: pointsPerQuestion() } }}</p>
+                      }
+                      <p class="quiz-feedback" [class.ok]="fb.correct">{{ fb.explanationKey | t }}</p>
+                    </div>
+                  </div>
+                  <button class="cta" type="button" (click)="advanceQuiz()">
+                    {{
+                      (quizIndex() + 1 >= u.quiz.questions.length
+                        ? 'learn.unit.quizSeeResults'
+                        : 'learn.unit.quizNext') | t
+                    }}
+                  </button>
+                }
+              }
             }
           </section>
         }
@@ -267,15 +357,70 @@ import { learnStepKey } from '../../data/learn-catalog.model';
     .read-confirm { display: flex; gap: 0.5rem; align-items: flex-start; margin: 1rem 0; cursor: pointer; }
     .hint { color: #5a6b7d; line-height: 1.45; margin: 0 0 1rem; }
     .hint.small { font-size: 0.9rem; }
-    .quiz-q { border: 1px solid #d8dee6; border-radius: 8px; padding: 0.75rem 1rem; margin: 0 0 1rem; }
-    .quiz-q legend { font-weight: 600; padding: 0 0.25rem; }
+    .quiz-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0 1rem; }
+    .quiz-progress { font-weight: 700; color: #0b6e4f; font-size: 0.95rem; }
+    .quiz-timer {
+      position: relative; width: 3.25rem; height: 3.25rem; flex-shrink: 0;
+      display: grid; place-items: center;
+    }
+    .quiz-timer-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .quiz-timer-track { fill: none; stroke: #e2e8f0; stroke-width: 3; }
+    .quiz-timer-value {
+      fill: none; stroke: #0b6e4f; stroke-width: 3; stroke-linecap: round;
+      stroke-dashoffset: 0; transition: stroke-dasharray 0.2s linear;
+    }
+    .quiz-timer.urgent .quiz-timer-value { stroke: #c2410c; }
+    .quiz-timer.stopped .quiz-timer-value { stroke: #94a3b8; }
+    .quiz-timer-text { position: relative; z-index: 1; font-weight: 800; font-size: 0.85rem; color: #12263a; }
+    .quiz-timer.urgent .quiz-timer-text { color: #c2410c; }
+    .quiz-q { border: 1px solid #d8dee6; border-radius: 10px; padding: 0.85rem 1rem; margin: 0 0 1rem; transition: border-color 0.2s, background 0.2s; }
+    .quiz-q legend { font-weight: 600; padding: 0 0.25rem; color: #12263a; }
     .quiz-q.correct { border-color: #0b6e4f; background: #f0f7f4; }
     .quiz-q.wrong { border-color: #c2410c; background: #fff7ed; }
-    .quiz-opt { display: flex; gap: 0.5rem; margin: 0.35rem 0; cursor: pointer; }
-    .quiz-feedback { margin: 0.5rem 0 0; font-size: 0.92rem; }
+    .quiz-opt { display: flex; gap: 0.5rem; margin: 0.4rem 0; cursor: pointer; padding: 0.45rem 0.55rem; border-radius: 8px; border: 1px solid transparent; transition: background 0.15s, border-color 0.15s; }
+    .quiz-opt:hover { background: #f8fafc; }
+    .quiz-opt.picked { border-color: #94a3b8; background: #f1f5f9; }
+    .quiz-opt.right { border-color: #0b6e4f; background: #e8f5f0; }
+    .quiz-opt.miss { border-color: #c2410c; background: #fff7ed; }
+    .quiz-verdict {
+      display: flex; gap: 0.85rem; align-items: flex-start; margin: 0 0 1rem; padding: 0.85rem 1rem;
+      border-radius: 10px; animation: quiz-pop 0.35s ease-out;
+    }
+    .quiz-verdict.ok { background: #e8f5f0; color: #0b6e4f; border: 1px solid #a7e0c8; }
+    .quiz-verdict.bad { background: #fff7ed; color: #9a3412; border: 1px solid #fdba74; }
+    .quiz-verdict-badge {
+      width: 2.5rem; height: 2.5rem; border-radius: 999px; display: grid; place-items: center;
+      font-size: 1.35rem; font-weight: 800; flex-shrink: 0; color: #fff;
+    }
+    .quiz-verdict.ok .quiz-verdict-badge { background: #0b6e4f; }
+    .quiz-verdict.bad .quiz-verdict-badge { background: #c2410c; }
+    .quiz-verdict-copy { min-width: 0; }
+    .quiz-verdict-copy strong { display: block; font-size: 1.05rem; margin-bottom: 0.25rem; }
+    .quiz-feedback { margin: 0; font-size: 0.92rem; line-height: 1.45; color: inherit; }
     .quiz-feedback.ok { color: #0b6e4f; }
-    .quiz-score { margin: 0 0 0.75rem; font-weight: 600; color: #c2410c; }
+    .quiz-summary {
+      display: flex; gap: 0.85rem; align-items: center; margin: 0 0 1rem; padding: 1rem 1.1rem;
+      border-radius: 12px; animation: quiz-pop 0.35s ease-out;
+    }
+    .quiz-summary.ok { background: #e8f5f0; border: 1px solid #a7e0c8; }
+    .quiz-summary.bad { background: #fff7ed; border: 1px solid #fdba74; }
+    .quiz-summary-badge {
+      width: 3rem; height: 3rem; border-radius: 999px; display: grid; place-items: center;
+      font-size: 1.6rem; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .quiz-summary.ok .quiz-summary-badge { background: #0b6e4f; }
+    .quiz-summary.bad .quiz-summary-badge { background: #c2410c; }
+    .quiz-score { margin: 0; font-weight: 700; color: #c2410c; line-height: 1.4; }
     .quiz-score.ok { color: #0b6e4f; }
+    .quiz-points-line { margin: 0.25rem 0 0; font-weight: 700; color: #0b6e4f; font-size: 0.95rem; }
+    @keyframes quiz-pop {
+      from { opacity: 0; transform: translateY(6px) scale(0.97); }
+      to { opacity: 1; transform: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .quiz-verdict, .quiz-summary { animation: none; }
+      .quiz-timer-value { transition: none; }
+    }
     .criteria { margin: 0 0 1rem; padding-left: 1.2rem; color: #334155; line-height: 1.5; }
     .task-brief { margin: 0 0 0.85rem; padding: 0.75rem 0.9rem; border-radius: 8px; background: #f0f7f4; border: 1px solid #c5e6d8; }
     .task-brief h3 { margin: 0 0 0.35rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #0b6e4f; }
@@ -316,6 +461,45 @@ export class LearnUnitPageComponent implements OnInit {
   readonly quizPassed = signal(false);
   /** Server definitively rejected the submission (locked unit / prerequisites) — not an offline case. */
   readonly quizRejected = signal(false);
+  readonly quizSeconds = QUIZ_SECONDS;
+  readonly quizIndex = signal(0);
+  readonly quizStage = signal<QuizStage>('answering');
+  readonly secondsLeft = signal(QUIZ_SECONDS);
+  readonly lastFeedback = signal<QuizQuestionFeedback | null>(null);
+  /** Last graded attempt, for the score line. */
+  readonly quizScore = signal<{ correct: number; total: number; points: number } | null>(null);
+
+  readonly currentQuizQuestion = computed((): LearnQuizQuestionDto | null => {
+    const u = this.unit();
+    if (!u || this.quizStage() === 'ready') return null;
+    return u.quiz.questions[this.quizIndex()] ?? null;
+  });
+
+  /** Per-attempt display order of option ids (grading still uses stable option ids). */
+  readonly quizOptionOrder = signal<Record<number, string[]>>({});
+
+  readonly currentQuizOptions = computed(() => {
+    const q = this.currentQuizQuestion();
+    if (!q) return [];
+    const order = this.quizOptionOrder()[q.id];
+    if (!order?.length) return q.options;
+    const byId = new Map(q.options.map((o) => [o.id, o]));
+    return order.map((id) => byId.get(id)).filter((o): o is (typeof q.options)[number] => !!o);
+  });
+
+  readonly pointsPerQuestion = computed(() => {
+    const u = this.unit();
+    if (!u || !u.quiz.questions.length) return 0;
+    return quizPointsForCorrect(1, u.quiz.questions.length, this.isFinalQuiz(), u.unitSlug);
+  });
+
+  readonly timerDash = computed(() => {
+    const frac = Math.max(0, this.secondsLeft()) / QUIZ_SECONDS;
+    const filled = TIMER_CIRCUMFERENCE * frac;
+    return `${filled} ${TIMER_CIRCUMFERENCE}`;
+  });
+
+  private quizTimerId: ReturnType<typeof setInterval> | null = null;
 
   /** Illustrated slide deck for this unit, when one is authored (else the two lesson blocks). */
   readonly slideDeck = computed(() => {
@@ -348,6 +532,7 @@ export class LearnUnitPageComponent implements OnInit {
   showPhase(p: LearnUnitPhase): void {
     if (!this.canView(p)) return;
     this.viewPhase.set(p === this.phase() ? null : p);
+    if (p === 'quiz') this.prepareQuizLobby();
   }
   /** Learner has reached the last slide — unlocks the read confirmation. */
   readonly deckFinished = signal(false);
@@ -364,14 +549,25 @@ export class LearnUnitPageComponent implements OnInit {
     const u = this.unit();
     return !!u && !!findLearnUnit(u.moduleSlug, u.unitSlug)?.finalQuiz;
   });
-  readonly quizPoints = computed(() => (this.isFinalQuiz() ? LEARN_POINTS.finalQuiz : LEARN_POINTS.quiz));
+  readonly quizPoints = computed(() => {
+    const u = this.unit();
+    return quizMaxPointsFor(u?.unitSlug, this.isFinalQuiz());
+  });
   readonly pointsEarned = computed(() => {
     const u = this.unit();
-    return u ? unitPointsEarned(this.progress.progressFor(u.moduleSlug, u.unitSlug), this.hasLab(), this.isFinalQuiz()) : 0;
+    return u
+      ? unitPointsEarned(
+          this.progress.progressFor(u.moduleSlug, u.unitSlug),
+          this.hasLab(),
+          this.isFinalQuiz(),
+          u.quiz.questions.length
+        )
+      : 0;
   });
-  readonly pointsMax = computed(() => unitPointsMax(this.hasLab(), this.isFinalQuiz()));
-  /** Last graded attempt, for the score line. */
-  readonly quizScore = signal<{ correct: number; total: number } | null>(null);
+  readonly pointsMax = computed(() => {
+    const u = this.unit();
+    return unitPointsMax(this.hasLab(), this.isFinalQuiz(), u?.unitSlug);
+  });
 
   readonly phase = computed((): LearnUnitPhase => {
     const u = this.unit();
@@ -415,6 +611,7 @@ export class LearnUnitPageComponent implements OnInit {
   private bootstrapGeneration = 0;
 
   ngOnInit(): void {
+    this.destroyRef.onDestroy(() => this.clearQuizTimer());
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.resetUnitState();
       const m = /^slide-(\d+)$/.exec(this.route.snapshot.fragment ?? '');
@@ -432,6 +629,7 @@ export class LearnUnitPageComponent implements OnInit {
   }
 
   private resetUnitState(): void {
+    this.clearQuizTimer();
     this.deckFinished.set(false);
     this.viewPhase.set(null);
     this.unit.set(null);
@@ -440,6 +638,12 @@ export class LearnUnitPageComponent implements OnInit {
     this.quizResults.set([]);
     this.quizSubmitted.set(false);
     this.quizPassed.set(false);
+    this.quizRejected.set(false);
+    this.quizScore.set(null);
+    this.quizIndex.set(0);
+    this.quizStage.set('ready');
+    this.secondsLeft.set(QUIZ_SECONDS);
+    this.lastFeedback.set(null);
   }
 
   labQueryParams(u: LearnUnitDetailResponse): { from: string; challenge: string } {
@@ -451,22 +655,6 @@ export class LearnUnitPageComponent implements OnInit {
 
   labChallengeCriteria(u: LearnUnitDetailResponse) {
     return specCriteriaForCheck(u.exampleId, u.labChallenge.criteria, u.unitSlug);
-  }
-
-  quizResult(questionId: number): boolean | null {
-    const row = this.quizResults().find((r) => r.questionId === questionId);
-    if (!row) return null;
-    return row.correct;
-  }
-
-  quizFeedback(questionId: number): QuizQuestionResultDto | undefined {
-    return this.quizResults().find((r) => r.questionId === questionId);
-  }
-
-  canSubmitQuiz(): boolean {
-    const u = this.unit();
-    if (!u) return false;
-    return u.quiz.questions.every((q) => !!this.answers()[q.id]);
   }
 
   async onReadConfirm(event: Event): Promise<void> {
@@ -481,6 +669,7 @@ export class LearnUnitPageComponent implements OnInit {
     const u = this.unit();
     if (!u || !this.readConfirmed()) return;
     await this.markReadSafely(u, true);
+    this.prepareQuizLobby();
   }
 
   /** markRead rethrows definitive 4xx rejections (e.g. locked unit); reflect them instead of crashing the handler. */
@@ -494,23 +683,156 @@ export class LearnUnitPageComponent implements OnInit {
     }
   }
 
-  setAnswer(questionId: number, optionId: string): void {
-    this.answers.update((prev) => ({ ...prev, [questionId]: optionId }));
-    this.quizSubmitted.set(false);
-    this.quizResults.set([]);
+  /** Show the quiz lobby (hint + Start) without starting the timer. */
+  private prepareQuizLobby(): void {
+    if (this.quizStage() === 'answering' || this.quizStage() === 'feedback') return;
+    this.clearQuizTimer();
+    this.quizStage.set('ready');
+    this.quizIndex.set(0);
+    this.lastFeedback.set(null);
+    this.quizOptionOrder.set({});
+    this.secondsLeft.set(QUIZ_SECONDS);
   }
 
-  async submitQuiz(): Promise<void> {
-    const u = this.unit();
-    if (!u || !this.canSubmitQuiz()) return;
-    const answers = this.answers();
+  startQuiz(): void {
+    this.clearQuizTimer();
+    this.answers.set({});
+    this.quizResults.set([]);
+    this.quizSubmitted.set(false);
+    this.quizPassed.set(false);
     this.quizRejected.set(false);
+    this.quizScore.set(null);
+    this.quizIndex.set(0);
+    this.lastFeedback.set(null);
+    this.seedQuizOptionOrders();
+    this.quizStage.set('answering');
+    this.secondsLeft.set(QUIZ_SECONDS);
+    this.startQuestionTimer();
+  }
+
+  restartQuiz(): void {
+    this.clearQuizTimer();
+    this.answers.set({});
+    this.quizResults.set([]);
+    this.quizSubmitted.set(false);
+    this.quizPassed.set(false);
+    this.quizRejected.set(false);
+    this.quizScore.set(null);
+    this.quizIndex.set(0);
+    this.lastFeedback.set(null);
+    this.quizOptionOrder.set({});
+    this.quizStage.set('ready');
+    this.secondsLeft.set(QUIZ_SECONDS);
+  }
+
+  private seedQuizOptionOrders(): void {
+    const u = this.unit();
+    if (!u) {
+      this.quizOptionOrder.set({});
+      return;
+    }
+    const next: Record<number, string[]> = {};
+    for (const q of u.quiz.questions) {
+      next[q.id] = shuffleCopy(q.options.map((o) => o.id));
+    }
+    this.quizOptionOrder.set(next);
+  }
+
+  pickQuizAnswer(optionId: string): void {
+    if (this.quizStage() !== 'answering') return;
+    const q = this.currentQuizQuestion();
+    const u = this.unit();
+    if (!q || !u) return;
+    this.answers.update((prev) => ({ ...prev, [q.id]: optionId }));
+    this.resolveCurrentQuestion(false);
+  }
+
+  advanceQuiz(): void {
+    if (this.quizStage() !== 'feedback') return;
+    const u = this.unit();
+    if (!u) return;
+    const next = this.quizIndex() + 1;
+    if (next >= u.quiz.questions.length) {
+      void this.finishQuiz();
+      return;
+    }
+    this.quizIndex.set(next);
+    this.lastFeedback.set(null);
+    this.quizStage.set('answering');
+    this.secondsLeft.set(QUIZ_SECONDS);
+    this.startQuestionTimer();
+  }
+
+  private resolveCurrentQuestion(timedOut: boolean): void {
+    const q = this.currentQuizQuestion();
+    const u = this.unit();
+    if (!q || !u || this.quizStage() !== 'answering') return;
+    this.clearQuizTimer();
+    const order = q.order || this.quizIndex() + 1;
+    const correctOptionId = correctOptionForOrder(order, u.unitSlug) ?? '';
+    const chosen = this.answers()[q.id] ?? '';
+    const correct = !timedOut && correctOptionId !== '' && chosen === correctOptionId;
+    this.lastFeedback.set({
+      correct,
+      correctOptionId,
+      explanationKey: `${u.i18nKeyPrefix}.quiz.q${order}.explain`,
+      timedOut
+    });
+    this.quizStage.set('feedback');
+  }
+
+  private startQuestionTimer(): void {
+    this.clearQuizTimer();
+    this.secondsLeft.set(QUIZ_SECONDS);
+    this.quizTimerId = setInterval(() => {
+      const next = this.secondsLeft() - 1;
+      if (next <= 0) {
+        this.secondsLeft.set(0);
+        this.resolveCurrentQuestion(true);
+        return;
+      }
+      this.secondsLeft.set(next);
+    }, 1000);
+  }
+
+  private clearQuizTimer(): void {
+    if (this.quizTimerId != null) {
+      clearInterval(this.quizTimerId);
+      this.quizTimerId = null;
+    }
+  }
+
+  private applyQuizAttempt(correct: number, total: number, passed: boolean): void {
+    const points = quizPointsForCorrect(correct, total, this.isFinalQuiz(), u.unitSlug);
+    this.quizScore.set({ correct, total, points });
+    this.quizPassed.set(passed);
+    const u = this.unit();
+    if (!u) return;
+    const prev = this.progress.progressFor(u.moduleSlug, u.unitSlug);
+    const bestCorrect = Math.max(prev.quizCorrectCount ?? 0, correct);
+    const bestTotal = bestCorrect > (prev.quizCorrectCount ?? 0) ? total : (prev.quizTotalCount ?? total);
+    this.patchUnitProgress({
+      ...prev,
+      readComplete: true,
+      quizPassed: prev.quizPassed || passed,
+      quizCorrectCount: bestCorrect,
+      quizTotalCount: bestCorrect > 0 ? bestTotal : (prev.quizTotalCount ?? total),
+      complete: prev.complete || (prev.readComplete && (prev.quizPassed || passed))
+    });
+  }
+
+  private async finishQuiz(): Promise<void> {
+    const u = this.unit();
+    if (!u) return;
+    this.clearQuizTimer();
+    this.quizStage.set('summary');
+    this.quizRejected.set(false);
+    const answers = this.answers();
     try {
       const result = await firstValueFrom(this.api.submitQuiz(u.moduleSlug, u.unitSlug, { answers }));
       this.quizResults.set(result.results);
       this.quizSubmitted.set(true);
-      this.quizPassed.set(result.passed);
-      this.quizScore.set({ correct: result.correctCount, total: result.totalCount });
+      this.applyQuizAttempt(result.correctCount, result.totalCount, result.passed);
       if (result.passed) {
         await this.progress.sync();
         const p = this.progress.progressFor(u.moduleSlug, u.unitSlug);
@@ -518,7 +840,6 @@ export class LearnUnitPageComponent implements OnInit {
       }
     } catch (err) {
       if (!isApiUnreachable(err)) {
-        // Definitive server rejection (e.g. 409 unit-locked / quiz-required): do not grade locally.
         this.quizResults.set([]);
         this.quizSubmitted.set(false);
         this.quizPassed.set(false);
@@ -526,30 +847,37 @@ export class LearnUnitPageComponent implements OnInit {
         this.quizRejected.set(true);
         return;
       }
-      // API unreachable: grade with the client answer key and keep progress on this device.
       const graded = gradeQuizLocally(u, answers);
       this.quizResults.set(graded.results);
       this.quizSubmitted.set(true);
-      this.quizPassed.set(graded.passed);
-      this.quizScore.set({ correct: graded.correctCount, total: graded.totalCount });
+      this.applyQuizAttempt(graded.correctCount, graded.totalCount, graded.passed);
       if (graded.passed) {
-        const row = this.progress.recordLocalQuizPass(u.moduleSlug, u.unitSlug, answers);
+        const row = this.progress.recordLocalQuizPass(
+          u.moduleSlug,
+          u.unitSlug,
+          answers,
+          graded.correctCount,
+          graded.totalCount
+        );
         this.patchUnitProgress(row);
       }
     }
   }
 
-  goToLab(): void {
+  /** Leave the quiz summary and open the lab bonus phase, or the unit-complete screen. */
+  continueAfterQuiz(): void {
     if (!this.quizPassed()) return;
     const u = this.unit();
     if (!u) return;
-    // Optimistic advance when local quiz pass outruns session progress sync.
+    const prev = this.progress.progressFor(u.moduleSlug, u.unitSlug);
     this.patchUnitProgress({
+      ...prev,
       readComplete: true,
       quizPassed: true,
-      labPassed: u.progress.labPassed,
-      complete: u.progress.complete
+      complete: true
     });
+    // Follow the live phase (lab if this unit has one, otherwise complete) instead of staying on quiz.
+    this.viewPhase.set(null);
   }
 
   onOpenLab(u: LearnUnitDetailResponse): void {
@@ -585,6 +913,7 @@ export class LearnUnitPageComponent implements OnInit {
     };
     this.unit.set(merged);
     this.readConfirmed.set(merged.progress.readComplete);
+    if (this.displayPhase() === 'quiz') this.prepareQuizLobby();
 
     const legacy = findLearnUnit(moduleSlug, unitSlug);
     if (legacy) {
@@ -593,10 +922,26 @@ export class LearnUnitPageComponent implements OnInit {
     }
   }
 
-  private patchUnitProgress(row: { readComplete: boolean; quizPassed: boolean; labPassed: boolean; complete: boolean }): void {
+  private patchUnitProgress(
+    row: {
+      readComplete: boolean;
+      quizPassed: boolean;
+      labPassed: boolean;
+      complete: boolean;
+      quizCorrectCount?: number | null;
+      quizTotalCount?: number | null;
+      moduleSlug?: string;
+      unitSlug?: string;
+    }
+  ): void {
     const u = this.unit();
     if (!u) return;
-    const progress = { ...u.progress, moduleSlug: u.moduleSlug, unitSlug: u.unitSlug, ...row };
+    const progress = {
+      ...u.progress,
+      moduleSlug: u.moduleSlug,
+      unitSlug: u.unitSlug,
+      ...row
+    };
     this.unit.set({
       ...u,
       progress,

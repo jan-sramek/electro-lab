@@ -136,44 +136,6 @@
   },
   {
     "moduleSlug": "basics",
-    "unitSlug": "fundamentals-loop",
-    "exampleId": "led",
-    "analysisMode": "dcOp",
-    "criteria": [
-      {
-        "order": 1,
-        "type": "no_circuit_errors",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.no_circuit_errors"
-      },
-      {
-        "order": 2,
-        "type": "has_models",
-        "paramsJson": "{\"models\":[\"battery\",\"led\",\"resistor\",\"ground\"]}",
-        "labelKey": "learn.challenge.check.has_models"
-      },
-      {
-        "order": 3,
-        "type": "sim_ok",
-        "paramsJson": "{}",
-        "labelKey": "learn.challenge.check.sim_ok"
-      },
-      {
-        "order": 4,
-        "type": "min_wire_count",
-        "paramsJson": "{\"min\":3}",
-        "labelKey": "learn.challenge.check.min_wire_count"
-      },
-      {
-        "order": 5,
-        "type": "any_model_current_min",
-        "paramsJson": "{\"modelKey\":\"led\",\"minAmps\":0.0005}",
-        "labelKey": "learn.challenge.check.any_model_current_min"
-      }
-    ]
-  },
-  {
-    "moduleSlug": "basics",
     "unitSlug": "led-series",
     "exampleId": "led",
     "analysisMode": "dcOp",
@@ -1414,7 +1376,7 @@
     ]
   },
   {
-    "moduleSlug": "filters",
+    "moduleSlug": "basics",
     "unitSlug": "voltage-divider",
     "exampleId": "voltageDivider",
     "analysisMode": "dcOp",
@@ -1452,7 +1414,7 @@
     ]
   },
   {
-    "moduleSlug": "filters",
+    "moduleSlug": "basics",
     "unitSlug": "divider-design",
     "exampleId": "voltageDivider",
     "analysisMode": "dcOp",
@@ -1490,7 +1452,7 @@
     ]
   },
   {
-    "moduleSlug": "filters",
+    "moduleSlug": "basics",
     "unitSlug": "pot-divider",
     "exampleId": "pot",
     "analysisMode": "dcOp",

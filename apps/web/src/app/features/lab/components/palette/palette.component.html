@@ -1,7 +1,27 @@
 <div class="palette">
   <h2>{{ 'lab.palette.title' | t }}</h2>
+  @if (showScopeToggle()) {
+    <div class="scope-modes" role="group" [attr.aria-label]="'lab.palette.scopeLabel' | t">
+      <button
+        type="button"
+        class="scope"
+        [class.active]="scope() === 'exercise'"
+        (click)="setScope('exercise')"
+      >
+        {{ 'lab.palette.scopeExercise' | t }}
+      </button>
+      <button
+        type="button"
+        class="scope"
+        [class.active]="scope() === 'all'"
+        (click)="setScope('all')"
+      >
+        {{ 'lab.palette.scopeAll' | t }}
+      </button>
+    </div>
+  }
   <div class="groups">
-    @for (g of groups; track g.id) {
+    @for (g of visibleGroups(); track g.id) {
       <section class="group" [class.open]="isOpen(g.id)">
         <button
           type="button"

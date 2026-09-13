@@ -644,48 +644,6 @@ const AC_DC: readonly SlideSource[] = [
 
 // ───────────────────────── Hands-on units, short decks ─────────────────────────
 
-const FUNDAMENTALS_LOOP: readonly SlideSource[] = [
-  {
-    title: 'One path out, one path back',
-    body: [
-      'This is the smallest useful circuit: a battery, a resistor, an LED and a return to ground. Current leaves the positive terminal, passes through every part in turn and comes back to the negative terminal.',
-      'Every part sits on that single path. Take any one of them out and there is no circuit any more.',
-      'The order of the parts along the path does not matter for the current. Put the resistor before the LED or after it, the same 12.5 mA flows either way.'
-    ],
-    figure: { kind: 'loop', params: { flow: true }, caption: 'The moving dashes show the single current going round the loop.' }
-  },
-  {
-    title: 'Break it anywhere',
-    body: [
-      'Open the switch, pull out a wire or burn the LED, and the current stops everywhere at the same moment, not just at the break.',
-      'Ground is part of the loop too. Without the return wire nothing lights up, even though the battery is still in place.',
-      'A break is simply a very large resistance. Ohm\'s law with an enormous R gives a current of practically zero, and that is exactly what you see on every wire.'
-    ],
-    figure: { kind: 'loop', params: { switchOpen: true, flow: false }, caption: 'One gap, zero current.' }
-  },
-  {
-    title: 'Reading the labels',
-    body: [
-      'After you run the DC analysis, every node shows its voltage relative to ground and every part shows the current flowing through it.',
-      'The battery, the resistor and the LED all show the same current, because there is only one path. The node voltages step down from 5 V to 0 V as you go round the loop.',
-      'The voltage labels only make sense relative to ground. If the ground symbol is missing, the Lab has no zero to measure from, and it will tell you so.'
-    ],
-    figure: { kind: 'loop', params: { flow: true, drops: true, designators: true }, caption: '5 V in, 2.75 V across R1, 2.25 V across D1, 0 V at ground.' }
-  },
-  {
-    title: 'Now build it',
-    body: [
-      'In the Lab:'
-    ],
-    facts: [
-      'Place a battery, a resistor, an LED and a ground symbol. Wire + → R → LED → ground, and ground back to −.',
-      'Run the DC analysis. The LED should light and show about 12.5 mA.',
-      'Probe the node between the resistor and the LED. It sits near 2.25 V.',
-      'Delete one wire and run again. Everything stops.'
-    ]
-  }
-];
-
 const LED_SERIES: readonly SlideSource[] = [
   {
     title: 'Why the resistor?',
@@ -1006,7 +964,6 @@ const built = {
   'circuit-elements': buildDeck('learn.project.circuitElements', CIRCUIT_ELEMENTS),
   'series-parallel-circuits': buildDeck('learn.project.seriesParallelCircuits', SERIES_PARALLEL),
   'ac-dc': buildDeck('learn.project.acDc', AC_DC),
-  'fundamentals-loop': buildDeck('learn.project.fundamentalsLoop', FUNDAMENTALS_LOOP),
   'led-series': buildDeck('learn.project.led', LED_SERIES),
   'diode-direction': buildDeck('learn.project.diodeDirection', DIODE_DIRECTION),
   'series-leds': buildDeck('learn.project.seriesLeds', SERIES_LEDS),

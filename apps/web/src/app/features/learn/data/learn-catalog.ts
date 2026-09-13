@@ -1,26 +1,30 @@
 import { LearnModuleDef, LearnUnit } from './learn-catalog.model';
 
+/**
+ * Module order = unlock / hub order. `track` groups the hub into Starter (common
+ * hobby path) vs Advanced (power, analog depth, MCU/buses).
+ */
 export const LEARN_MODULES: readonly LearnModuleDef[] = [
-  { moduleSlug: 'basics', titleKey: 'learn.module.basics.title', order: 1 },
-  { moduleSlug: 'power', titleKey: 'learn.module.power.title', order: 2 },
-  { moduleSlug: 'opamps', titleKey: 'learn.module.opamps.title', order: 3 },
-  { moduleSlug: 'filters', titleKey: 'learn.module.filters.title', order: 4 },
-  { moduleSlug: 'motors', titleKey: 'learn.module.motors.title', order: 5 },
-  { moduleSlug: 'digital', titleKey: 'learn.module.digital.title', order: 6 },
-  { moduleSlug: 'sensors', titleKey: 'learn.module.sensors.title', order: 7 },
-  { moduleSlug: 'comms', titleKey: 'learn.module.comms.title', order: 8 },
-  { moduleSlug: 'adc-dac', titleKey: 'learn.module.adcDac.title', order: 9 },
-  { moduleSlug: 'industrial', titleKey: 'learn.module.industrial.title', order: 10 },
-  { moduleSlug: 'switching', titleKey: 'learn.module.switching.title', order: 11 },
-  { moduleSlug: 'timing', titleKey: 'learn.module.timing.title', order: 12 },
-  { moduleSlug: 'input', titleKey: 'learn.module.input.title', order: 13 },
-  { moduleSlug: 'actuators', titleKey: 'learn.module.actuators.title', order: 14 },
-  { moduleSlug: 'mcu', titleKey: 'learn.module.mcu.title', order: 15 },
-  { moduleSlug: 'buses', titleKey: 'learn.module.buses.title', order: 16 }
+  { moduleSlug: 'basics', titleKey: 'learn.module.basics.title', order: 1, track: 'starter' },
+  { moduleSlug: 'switching', titleKey: 'learn.module.switching.title', order: 2, track: 'starter' },
+  { moduleSlug: 'input', titleKey: 'learn.module.input.title', order: 3, track: 'starter' },
+  { moduleSlug: 'timing', titleKey: 'learn.module.timing.title', order: 4, track: 'starter' },
+  { moduleSlug: 'actuators', titleKey: 'learn.module.actuators.title', order: 5, track: 'starter' },
+  { moduleSlug: 'sensors', titleKey: 'learn.module.sensors.title', order: 6, track: 'starter' },
+  { moduleSlug: 'digital', titleKey: 'learn.module.digital.title', order: 7, track: 'starter' },
+  { moduleSlug: 'motors', titleKey: 'learn.module.motors.title', order: 8, track: 'advanced' },
+  { moduleSlug: 'power', titleKey: 'learn.module.power.title', order: 9, track: 'advanced' },
+  { moduleSlug: 'filters', titleKey: 'learn.module.filters.title', order: 10, track: 'advanced' },
+  { moduleSlug: 'opamps', titleKey: 'learn.module.opamps.title', order: 11, track: 'advanced' },
+  { moduleSlug: 'industrial', titleKey: 'learn.module.industrial.title', order: 12, track: 'advanced' },
+  { moduleSlug: 'adc-dac', titleKey: 'learn.module.adcDac.title', order: 13, track: 'advanced' },
+  { moduleSlug: 'mcu', titleKey: 'learn.module.mcu.title', order: 14, track: 'advanced' },
+  { moduleSlug: 'buses', titleKey: 'learn.module.buses.title', order: 15, track: 'advanced' },
+  { moduleSlug: 'comms', titleKey: 'learn.module.comms.title', order: 16, track: 'advanced' }
 ];
 
 export const LEARN_UNITS: readonly LearnUnit[] = [
-  // Concept openers — illustrated slide decks (see learn-slides-content.ts).
+  // ── Starter: concepts → LED practice → dividers → RC → AC (harder, later) ──
   {
     unitSlug: 'voltage-intro',
     moduleSlug: 'basics',
@@ -68,18 +72,24 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
-    unitSlug: 'ac-dc',
+    unitSlug: 'voltage-divider',
     moduleSlug: 'basics',
-    exampleId: 'measureAc',
-    i18nKeyPrefix: 'learn.project.acDc',
-    stepCount: 4,
-    lab: false
+    exampleId: 'voltageDivider',
+    i18nKeyPrefix: 'learn.project.voltageDivider',
+    stepCount: 4
   },
   {
-    unitSlug: 'fundamentals-loop',
+    unitSlug: 'divider-design',
     moduleSlug: 'basics',
-    exampleId: 'led',
-    i18nKeyPrefix: 'learn.project.fundamentalsLoop',
+    exampleId: 'voltageDivider',
+    i18nKeyPrefix: 'learn.project.dividerDesign',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'pot-divider',
+    moduleSlug: 'basics',
+    exampleId: 'pot',
+    i18nKeyPrefix: 'learn.project.potDivider',
     stepCount: 4
   },
   {
@@ -133,7 +143,15 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4,
     optional: true
   },
-  // Group final for the basics module: 10 questions, pass at 8.
+  {
+    unitSlug: 'ac-dc',
+    moduleSlug: 'basics',
+    exampleId: 'measureAc',
+    i18nKeyPrefix: 'learn.project.acDc',
+    stepCount: 4,
+    lab: false,
+    optional: true
+  },
   {
     unitSlug: 'basics-final-quiz',
     moduleSlug: 'basics',
@@ -142,6 +160,224 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 3,
     lab: false,
     finalQuiz: true
+  },
+
+  // ── Starter: transistors & relays ──
+  {
+    unitSlug: 'bjt-switch',
+    moduleSlug: 'switching',
+    exampleId: 'bjt',
+    i18nKeyPrefix: 'learn.project.bc547',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'nmos-switch',
+    moduleSlug: 'switching',
+    exampleId: 'nmos',
+    i18nKeyPrefix: 'learn.project.nmos',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'relay-flyback',
+    moduleSlug: 'switching',
+    exampleId: 'relay',
+    i18nKeyPrefix: 'learn.project.relay',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'inductive-why-diode',
+    moduleSlug: 'switching',
+    exampleId: 'relay',
+    i18nKeyPrefix: 'learn.project.inductiveWhyDiode',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-lowside',
+    moduleSlug: 'switching',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motor',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'bjt-vs-mos-compare',
+    moduleSlug: 'switching',
+    exampleId: 'nmos',
+    i18nKeyPrefix: 'learn.project.bjtVsMos',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Starter: buttons & nightlight ──
+  {
+    unitSlug: 'pushbutton-led',
+    moduleSlug: 'input',
+    exampleId: 'pushbutton',
+    i18nKeyPrefix: 'learn.project.pushbutton',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ldr-nightlight',
+    moduleSlug: 'input',
+    exampleId: 'ldr',
+    i18nKeyPrefix: 'learn.project.ldr',
+    stepCount: 4
+  },
+
+  // ── Starter: timing ──
+  {
+    unitSlug: 'ne555-astable',
+    moduleSlug: 'timing',
+    exampleId: 'ne555',
+    i18nKeyPrefix: 'learn.project.ne555',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ne555-pot-blink',
+    moduleSlug: 'timing',
+    exampleId: 'ne555Pot',
+    i18nKeyPrefix: 'learn.project.ne555Pot',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'ne555-play',
+    moduleSlug: 'timing',
+    exampleId: 'christmasTree',
+    i18nKeyPrefix: 'learn.project.ne555Play',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Starter: simple actuators ──
+  {
+    unitSlug: 'buzzer-button',
+    moduleSlug: 'actuators',
+    exampleId: 'buzzer',
+    i18nKeyPrefix: 'learn.project.buzzer',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-control',
+    moduleSlug: 'actuators',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motorControl',
+    stepCount: 4
+  },
+
+  // ── Starter: sensors ──
+  {
+    unitSlug: 'sensor-pot',
+    moduleSlug: 'sensors',
+    exampleId: 'pot',
+    i18nKeyPrefix: 'learn.project.sensorPot',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-ldr',
+    moduleSlug: 'sensors',
+    exampleId: 'ldr',
+    i18nKeyPrefix: 'learn.project.sensorLdr',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-ntc',
+    moduleSlug: 'sensors',
+    exampleId: 'ntcDivider',
+    i18nKeyPrefix: 'learn.project.ntcDivider',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'sensor-threshold',
+    moduleSlug: 'sensors',
+    exampleId: 'opampComparator',
+    i18nKeyPrefix: 'learn.project.sensorThreshold',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Starter: digital basics ──
+  {
+    unitSlug: 'pull-up-down',
+    moduleSlug: 'digital',
+    exampleId: 'pullUpDown',
+    i18nKeyPrefix: 'learn.project.pullUpDown',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'debounce',
+    moduleSlug: 'digital',
+    exampleId: 'debounce',
+    i18nKeyPrefix: 'learn.project.debounce',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'debounce-idea',
+    moduleSlug: 'digital',
+    exampleId: 'debounce',
+    i18nKeyPrefix: 'learn.project.debounceIdea',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Advanced: motors ──
+  {
+    unitSlug: 'motor-mosfet',
+    moduleSlug: 'motors',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motorMosfet',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-flyback',
+    moduleSlug: 'motors',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.motorFlyback',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-pwm',
+    moduleSlug: 'motors',
+    exampleId: 'motorPwm',
+    i18nKeyPrefix: 'learn.project.motorPwm',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'motor-speed',
+    moduleSlug: 'motors',
+    exampleId: 'motorPwm',
+    i18nKeyPrefix: 'learn.project.motorSpeed',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'h-bridge',
+    moduleSlug: 'motors',
+    exampleId: 'hBridge',
+    i18nKeyPrefix: 'learn.project.hBridge',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'motor-direction',
+    moduleSlug: 'motors',
+    exampleId: 'motorDirection',
+    i18nKeyPrefix: 'learn.project.motorDirection',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Advanced: power supplies (after diodes & switching) ──
+  {
+    unitSlug: 'reverse-polarity',
+    moduleSlug: 'power',
+    exampleId: 'reversePolarity',
+    i18nKeyPrefix: 'learn.project.reversePolarity',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'fuse-protection',
+    moduleSlug: 'power',
+    exampleId: 'fuseProtect',
+    i18nKeyPrefix: 'learn.project.fuseProtect',
+    stepCount: 4
   },
   {
     unitSlug: 'half-wave-rectifier',
@@ -179,25 +415,12 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
-    unitSlug: 'reverse-polarity',
-    moduleSlug: 'power',
-    exampleId: 'reversePolarity',
-    i18nKeyPrefix: 'learn.project.reversePolarity',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'fuse-protection',
-    moduleSlug: 'power',
-    exampleId: 'fuseProtect',
-    i18nKeyPrefix: 'learn.project.fuseProtect',
-    stepCount: 4
-  },
-  {
     unitSlug: 'ripple-measure',
     moduleSlug: 'power',
     exampleId: 'ripple',
     i18nKeyPrefix: 'learn.project.ripple',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'buck-converter',
@@ -215,73 +438,8 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4,
     optional: true
   },
-  {
-    unitSlug: 'opamp-follower',
-    moduleSlug: 'opamps',
-    exampleId: 'opampFollower',
-    i18nKeyPrefix: 'learn.project.opampFollower',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'opamp-invert',
-    moduleSlug: 'opamps',
-    exampleId: 'opamp',
-    i18nKeyPrefix: 'learn.project.opamp',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'opamp-noninv',
-    moduleSlug: 'opamps',
-    exampleId: 'opampNonInv',
-    i18nKeyPrefix: 'learn.project.opampNonInv',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'opamp-comparator',
-    moduleSlug: 'opamps',
-    exampleId: 'opampComparator',
-    i18nKeyPrefix: 'learn.project.opampComparator',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'opamp-schmitt',
-    moduleSlug: 'opamps',
-    exampleId: 'opampSchmitt',
-    i18nKeyPrefix: 'learn.project.opampSchmitt',
-    stepCount: 4,
-    optional: true
-  },
-  {
-    unitSlug: 'opamp-summing',
-    moduleSlug: 'opamps',
-    exampleId: 'opampSumming',
-    i18nKeyPrefix: 'learn.project.opampSumming',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'opamp-integrator',
-    moduleSlug: 'opamps',
-    exampleId: 'opampIntegrator',
-    i18nKeyPrefix: 'learn.project.opampIntegrator',
-    stepCount: 4,
-    optional: true
-  },
-  {
-    unitSlug: 'opamp-differentiator',
-    moduleSlug: 'opamps',
-    exampleId: 'opampDifferentiator',
-    i18nKeyPrefix: 'learn.project.opampDifferentiator',
-    stepCount: 4,
-    optional: true
-  },
-  {
-    unitSlug: 'opamp-active-filter',
-    moduleSlug: 'opamps',
-    exampleId: 'opampActiveFilter',
-    i18nKeyPrefix: 'learn.project.opampActiveFilter',
-    stepCount: 4,
-    optional: true
-  },
+
+  // ── Advanced: filters (dividers live in basics now) ──
   {
     unitSlug: 'rc-low-pass',
     moduleSlug: 'filters',
@@ -290,18 +448,27 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4
   },
   {
-    unitSlug: 'ac-rc-lpf',
-    moduleSlug: 'filters',
-    exampleId: 'ac',
-    i18nKeyPrefix: 'learn.project.acRcLpf',
-    stepCount: 4
-  },
-  {
     unitSlug: 'rc-high-pass',
     moduleSlug: 'filters',
     exampleId: 'rcHighPass',
     i18nKeyPrefix: 'learn.project.rcHighPass',
     stepCount: 4
+  },
+  {
+    unitSlug: 'ac-rc-lpf',
+    moduleSlug: 'filters',
+    exampleId: 'ac',
+    i18nKeyPrefix: 'learn.project.acRcLpf',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'measure-freq-amp',
+    moduleSlug: 'filters',
+    exampleId: 'measureAc',
+    i18nKeyPrefix: 'learn.project.measureAc',
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'rlc-series',
@@ -328,34 +495,6 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     optional: true
   },
   {
-    unitSlug: 'voltage-divider',
-    moduleSlug: 'filters',
-    exampleId: 'voltageDivider',
-    i18nKeyPrefix: 'learn.project.voltageDivider',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'divider-design',
-    moduleSlug: 'filters',
-    exampleId: 'voltageDivider',
-    i18nKeyPrefix: 'learn.project.dividerDesign',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'pot-divider',
-    moduleSlug: 'filters',
-    exampleId: 'pot',
-    i18nKeyPrefix: 'learn.project.potDivider',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'measure-freq-amp',
-    moduleSlug: 'filters',
-    exampleId: 'measureAc',
-    i18nKeyPrefix: 'learn.project.measureAc',
-    stepCount: 4
-  },
-  {
     unitSlug: 'bode-intuition',
     moduleSlug: 'filters',
     exampleId: 'measureAc',
@@ -363,104 +502,124 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     stepCount: 4,
     optional: true
   },
+
+  // ── Advanced: op-amps ──
   {
-    unitSlug: 'motor-mosfet',
-    moduleSlug: 'motors',
-    exampleId: 'motor',
-    i18nKeyPrefix: 'learn.project.motorMosfet',
+    unitSlug: 'opamp-follower',
+    moduleSlug: 'opamps',
+    exampleId: 'opampFollower',
+    i18nKeyPrefix: 'learn.project.opampFollower',
     stepCount: 4
   },
   {
-    unitSlug: 'motor-pwm',
-    moduleSlug: 'motors',
-    exampleId: 'motorPwm',
-    i18nKeyPrefix: 'learn.project.motorPwm',
+    unitSlug: 'opamp-noninv',
+    moduleSlug: 'opamps',
+    exampleId: 'opampNonInv',
+    i18nKeyPrefix: 'learn.project.opampNonInv',
     stepCount: 4
   },
   {
-    unitSlug: 'motor-speed',
-    moduleSlug: 'motors',
-    exampleId: 'motorPwm',
-    i18nKeyPrefix: 'learn.project.motorSpeed',
+    unitSlug: 'opamp-invert',
+    moduleSlug: 'opamps',
+    exampleId: 'opamp',
+    i18nKeyPrefix: 'learn.project.opamp',
     stepCount: 4
   },
   {
-    unitSlug: 'motor-flyback',
-    moduleSlug: 'motors',
-    exampleId: 'motor',
-    i18nKeyPrefix: 'learn.project.motorFlyback',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'h-bridge',
-    moduleSlug: 'motors',
-    exampleId: 'hBridge',
-    i18nKeyPrefix: 'learn.project.hBridge',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'motor-direction',
-    moduleSlug: 'motors',
-    exampleId: 'motorDirection',
-    i18nKeyPrefix: 'learn.project.motorDirection',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'pull-up-down',
-    moduleSlug: 'digital',
-    exampleId: 'pullUpDown',
-    i18nKeyPrefix: 'learn.project.pullUpDown',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'debounce',
-    moduleSlug: 'digital',
-    exampleId: 'debounce',
-    i18nKeyPrefix: 'learn.project.debounce',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'debounce-idea',
-    moduleSlug: 'digital',
-    exampleId: 'debounce',
-    i18nKeyPrefix: 'learn.project.debounceIdea',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'sensor-ldr',
-    moduleSlug: 'sensors',
-    exampleId: 'ldr',
-    i18nKeyPrefix: 'learn.project.sensorLdr',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'sensor-pot',
-    moduleSlug: 'sensors',
-    exampleId: 'pot',
-    i18nKeyPrefix: 'learn.project.sensorPot',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'sensor-ntc',
-    moduleSlug: 'sensors',
-    exampleId: 'ntcDivider',
-    i18nKeyPrefix: 'learn.project.ntcDivider',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'sensor-threshold',
-    moduleSlug: 'sensors',
+    unitSlug: 'opamp-comparator',
+    moduleSlug: 'opamps',
     exampleId: 'opampComparator',
-    i18nKeyPrefix: 'learn.project.sensorThreshold',
+    i18nKeyPrefix: 'learn.project.opampComparator',
     stepCount: 4
   },
   {
-    unitSlug: 'i2c-wiring',
-    moduleSlug: 'comms',
-    exampleId: 'i2cOled',
-    i18nKeyPrefix: 'learn.project.commsI2c',
+    unitSlug: 'opamp-summing',
+    moduleSlug: 'opamps',
+    exampleId: 'opampSumming',
+    i18nKeyPrefix: 'learn.project.opampSumming',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'opamp-schmitt',
+    moduleSlug: 'opamps',
+    exampleId: 'opampSchmitt',
+    i18nKeyPrefix: 'learn.project.opampSchmitt',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'opamp-integrator',
+    moduleSlug: 'opamps',
+    exampleId: 'opampIntegrator',
+    i18nKeyPrefix: 'learn.project.opampIntegrator',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'opamp-differentiator',
+    moduleSlug: 'opamps',
+    exampleId: 'opampDifferentiator',
+    i18nKeyPrefix: 'learn.project.opampDifferentiator',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'opamp-active-filter',
+    moduleSlug: 'opamps',
+    exampleId: 'opampActiveFilter',
+    i18nKeyPrefix: 'learn.project.opampActiveFilter',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Advanced: industrial ──
+  {
+    unitSlug: 'relay-transistor',
+    moduleSlug: 'industrial',
+    exampleId: 'relayBjt',
+    i18nKeyPrefix: 'learn.project.relayBjt',
     stepCount: 4
   },
+  {
+    unitSlug: 'coil-protection',
+    moduleSlug: 'industrial',
+    exampleId: 'relay',
+    i18nKeyPrefix: 'learn.project.coilProtect',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'mosfet-driver',
+    moduleSlug: 'industrial',
+    exampleId: 'nmos',
+    i18nKeyPrefix: 'learn.project.mosfetDriver',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'inductive-load',
+    moduleSlug: 'industrial',
+    exampleId: 'motor',
+    i18nKeyPrefix: 'learn.project.inductiveLoad',
+    stepCount: 4
+  },
+  {
+    unitSlug: 'estop-principle',
+    moduleSlug: 'industrial',
+    exampleId: 'estopRelay',
+    i18nKeyPrefix: 'learn.project.estopRelay',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'control-24v',
+    moduleSlug: 'industrial',
+    exampleId: 'industrial24v',
+    i18nKeyPrefix: 'learn.project.industrial24v',
+    stepCount: 4,
+    optional: true
+  },
+
+  // ── Advanced: ADC / MCU / buses / comms ──
   {
     unitSlug: 'adc-front-end',
     moduleSlug: 'adc-dac',
@@ -480,140 +639,8 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'adc-dac',
     exampleId: 'pwmFilter',
     i18nKeyPrefix: 'learn.project.pwmFilter',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'relay-transistor',
-    moduleSlug: 'industrial',
-    exampleId: 'relayBjt',
-    i18nKeyPrefix: 'learn.project.relayBjt',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'mosfet-driver',
-    moduleSlug: 'industrial',
-    exampleId: 'nmos',
-    i18nKeyPrefix: 'learn.project.mosfetDriver',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'coil-protection',
-    moduleSlug: 'industrial',
-    exampleId: 'relay',
-    i18nKeyPrefix: 'learn.project.coilProtect',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'inductive-load',
-    moduleSlug: 'industrial',
-    exampleId: 'motor',
-    i18nKeyPrefix: 'learn.project.inductiveLoad',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'estop-principle',
-    moduleSlug: 'industrial',
-    exampleId: 'estopRelay',
-    i18nKeyPrefix: 'learn.project.estopRelay',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'control-24v',
-    moduleSlug: 'industrial',
-    exampleId: 'industrial24v',
-    i18nKeyPrefix: 'learn.project.industrial24v',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'bjt-switch',
-    moduleSlug: 'switching',
-    exampleId: 'bjt',
-    i18nKeyPrefix: 'learn.project.bc547',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'relay-flyback',
-    moduleSlug: 'switching',
-    exampleId: 'relay',
-    i18nKeyPrefix: 'learn.project.relay',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'nmos-switch',
-    moduleSlug: 'switching',
-    exampleId: 'nmos',
-    i18nKeyPrefix: 'learn.project.nmos',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'motor-lowside',
-    moduleSlug: 'switching',
-    exampleId: 'motor',
-    i18nKeyPrefix: 'learn.project.motor',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'bjt-vs-mos-compare',
-    moduleSlug: 'switching',
-    exampleId: 'nmos',
-    i18nKeyPrefix: 'learn.project.bjtVsMos',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'inductive-why-diode',
-    moduleSlug: 'switching',
-    exampleId: 'relay',
-    i18nKeyPrefix: 'learn.project.inductiveWhyDiode',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'ne555-astable',
-    moduleSlug: 'timing',
-    exampleId: 'ne555',
-    i18nKeyPrefix: 'learn.project.ne555',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'ne555-play',
-    moduleSlug: 'timing',
-    exampleId: 'christmasTree',
-    i18nKeyPrefix: 'learn.project.ne555Play',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'ne555-pot-blink',
-    moduleSlug: 'timing',
-    exampleId: 'ne555Pot',
-    i18nKeyPrefix: 'learn.project.ne555Pot',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'pushbutton-led',
-    moduleSlug: 'input',
-    exampleId: 'pushbutton',
-    i18nKeyPrefix: 'learn.project.pushbutton',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'ldr-nightlight',
-    moduleSlug: 'input',
-    exampleId: 'ldr',
-    i18nKeyPrefix: 'learn.project.ldr',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'buzzer-button',
-    moduleSlug: 'actuators',
-    exampleId: 'buzzer',
-    i18nKeyPrefix: 'learn.project.buzzer',
-    stepCount: 4
-  },
-  {
-    unitSlug: 'motor-control',
-    moduleSlug: 'actuators',
-    exampleId: 'motor',
-    i18nKeyPrefix: 'learn.project.motorControl',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'arduino-dio-led',
@@ -648,13 +675,22 @@ export const LEARN_UNITS: readonly LearnUnit[] = [
     moduleSlug: 'buses',
     exampleId: 'i2cOled',
     i18nKeyPrefix: 'learn.project.spiVsI2c',
-    stepCount: 4
+    stepCount: 4,
+    optional: true
   },
   {
     unitSlug: 'i2c-multi-slave',
     moduleSlug: 'buses',
     exampleId: 'i2cOled',
     i18nKeyPrefix: 'learn.project.i2cMultiSlave',
+    stepCount: 4,
+    optional: true
+  },
+  {
+    unitSlug: 'i2c-wiring',
+    moduleSlug: 'comms',
+    exampleId: 'i2cOled',
+    i18nKeyPrefix: 'learn.project.commsI2c',
     stepCount: 4
   }
 ];

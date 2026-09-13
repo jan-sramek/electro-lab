@@ -39,7 +39,7 @@
           <button
             type="button"
             class="challenge-btn"
-            [disabled]="sim.busy() || challengeChecking() || !!challengeConfirm()"
+            [disabled]="sim.busy() || challengeChecking() || !!challengeConfirm() || challengeShowingSample()"
             (click)="checkLearnChallenge()"
           >
             {{ 'lab.challenge.check' | t }}
@@ -61,6 +61,9 @@
             {{ 'lab.challenge.clearCanvas' | t }}
           </button>
           <p class="challenge-peek-hint">{{ 'lab.challenge.peekHint' | t }}</p>
+          @if (challengeShowingSample()) {
+            <p class="challenge-msg warn" role="status">{{ 'lab.challenge.sampleNotAllowed' | t }}</p>
+          }
           @if (challengeConfirm(); as confirmAction) {
             <div class="challenge-confirm" role="alertdialog" aria-live="polite">
               <p>
@@ -81,7 +84,7 @@
             <p
               class="challenge-msg"
               [class.ok]="msg === 'lab.challenge.passed'"
-              [class.warn]="msg === 'lab.challenge.verifyUnavailable'"
+              [class.warn]="msg === 'lab.challenge.verifyUnavailable' || msg === 'lab.challenge.sampleNotAllowed'"
             >
               {{ msg | t }}
             </p>
@@ -144,7 +147,12 @@
 
   <div class="lab-layout">
     <aside class="side">
-      <app-component-palette (place)="editor.onPalettePlace($event)" />
+      <app-component-palette
+        [exerciseKeys]="exercisePaletteKeys()"
+        [scope]="paletteScope()"
+        (scopeChange)="setPaletteScope($event)"
+        (place)="editor.onPalettePlace($event)"
+      />
     </aside>
 
     <div class="center">

@@ -353,6 +353,32 @@ export function cloneDoc(doc: SchematicDocument): SchematicDocument {
   return structuredClone(doc);
 }
 
+/**
+ * Stable identity of a schematic's parts and wires (ignores net labels).
+ * Used to detect an unmodified teaching sample on a Learn challenge canvas.
+ */
+export function schematicStructureKey(doc: SchematicDocument): string {
+  const components = [...doc.components]
+    .map((c) => ({
+      id: c.id,
+      modelKey: c.modelKey,
+      x: c.x,
+      y: c.y,
+      rotation: c.rotation,
+      params: c.params
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const wires = [...doc.wires]
+    .map((w) => ({
+      id: w.id,
+      a: w.a,
+      b: w.b,
+      waypoints: w.waypoints ?? []
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  return JSON.stringify({ components, wires });
+}
+
 export function emptyDocument(): SchematicDocument {
   return { groundNet: 'gnd', components: [], wires: [] };
 }

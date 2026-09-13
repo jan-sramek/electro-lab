@@ -61,6 +61,8 @@ MVP ships Path + Project + Lessons + Quiz + Lab challenge. Account-backed progre
 
 Modules are ordered for a motivated beginner → early hobbyist. Each module lists **units** (future Learn projects).
 
+**Module order (hub):** Starter path — `basics` → `switching` → `input` → `timing` → `actuators` → `sensors` → `digital`. Advanced — `motors` → `power` → `filters` → `opamps` → `industrial` → `adc-dac` → `mcu` → `buses` → `comms`. Voltage dividers sit in `basics` (after series/parallel). AC/DC and other harder units are `optional` so they do not block the path.
+
 ### Module A — Voltage, current, resistance
 
 **Intent:** Comfortable with a simple loop and Ohm’s law at teaching level. The three `*-intro` openers use the slide-deck Read phase (`learn-slides-content.ts`: one idea per slide, an inline-SVG figure, callouts, a takeaways slide); other units keep the two lesson blocks. Lesson + quiz complete a unit and unlock the next; the lab challenge is optional and only present where it makes sense (`lab: false` hides it: the concept openers `voltage-intro`, `current-intro`, `resistance-intro`, `circuit-elements`, `ac-dc` are theory-only; `ohms-law` and `series-parallel-circuits` check a built circuit). Points: lesson 10, quiz 30, lab bonus 60 (`learn-points.ts`). Every unit renders in the slide style: hand-authored decks where they exist, otherwise an automatic deck built from the two lesson blocks, a parts picture and the step texts (`learn-auto-deck.ts`). Finished phases stay revisitable from the phase pills. Difficult units carry `optional: true` (mirrored by `OptionalUnits` in the seeder and `IsOptional` in the DB): they never gate the next unit and their points are bonus. Redundant units were merged: `ohm-explore` → `ohms-law`, `series-parallel-intro` → `series-parallel-circuits`, `time-constant-estimate` → `rc-charge`; the seeder prunes units that leave the catalog. Czech (`cs`) is available for the app chrome and the whole basics module (`apps/web/src/app/core/i18n/cs.ts`, seeded via the same sync script); other content falls back to English. **Temporary:** all units are unlocked via `Learn:UnlockAll` (API appsettings) + `LEARN_UNLOCK_ALL` (`learn-flags.ts`); set both to false to restore sequential unlocking.
@@ -73,8 +75,9 @@ Modules are ordered for a motivated beginner → early hobbyist. Each module lis
 | `ohms-law` | Ohm’s law — 8 slides (I–U line, two worked examples, prefixes, non-ohmic parts, power) | ready (`led`) | **shipped** |
 | `circuit-elements` | Circuit elements — 8 slides (sources, passives, semiconductors, controls, wires/ground/meters, reading a schematic) | ready (`led`) | **shipped** |
 | `series-parallel-circuits` | Series & parallel — 8 slides (rules, failures, mixed circuits, quick test) | ready (`seriesParallel`) | **shipped** |
-| `ac-dc` | AC and DC — 8 slides (polarity, T and f, peak/RMS, grid vs gadgets, rectify/smooth, AC analysis) | ready (`measureAc`) | **shipped** |
-| `fundamentals-loop` | Battery, resistor, current, ground | ready (`led`) | **mvp** |
+| `voltage-divider` / `divider-design` / `pot-divider` | Dividers and pots (moved early from filters) | ready | **shipped** |
+| `led-series` … `rc-charge` | LED practice then RC | ready | **shipped** |
+| `ac-dc` | AC and DC (optional — does not gate the path) | ready (`measureAc`) | **shipped** |
 | `series-leds` | Series LED string | ready (`seriesLeds`) | **mvp** |
 
 **Quiz A (later):** Identify which change raises current; pick a safe ballpark resistor for an LED given Vf (teaching numbers).

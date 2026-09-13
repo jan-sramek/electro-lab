@@ -6,6 +6,11 @@ export interface LearnModuleDef {
   /** i18n key for section heading on the hub, e.g. `learn.module.switching.title`. */
   titleKey: string;
   order: number;
+  /**
+   * Hub grouping: starter = common hobby path first; advanced = power, deep analog, MCU.
+   * Defaults to starter when omitted.
+   */
+  track?: 'starter' | 'advanced';
 }
 
 /** One teachable project with a Lab preset deep-link. */

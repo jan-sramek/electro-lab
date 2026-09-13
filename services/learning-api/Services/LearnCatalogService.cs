@@ -257,7 +257,9 @@ public sealed class LearnCatalogService(LearningDbContext db, Microsoft.Extensio
             row?.ReadComplete ?? false,
             row?.QuizPassed ?? false,
             row?.LabPassed ?? false,
-            row?.IsComplete ?? false);
+            row?.IsComplete ?? false,
+            row?.QuizCorrectCount ?? 0,
+            row?.QuizTotalCount ?? 0);
 
     private static IReadOnlyList<LearnQuizOptionDto> ParseOptions(string json)
     {

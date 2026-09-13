@@ -1,7 +1,7 @@
 /**
- * Group finals: a longer quiz at the end of a module. English copy lives here and
- * is derived into i18n keys (`${prefix}.quiz.qN.prompt|a|b|c|explain`) plus the
- * answer key used for offline grading. The seeder mirrors the answer key
+ * Longer quiz banks (module finals and special formative units). English copy
+ * lives here and is derived into i18n keys (`${prefix}.quiz.qN.prompt|a|b|c|explain`)
+ * plus the answer key used for offline grading. The seeder mirrors the answer key
  * (services/learning-api/Seed/LearnCatalogSeeder.cs, LongQuiz).
  */
 export interface FinalQuizQuestion {
@@ -106,7 +106,159 @@ const BASICS_FINAL: FinalQuizDef = {
   ]
 };
 
-export const LEARN_FINAL_QUIZZES: readonly FinalQuizDef[] = [BASICS_FINAL];
+/** One “what does this part do?” question per palette element from the circuit-elements lesson. */
+const CIRCUIT_ELEMENTS: FinalQuizDef = {
+  unitSlug: 'circuit-elements',
+  prefix: 'learn.project.circuitElements',
+  questions: [
+    {
+      prompt: 'What does a battery do in a circuit?',
+      a: 'It provides a steady DC voltage between its terminals.',
+      b: 'It swings back and forth like the mains.',
+      c: 'It measures current in series.',
+      correct: 'a',
+      explain: 'A battery is a DC source. The long line on its symbol marks the positive terminal.'
+    },
+    {
+      prompt: 'What does an AC source do?',
+      a: 'It stores charge and blocks steady DC.',
+      b: 'It swings voltage back and forth, like the mains.',
+      c: 'It melts when the current gets too high.',
+      correct: 'b',
+      explain: 'An AC source alternates polarity. Use it when the lesson needs a changing supply.'
+    },
+    {
+      prompt: 'What does a pulse source do?',
+      a: 'It jumps between two voltage levels, like a microcontroller pin.',
+      b: 'It only limits current, like a resistor.',
+      c: 'It is the agreed 0 V reference node.',
+      correct: 'a',
+      explain: 'A pulse source is a digital-style supply: low and high levels over time.'
+    },
+    {
+      prompt: 'What does a resistor do?',
+      a: 'It limits current.',
+      b: 'It emits light when current flows.',
+      c: 'It opens the path only while you hold it.',
+      correct: 'a',
+      explain: 'Resistors shape how much current the source can push. They do not add energy.'
+    },
+    {
+      prompt: 'What does a capacitor do?',
+      a: 'It adds energy to the circuit like a battery.',
+      b: 'It stores charge and blocks steady DC.',
+      c: 'It is a deliberately weak link that melts.',
+      correct: 'b',
+      explain: 'In steady DC a capacitor looks open; it matters when voltages change.'
+    },
+    {
+      prompt: 'What does an inductor do?',
+      a: 'It stores energy in a magnetic field and resists changes in current.',
+      b: 'It is a one-way valve for current.',
+      c: 'It measures voltage across two points.',
+      correct: 'a',
+      explain: 'In steady DC an inductor behaves like a plain wire; its role shows when current changes.'
+    },
+    {
+      prompt: 'What does a diode do?',
+      a: 'It adjusts resistance with a sliding tap.',
+      b: 'It connects every ground symbol into one node.',
+      c: 'It acts as a one-way valve for current.',
+      correct: 'c',
+      explain: 'Current flows anode → cathode (the bar side). A silicon diode drops about 0.7 V when conducting.'
+    },
+    {
+      prompt: 'What does an LED do?',
+      a: 'It is a fuse that protects the supply.',
+      b: 'It is a diode that emits light when current flows the right way.',
+      c: 'It swings AC like the mains.',
+      correct: 'b',
+      explain: 'An LED needs a series resistor. Current flows in the arrow direction; typical drop is about 2 V.'
+    },
+    {
+      prompt: 'What does an NPN transistor do?',
+      a: 'It is a controllable valve: a small signal switches a larger current.',
+      b: 'It only marks a schematic crossing with no join.',
+      c: 'It provides a fixed AC frequency.',
+      correct: 'a',
+      explain: 'BJTs are electronic switches/amplifiers. A small base current controls collector–emitter current.'
+    },
+    {
+      prompt: 'What does an N-MOSFET do?',
+      a: 'It stores charge between plates.',
+      b: 'It is only used as a junction dot.',
+      c: 'It is a voltage-controlled electronic switch.',
+      correct: 'c',
+      explain: 'A small gate voltage controls a larger drain–source current — no moving parts.'
+    },
+    {
+      prompt: 'What does a switch do?',
+      a: 'It opens or closes the path so current can flow or stop.',
+      b: 'It always measures amps in series.',
+      c: 'It blocks DC and passes only AC.',
+      correct: 'a',
+      explain: 'In the Lab you toggle a switch by clicking it. Open means the loop is broken.'
+    },
+    {
+      prompt: 'What does a pushbutton do?',
+      a: 'It permanently shorts the supply to ground.',
+      b: 'It opens or closes the path only while you hold it down.',
+      c: 'It is a coil that drives a relay contact.',
+      correct: 'b',
+      explain: 'Unlike a latching switch, a pushbutton returns when released.'
+    },
+    {
+      prompt: 'What does a potentiometer do?',
+      a: 'It is a resistor with a sliding tap so resistance can be adjusted.',
+      b: 'It is a one-way light emitter.',
+      c: 'It marks 0 V on the schematic.',
+      correct: 'a',
+      explain: 'A pot is three terminals: the ends of a resistive track and a wiper you can move.'
+    },
+    {
+      prompt: 'What does a fuse do?',
+      a: 'It provides a steady DC voltage.',
+      b: 'It measures the difference between two nodes.',
+      c: 'It is a weak link that melts when current is too high.',
+      correct: 'c',
+      explain: 'A fuse protects the circuit by opening when overload would otherwise damage parts.'
+    },
+    {
+      prompt: 'What does a junction (dot) mean on a schematic?',
+      a: 'Wires meeting at a filled dot are electrically connected.',
+      b: 'Any crossing of two lines is always connected.',
+      c: 'It is the positive battery terminal.',
+      correct: 'a',
+      explain: 'Lines that cross without a dot are not connected. Only the filled junction joins nets.'
+    },
+    {
+      prompt: 'What does ground do in a schematic?',
+      a: 'It is where current disappears forever.',
+      b: 'It marks the agreed 0 V reference; every ground symbol is the same node.',
+      c: 'It always carries the largest current in the circuit.',
+      correct: 'b',
+      explain: 'All node voltages are measured against ground. Separate ground symbols are still one net.'
+    },
+    {
+      prompt: 'What does a voltmeter do?',
+      a: 'It measures voltage across two points (connected in parallel).',
+      b: 'It must sit in series so all current passes through it.',
+      c: 'It melts to protect against overcurrent.',
+      correct: 'a',
+      explain: 'A voltmeter sees the potential difference between two nodes without becoming the path.'
+    },
+    {
+      prompt: 'What does an ammeter do?',
+      a: 'It only connects across two points like a voltmeter.',
+      b: 'It stores energy in a magnetic field.',
+      c: 'It measures current and must sit in series with the path.',
+      correct: 'c',
+      explain: 'Current has to pass through the meter, so the ammeter is inserted into the loop.'
+    }
+  ]
+};
+
+export const LEARN_FINAL_QUIZZES: readonly FinalQuizDef[] = [BASICS_FINAL, CIRCUIT_ELEMENTS];
 
 /** Answer key by unit slug (correct option id per question order). */
 export const LEARN_QUIZ_KEYS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(

@@ -106,12 +106,18 @@ export class LearnProgressService {
   recordLocalQuizPass(
     moduleSlug: string,
     unitSlug: string,
-    answers: Record<number, string>
+    answers: Record<number, string>,
+    correctCount = 0,
+    totalCount = 0
   ): LearnUnitProgressDto {
+    const prev = this.progressFor(moduleSlug, unitSlug);
+    const bestCorrect = Math.max(prev.quizCorrectCount ?? 0, correctCount);
     const row: LearnUnitProgressDto = {
-      ...this.progressFor(moduleSlug, unitSlug),
+      ...prev,
       readComplete: true,
       quizPassed: true,
+      quizCorrectCount: bestCorrect,
+      quizTotalCount: bestCorrect > 0 ? (bestCorrect > (prev.quizCorrectCount ?? 0) ? totalCount : (prev.quizTotalCount ?? totalCount)) : totalCount,
       // Lesson + quiz complete the unit offline too; the lab stays an optional bonus.
       complete: true
     };
@@ -174,11 +180,16 @@ export class LearnProgressService {
         if (row.readComplete || row.quizPassed) out[key] = row;
         continue;
       }
-      if ((row.readComplete && !server.readComplete) || (row.quizPassed && !server.quizPassed)) {
+      if ((row.readComplete && !server.readComplete) || (row.quizPassed && !server.quizPassed) || (row.quizCorrectCount ?? 0) > (server.quizCorrectCount ?? 0)) {
         out[key] = {
           ...server,
           readComplete: server.readComplete || row.readComplete,
-          quizPassed: server.quizPassed || row.quizPassed
+          quizPassed: server.quizPassed || row.quizPassed,
+          quizCorrectCount: Math.max(server.quizCorrectCount ?? 0, row.quizCorrectCount ?? 0),
+          quizTotalCount:
+            (row.quizCorrectCount ?? 0) > (server.quizCorrectCount ?? 0)
+              ? (row.quizTotalCount ?? server.quizTotalCount ?? null)
+              : (server.quizTotalCount ?? row.quizTotalCount ?? null)
         };
       }
     }

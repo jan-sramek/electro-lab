@@ -73,7 +73,9 @@ public sealed record LearnUnitProgressDto(
     bool ReadComplete,
     bool QuizPassed,
     bool LabPassed,
-    bool Complete);
+    bool Complete,
+    int QuizCorrectCount = 0,
+    int QuizTotalCount = 0);
 
 public sealed record MarkReadRequest(bool Complete);
 

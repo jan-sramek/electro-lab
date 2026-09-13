@@ -75,6 +75,10 @@ public sealed class LearnProgressRow
     public bool ReadComplete { get; set; }
     public bool QuizPassed { get; set; }
     public bool LabPassed { get; set; }
+    /// <summary>Best number of correct answers across quiz attempts (for proportional points).</summary>
+    public int QuizCorrectCount { get; set; }
+    /// <summary>Question count paired with <see cref="QuizCorrectCount"/>.</summary>
+    public int QuizTotalCount { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
     public LearnUnit Unit { get; set; } = null!;

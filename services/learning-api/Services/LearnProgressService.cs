@@ -33,7 +33,9 @@ public sealed class LearnProgressService(LearningDbContext db, LearnCatalogServi
                     row?.ReadComplete ?? false,
                     row?.QuizPassed ?? false,
                     row?.LabPassed ?? false,
-                    row?.IsComplete ?? false);
+                    row?.IsComplete ?? false,
+                    row?.QuizCorrectCount ?? 0,
+                    row?.QuizTotalCount ?? 0);
             })
             .ToList();
 
@@ -100,9 +102,16 @@ public sealed class LearnProgressService(LearningDbContext db, LearnCatalogServi
             results.Add(new QuizQuestionResultDto(q.Id, isCorrect, q.CorrectOptionId, q.ExplanationKey));
         }
 
-        // An empty quiz is trivially passed; persist it so the unit can still reach Complete.
         var passed = correct >= LearnQuizRules.PassCountFor(questions.Count);
-        await UpsertRowAsync(sessionId, unit.Id, r => r.QuizPassed |= passed, ct);
+        await UpsertRowAsync(sessionId, unit.Id, r =>
+        {
+            r.QuizPassed |= passed;
+            if (correct >= r.QuizCorrectCount)
+            {
+                r.QuizCorrectCount = correct;
+                r.QuizTotalCount = questions.Count;
+            }
+        }, ct);
 
         return LearnResult<QuizSubmitResponse>.Ok(new QuizSubmitResponse(passed, correct, questions.Count, results));
     }
@@ -225,5 +234,6 @@ public sealed class LearnProgressService(LearningDbContext db, LearnCatalogServi
     }
 
     private static LearnUnitProgressDto ToDto(LearnUnit unit, LearnProgressRow row) =>
-        new(unit.Module.Slug, unit.Slug, row.ReadComplete, row.QuizPassed, row.LabPassed, row.IsComplete);
+        new(unit.Module.Slug, unit.Slug, row.ReadComplete, row.QuizPassed, row.LabPassed, row.IsComplete,
+            row.QuizCorrectCount, row.QuizTotalCount);
 }

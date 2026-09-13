@@ -1,5 +1,6 @@
 import { LEARN_SLIDES_I18N } from './learn-slides-content';
 import { LEARN_FINAL_QUIZ_I18N } from './learn-final-quizzes';
+import { STANDARD_QUIZ_EXTRAS, type QuizRow } from './learn-quiz-extras';
 
 /** Assessment copy for Learn units (lessons, quizzes, lab challenge labels). */
 export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
@@ -14,9 +15,19 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.readConfirm': 'I have read and understand this section.',
   'learn.unit.continueToQuiz': 'Continue to quiz',
   'learn.unit.quizHeading': 'Quick check',
-  'learn.unit.quizHint': 'Quick check: retry until all answers are correct. You get the reason after each try.',
-  'learn.unit.quizHintThreshold': 'Final quiz: {total} questions, you need at least {pass} correct. You can retry.',
+  'learn.unit.quizHint': 'One question at a time. You have 20 seconds each — answer to see if you got it right.',
+  'learn.unit.quizHintThreshold': '{total} questions, need at least {pass} correct. {seconds}s per question. You can retry.',
   'learn.unit.finalQuizHeading': 'Final quiz',
+  'learn.unit.quizProgress': 'Question {n} of {total}',
+  'learn.unit.quizTimer': '{s}s',
+  'learn.unit.quizTimerLabel': 'Time left',
+  'learn.unit.quizCorrect': 'Correct!',
+  'learn.unit.quizWrong': 'Not quite',
+  'learn.unit.quizTimedOut': 'Time is up',
+  'learn.unit.quizNext': 'Next question',
+  'learn.unit.quizSeeResults': 'See results',
+  'learn.unit.startQuiz': 'Start quiz',
+  'learn.unit.quizPointsEarned': '+{pts} pts',
   'learn.unit.quizScorePassed': '{correct} of {total} correct. Passed.',
   'learn.unit.quizScoreFailed': '{correct} of {total} correct. You need {pass}. Check the explanations and try again.',
   'learn.unit.finishUnit': 'Finish unit',
@@ -42,7 +53,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'lab.challenge.peekSample': 'Peek sample',
   'lab.challenge.clearCanvas': 'Clear canvas',
   'lab.challenge.peekHint':
-    'Peek loads the teaching sample as a reference. Clear returns to an empty canvas — you can still edit and check.',
+    'Peek loads the teaching sample as a reference. Clear returns to an empty canvas — you can still edit and check. Checking is blocked while the sample itself is on the canvas.',
   'lab.challenge.peekConfirm': 'Replace your challenge circuit with the teaching sample?',
   'lab.challenge.clearConfirm': 'Clear the challenge canvas? Your current wiring will be removed.',
   'lab.challenge.confirmAction': 'Continue',
@@ -51,6 +62,8 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'lab.challenge.verifyUnavailable':
     'Circuit looks good locally, but progress could not be saved — check your connection and try Check again.',
   'lab.challenge.failed': 'Not yet — adjust the circuit or run again, then check once more.',
+  'lab.challenge.sampleNotAllowed':
+    'The teaching sample is only a reference — clear the canvas or change the circuit, then build your own before checking.',
   'lab.challenge.backToUnit': 'Back to unit',
 
   'learn.challenge.tab.default': 'Challenge',
@@ -170,8 +183,6 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
     'Build a closed loop: 5 V battery → resistor → LED → ground. Pick the resistor value so the LED carries between 8 mA and 20 mA, and the node between resistor and LED sits near 2 V. Run DC and check.',
   'learn.project.seriesParallelCircuits.labGoal':
     'Build two parallel branches across the battery, each with its own resistor and LED, both returning to ground. Run DC: both LEDs must conduct between 2 mA and 30 mA.',
-  'learn.project.fundamentalsLoop.labGoal':
-    'Build the smallest complete circuit: battery + → resistor → LED → ground, with the return back to battery −. Run DC so the LED conducts.',
   'learn.project.ohmExplore.labGoal':
     'Start from the LED loop and change only the resistor. Find a value that keeps the LED lit between 1 mA and 25 mA without burning it, then Run DC.',
   'learn.project.led.labGoal':
@@ -210,6 +221,12 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.unit.reviewing': 'You are looking back at a finished part.',
   'learn.unit.backToCurrent': 'Back to where you are',
   'learn.hub.optional': 'Optional',
+  'learn.hub.track.starter.title': 'Starter path',
+  'learn.hub.track.starter.intro':
+    'Everyday electronics first: voltage and current, LEDs, transistors, buttons, sensors and timing.',
+  'learn.hub.track.advanced.title': 'Go deeper',
+  'learn.hub.track.advanced.intro':
+    'Power supplies, filters, op-amps, industrial control, and MCU/buses when you are ready.',
   'learn.slides.inTheLab': 'In the Lab',
   'learn.slides.inTheLabIntro': 'Suggested steps:',
 
@@ -218,7 +235,7 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   'learn.points.bonus': '+{pts} bonus',
   'learn.points.unit': '{earned} / {max} pts',
   'learn.points.total': 'Points: {earned} / {max}',
-  'learn.points.explain': 'Lesson +{read}, quiz +{quiz}, optional lab challenge +{lab} — building it earns the most.',
+  'learn.points.explain': 'Lesson +{read}, quiz up to +{quiz} (by correct answers), optional lab challenge +{lab} — building it earns the most.',
   'learn.unit.labOptionalHeading': 'Bonus lab challenge (optional)',
   'learn.unit.labOptionalUnlocked': 'Unit complete — the next project is unlocked.',
   'learn.unit.labOptionalHint':
@@ -304,7 +321,6 @@ export const LEARN_ASSESSMENT_I18N: Record<string, string> = {
   ...inductiveLoadAssessment(),
   ...estopRelayAssessment(),
   ...industrial24vAssessment(),
-  ...fundamentalsLoopAssessment(),
   ...ohmExploreAssessment(),
   ...ledBurnLimitAssessment(),
   ...diodeDirectionAssessment(),
@@ -332,20 +348,19 @@ function lessonKeys(prefix: string, l1Title: string, l1Body: string, l2Title: st
   };
 }
 
-function quizKeys(
-  prefix: string,
-  q1: [string, string, string, string, string],
-  q2: [string, string, string, string, string],
-  q3: [string, string, string, string, string]
-) {
-  const pack = (n: 1 | 2 | 3, row: [string, string, string, string, string]) => ({
-    [`${prefix}.quiz.q${n}.prompt`]: row[0],
-    [`${prefix}.quiz.q${n}.a`]: row[1],
-    [`${prefix}.quiz.q${n}.b`]: row[2],
-    [`${prefix}.quiz.q${n}.c`]: row[3],
-    [`${prefix}.quiz.q${n}.explain`]: row[4]
+function quizKeys(prefix: string, ...authored: QuizRow[]) {
+  const extras = STANDARD_QUIZ_EXTRAS[prefix] ?? [];
+  const rows = [...authored, ...extras];
+  const out: Record<string, string> = {};
+  rows.forEach((row, i) => {
+    const n = i + 1;
+    out[`${prefix}.quiz.q${n}.prompt`] = row[0];
+    out[`${prefix}.quiz.q${n}.a`] = row[1];
+    out[`${prefix}.quiz.q${n}.b`] = row[2];
+    out[`${prefix}.quiz.q${n}.c`] = row[3];
+    out[`${prefix}.quiz.q${n}.explain`] = row[4];
   });
-  return { ...pack(1, q1), ...pack(2, q2), ...pack(3, q3) };
+  return out;
 }
 
 /** Legacy c1/c2 labels for thin seeder fallbacks — Lab checklist prefers learn.challenge.check.*. */
@@ -446,12 +461,7 @@ function circuitElementsAssessment() {
       'Reading the symbols',
       'Diodes and LEDs are one-way arrows, transistors are controllable valves, switches and fuses control and protect. Dots connect wires, crossings do not, and every ground symbol is one node.'
     ),
-    ...quizKeys(
-      p,
-      ['On the battery symbol the long line marks…', 'The + terminal', 'The − terminal', 'Ground', 'Long line +, short thick line −.'],
-      ['A capacitor…', 'Adds energy to the circuit', 'Stores charge and blocks steady DC', 'Only limits current', 'It passes changing signals and blocks DC — smoothing, timing and filtering.'],
-      ['Two schematic lines cross without a dot. They are…', 'Connected', 'Connected only if both are wires', 'Not connected', 'Only a junction dot means an electrical connection.']
-    ),
+    // Quiz copy + answer key: learn-final-quizzes.ts (CIRCUIT_ELEMENTS) / LongQuiz seeder.
     ...challengeKeys(p, 'Battery, resistor, LED and ground are all present with a closed loop.', 'The LED lights and does not burn.')
   };
 }
@@ -1810,25 +1820,6 @@ function industrial24vAssessment() {
 }
 
 
-function fundamentalsLoopAssessment() {
-  const p = 'learn.project.fundamentalsLoop';
-  return {
-    ...lessonKeys(
-      p,
-      'Closed loop',
-      'Current only flows when there is a complete path from the supply through the load and back.',
-      'Ground is a return',
-      'In Lab, ground is the shared return reference — every teaching circuit needs it.'
-    ),
-    ...quizKeys(
-      p,
-      ['A circuit needs…', 'A closed path for current', 'Only a battery', 'Only an LED', 'Supply and return must connect through the load.'],
-      ['Ground in these labs is mainly…', 'Decoration', 'The return reference', 'A second battery', 'It closes the loop back to the supply.'],
-      ['If the return wire is missing…', 'Current still flows normally', 'Voltage doubles', 'Nothing useful lights', 'An open loop stops current.']
-    ),
-    ...challengeKeys(p, 'Simulation completes without errors.', 'LED conducts above ~1 mA.')
-  };
-}
 
 
 function ohmExploreAssessment() {

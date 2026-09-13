@@ -21,7 +21,7 @@ describe('Czech dictionary', () => {
 
   it('covers the whole basics module and the Learn / Lab chrome', () => {
     const basics = Object.keys(EN_FALLBACK).filter((k) =>
-      /^learn\.project\.(voltageIntro|currentIntro|resistanceIntro|ohmsLaw|circuitElements|seriesParallelCircuits|acDc|fundamentalsLoop|led|diodeDirection|seriesLeds|ledBurnLimit|rc|ledFade|pulseRc|basicsFinal)\./.test(k)
+      /^learn\.project\.(voltageIntro|currentIntro|resistanceIntro|ohmsLaw|circuitElements|seriesParallelCircuits|acDc|led|diodeDirection|seriesLeds|ledBurnLimit|rc|ledFade|pulseRc|basicsFinal)\./.test(k)
     );
     const missing = basics.filter((k) => !(k in CS_MESSAGES) && !/\.challenge\.c\d\.label$/.test(k));
     expect(missing).withContext(missing.join(', ')).toEqual([]);

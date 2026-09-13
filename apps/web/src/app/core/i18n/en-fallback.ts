@@ -188,6 +188,9 @@ export const EN_FALLBACK: Record<string, string> = {
 
   'lab.palette.title': 'Parts',
   'lab.palette.dragHint': 'Drag a symbol onto the canvas, or click then click to place. Hover a part for its teaching note.',
+  'lab.palette.scopeLabel': 'Parts list',
+  'lab.palette.scopeExercise': 'Exercise parts',
+  'lab.palette.scopeAll': 'All parts',
   'lab.palette.group.sources': 'Sources',
   'lab.palette.group.passives': 'Passives',
   'lab.palette.group.diodes': 'Diodes & LEDs',
@@ -2003,15 +2006,6 @@ export const EN_FALLBACK: Record<string, string> = {
   'learn.project.basicsFinal.step2': 'Answer all ten questions.',
   'learn.project.basicsFinal.step3': 'Score at least eight. Retry if needed.',
   'learn.project.basicsFinal.openLab': 'Open in Lab',
-
-  'learn.project.fundamentalsLoop.title': 'The simple loop',
-  'learn.project.fundamentalsLoop.summary':
-    'Battery, resistor, LED, and ground — the smallest complete circuit that teaches current and return path.',
-  'learn.project.fundamentalsLoop.step1': 'Open the Lab LED example and Run DC.',
-  'learn.project.fundamentalsLoop.step2': 'Trace the loop: battery + → resistor → LED → ground → battery −.',
-  'learn.project.fundamentalsLoop.step3': 'Remove the mental “mystery” — current needs a closed path.',
-  'learn.project.fundamentalsLoop.step4': 'Probe a node or the LED to see voltage/current labels.',
-  'learn.project.fundamentalsLoop.openLab': 'Open in Lab',
 
   'learn.project.ohmExplore.title': 'Ohm’s law by feel',
   'learn.project.ohmExplore.summary':

@@ -177,8 +177,8 @@ export class LearnCatalogService {
         { id: 2, order: 2, titleKey: `${prefix}.lesson2.title`, bodyKey: `${prefix}.lesson2.body` }
       ],
       quiz: {
-        passCount: quizPassCountFor(finalQuizQuestionCount(unitSlug) ?? 3),
-        questions: Array.from({ length: finalQuizQuestionCount(unitSlug) ?? 3 }, (_, i) => i + 1).map((n) => ({
+        passCount: quizPassCountFor(finalQuizQuestionCount(unitSlug) ?? 5),
+        questions: Array.from({ length: finalQuizQuestionCount(unitSlug) ?? 5 }, (_, i) => i + 1).map((n) => ({
           id: n,
           order: n,
           promptKey: `${prefix}.quiz.q${n}.prompt`,

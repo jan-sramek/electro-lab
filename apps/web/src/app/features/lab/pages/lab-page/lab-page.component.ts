@@ -21,6 +21,9 @@ import { LearnProgressService } from '../../../learn/services/learn-progress.ser
 import { LearnUnitDetailResponse } from '../../../learn/api/learning-api.types';
 import { CriterionCheckResult } from '../../../learn/data/lab-challenge-checker';
 import { getLearnChallengeSpec, specCriteriaForCheck } from '../../../learn/data/learn-challenge-spec';
+import { exercisePaletteKeysFromCriteria } from '../../data/challenge-palette';
+import { PaletteScope } from '../../components/palette/palette.component';
+import { schematicStructureKey } from '../../data/schematic.model';
 import { CriterionLabelPipe } from '../../../learn/data/learn-criterion-label.pipe';
 import { findLearnUnit } from '../../../learn/data/learn-catalog';
 import { learnStepKey } from '../../../learn/data/learn-catalog.model';
@@ -91,6 +94,30 @@ export class LabPageComponent implements OnInit, OnDestroy {
     if (!unit) return [];
     return specCriteriaForCheck(unit.exampleId, unit.labChallenge.criteria, unit.unitSlug);
   });
+
+  /** Parts the challenge needs — drives the palette exercise filter. */
+  readonly exercisePaletteKeys = computed(() => {
+    if (!this.editor.learnChallengeMode() || !this.learnChallengeUnit()) return null;
+    const keys = exercisePaletteKeysFromCriteria(this.challengeCriteria());
+    return keys.length ? keys : null;
+  });
+
+  /** Exercise parts by default in challenge mode; user can switch to the full palette. */
+  readonly paletteScope = signal<PaletteScope>('exercise');
+
+  /** Structure key of the peeked teaching sample; null when not showing a peek. */
+  private readonly challengePeekFingerprint = signal<string | null>(null);
+
+  /** True while the canvas still matches the unmodified peeked sample. */
+  readonly challengeShowingSample = computed(() => {
+    const fp = this.challengePeekFingerprint();
+    if (!fp || !this.editor.learnChallengeMode()) return false;
+    return schematicStructureKey(this.editor.doc()) === fp;
+  });
+
+  setPaletteScope(scope: PaletteScope): void {
+    this.paletteScope.set(scope);
+  }
 
   /** Plain-language task for the challenge (unit labGoal, else its summary). */
   readonly challengeGoal = computed(() => {
@@ -483,6 +510,12 @@ export class LabPageComponent implements OnInit, OnDestroy {
   async checkLearnChallenge(): Promise<void> {
     const unit = this.learnChallengeUnit();
     if (!unit || this.challengeChecking()) return;
+    if (this.challengeShowingSample()) {
+      this.challengePassed.set(false);
+      this.challengeResults.set([]);
+      this.challengeMessage.set('lab.challenge.sampleNotAllowed');
+      return;
+    }
 
     this.challengeChecking.set(true);
     try {
@@ -545,12 +578,14 @@ export class LabPageComponent implements OnInit, OnDestroy {
       this.challengePassed.set(false);
       this.challengeMessage.set(null);
       this.onLoadPreset(unit.exampleId as ExamplePresetId);
+      this.challengePeekFingerprint.set(schematicStructureKey(this.editor.doc()));
       return;
     }
     if (action === 'clear') {
       this.challengeResults.set([]);
       this.challengePassed.set(false);
       this.challengeMessage.set(null);
+      this.challengePeekFingerprint.set(null);
       this.editor.clearChallengeCanvas();
     }
   }
@@ -665,6 +700,8 @@ export class LabPageComponent implements OnInit, OnDestroy {
     }
 
     this.learnChallengeUnit.set(detail);
+    this.paletteScope.set('exercise');
+    this.challengePeekFingerprint.set(null);
     const spec = getLearnChallengeSpec(detail.exampleId);
     const tabNameKey = spec?.tabNameKey ?? 'learn.challenge.tab.default';
     this.editor.beginLearnChallenge({

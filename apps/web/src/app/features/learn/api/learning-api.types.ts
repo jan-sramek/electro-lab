@@ -85,6 +85,10 @@ export interface LearnUnitProgressDto {
   quizPassed: boolean;
   labPassed: boolean;
   complete: boolean;
+  /** Best correct answers on a quiz attempt (proportional points). */
+  quizCorrectCount?: number | null;
+  /** Question count for that best attempt. */
+  quizTotalCount?: number | null;
 }
 
 export interface QuizSubmitRequest {

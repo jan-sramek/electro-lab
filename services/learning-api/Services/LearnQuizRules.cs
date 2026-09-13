@@ -4,8 +4,8 @@ namespace ElectroLab.LearningApi.Services;
 public static class LearnQuizRules
 {
     /// <summary>
-    /// Short formative quizzes (up to 3 questions) must be fully correct. Longer quizzes,
-    /// such as a module final, pass at 80 % (rounded up).
+    /// Short formative quizzes (up to 3 questions) must be fully correct. Longer quizzes
+    /// (standard 5-question checks and module finals) pass at 80 % (rounded up).
     /// </summary>
     public static int PassCountFor(int questionCount) =>
         questionCount <= 3 ? questionCount : (int)Math.Ceiling(questionCount * 0.8);
